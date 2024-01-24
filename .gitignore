@@ -1,0 +1,10 @@
+doc/.ipynb_checkpoints/
+pandaict/__pycache__/
+pandaict/outage/__pycache__/
+pandaict/plotting/__pycache__/
+pandaict/simulation/__pycache__/
+pandaict/topology/__pycache__/
+test/__pycache__/
+
+
+
