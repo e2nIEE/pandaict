@@ -1,1 +1,1 @@
-from pandaict.plotting.collections import *
+from pandaict_orig.plotting.collections import *

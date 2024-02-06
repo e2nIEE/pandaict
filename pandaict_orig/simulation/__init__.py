@@ -1,2 +1,2 @@
-from pandaict.simulation.reliability import *
-from pandaict.simulation.toolbox import *
+from pandaict_orig.simulation.reliability import *
+from pandaict_orig.simulation.toolbox import *

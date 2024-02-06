@@ -1,5 +1,5 @@
 from pandapower.auxiliary import get_free_id, _preserve_dtypes
-from pandaict.auxiliary import pandaictNet
+from pandaict_orig.auxiliary import pandaictNet
 from numpy import dtype, zeros
 import pandas as pd
 
@@ -54,8 +54,7 @@ def create_ict_node(net, type=None, name=None, index=None, in_service=True):
 
     dtypes = net.node.dtypes
 
-    net.node.loc[index, ["name", "type", "in_service"]] = [
-        name, type, in_service]
+    net.node.loc[index, ["name", "type", "in_service"]] = [name, type, in_service]
 
     _preserve_dtypes(net.node, dtypes)
 

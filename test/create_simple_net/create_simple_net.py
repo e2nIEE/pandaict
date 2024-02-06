@@ -9,10 +9,8 @@ import pandapower.networks
 import pandapower.control as control
 import pandapower.timeseries as timeseries
 from pandapower.timeseries.data_sources.frame_data import DFData
-import os
-os.putenv("PYTHONPATH", "C:\\Users\\jringelstein\\git\\recode\\pandaict\\") 
 import pandaict as pi
-import enums
+import pandaict.enums as enums
 import pandas as pd
 import math
 import csv
@@ -153,7 +151,7 @@ def create_basic_ict_net(pp_net):
                                  devices = {'ext_grid': [0], 'switch':[2, 7, 5], 'sgen':[1,0]},
                                  devnames = ['CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2'],
                                  std_link = 'LAN1000', 
-                                 std_protocol = 'IEC104-TCP',
+                                 std_protocol = 'IEC104_TCP',
                                  links = [['CC','Node 1'], 
                                           ['Node 1','Node 2', 'Fiber'], 
                                           ['Node 2','Node 3', 'ADSL8'],
@@ -161,8 +159,8 @@ def create_basic_ict_net(pp_net):
                                           ['Node 2','PQ1'],
                                           ['Node 2','PQ2'],
                                           ['Node 2','SC', 'ADSL8'],
-                                          ['Node 3','PC1','LAN1000', 'IEC61850-MMS'],
-                                          ['Node 4','PC2','LAN1000', 'MODBUS-TCP-SMA']],
+                                          ['Node 3','PC1','LAN1000', 'IEC61850_MMS'],
+                                          ['Node 4','PC2','LAN1000', 'MODBUS_TCP_SMA']],
                                  check=True)
     
     

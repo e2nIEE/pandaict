@@ -4,8 +4,8 @@ Created on Sun Sep 25 10:58:48 2022
 
 @author: janli
 """
-import pandaict as pi
-import pandaict.plotting as pi_plot
+import pandaict_orig as pi
+import pandaict_orig.plotting as pi_plot
 
 import pandapower as pp
 import pandapower.plotting as pp_plot

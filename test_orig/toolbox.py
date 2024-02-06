@@ -4,8 +4,8 @@ Created on Sun Sep 25 11:08:10 2022
 
 @author: janli
 """
-import pandaict as pi
-import pandaict.plotting as pi_plot
+import pandaict_orig as pi
+import pandaict_orig.plotting as pi_plot
 
 import pandapower as pp
 import pandapower.plotting as pp_plot
@@ -15,7 +15,7 @@ import copy
 import networkx as nx
 import numpy as np
 from itertools import groupby
-import test.networks
+import test_orig.networks
 """
 TOOLBOX
 """

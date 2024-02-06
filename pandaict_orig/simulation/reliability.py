@@ -2,10 +2,10 @@ import pandapower as pp
 import random
 import pandapower.topology as top
 
-import pandaict.outage
-import pandaict.topology as ict_top
-from pandaict.simulation.toolbox import get_extended_protection_infos
-import pandaict as pi
+import pandaict_orig.outage
+import pandaict_orig.topology as ict_top
+from pandaict_orig.simulation.toolbox import get_extended_protection_infos
+import pandaict_orig as pi
 import pandas as pd
 
 import numba
