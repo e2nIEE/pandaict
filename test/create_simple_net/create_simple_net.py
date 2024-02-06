@@ -9,28 +9,20 @@ import pandapower.networks
 import pandapower.control as control
 import pandapower.timeseries as timeseries
 from pandapower.timeseries.data_sources.frame_data import DFData
+import os
+os.putenv("PYTHONPATH", "C:\\Users\\jringelstein\\git\\recode\\pandaict\\") 
+import pandaict as pi
+import enums
 import pandas as pd
 import math
 import csv
 
 net = None
 
-def get_net():
-    global net
-    net = pp.networks.example_simple()
+
+
     
-    # Mod's
-    #net.line.at[1,'length_km'] = 8.0
-    #net.line.at[3,'length_km'] = 10.0
-    pp.change_std_type(net,1,'NA2XS2Y 1x95 RM/25 12/20 kV','line')
-    pp.change_std_type(net,3,'NA2XS2Y 1x95 RM/25 12/20 kV','line')    
-    net.gen = net.gen.drop(0) # drop gen at bus 7        
-    pp.create_sgen(net, 5, p_mw=10, q_mvar=0, sn_mva=12, name="WPP", index=1) # create new 'PV' sgen at bus 7 
-    net.sgen.at[0,'name'] = 'PV' # make other sgen 'WPP' 
-    net.sgen.at[0,'q_mvar'] = 0 
-    net.load.at[0,'scaling'] = 1
-    
-def test_net(): 
+def perform_test_loadflows(): 
     global net
     cosphi_gen = 0.98
     cosphi_load = 0.95    
@@ -114,6 +106,7 @@ def get_timeseries():
     const_load_p = control.ConstControl(net, element='load', element_index=net.load.index, variable='p_mw', data_source=ds_p, profile_name=net.load.index)
     const_load_q = control.ConstControl(net, element='load', element_index=net.load.index, variable='q_mvar', data_source=ds_q, profile_name=net.load.index)
     
+    b = pp.create_bus(net)
     # ow = timeseries.OutputWriter(net, output_path="./", output_file_type=".xlsx")
     # ow.log_variable('res_bus', 'vm_pu')
     # ow.log_variable('res_load', 'p_mw')
@@ -129,8 +122,59 @@ def get_timeseries():
     return
     
             
+def generate_test_pp_network():
+    global net
+    net = pp.networks.example_simple()
+    
+    # Mod's
+    #net.line.at[1,'length_km'] = 8.0
+    #net.line.at[3,'length_km'] = 10.0
+    pp.change_std_type(net,1,'NA2XS2Y 1x95 RM/25 12/20 kV','line')
+    pp.change_std_type(net,3,'NA2XS2Y 1x95 RM/25 12/20 kV','line')    
+    net.gen = net.gen.drop(0) # drop gen at bus 7        
+    pp.create_sgen(net, 5, p_mw=10, q_mvar=0, sn_mva=12, name="WPP", index=1) # create new 'PV' sgen at bus 7 
+    net.sgen.at[0,'name'] = 'PV' # make other sgen 'WPP' 
+    net.sgen.at[0,'q_mvar'] = 0 
+    net.load.at[0,'scaling'] = 1
+    return
+
+def get_pp_test_net():    
+    return pp.from_json('UC4_simple.json')    
+
+def create_basic_ict_net(pp_net):
+    
+    ict_net = pi.create_empty_network("Testnet")
+    pi.create_ict_node(ict_net, name="Testnode", type=enums.NodeType.ROUTER)
+    
+    # This function should compile a basic ict net structure using the provided pp net elements    
+    ict_net = pi.autocreate_from_pp(net, 
+                                 nodes = {'bus': [0,2,5,6]},
+                                 nodenames = ['Node 1', 'Node 2', 'Node 3', 'Node 4'], 
+                                 devices = {'ext_grid': [0], 'switch':[2, 7, 5], 'sgen':[1,0]},
+                                 devnames = ['CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2'],
+                                 std_link = 'LAN1000', 
+                                 std_protocol = 'IEC104-TCP',
+                                 links = [['CC','Node 1'], 
+                                          ['Node 1','Node 2', 'Fiber'], 
+                                          ['Node 2','Node 3', 'ADSL8'],
+                                          ['Node 2','Node 4','LTE50'],
+                                          ['Node 2','PQ1'],
+                                          ['Node 2','PQ2'],
+                                          ['Node 2','SC', 'ADSL8'],
+                                          ['Node 3','PC1','LAN1000', 'IEC61850-MMS'],
+                                          ['Node 4','PC2','LAN1000', 'MODBUS-TCP-SMA']],
+                                 check=True)
+    
+    
+    return ict_net
+            
 if __name__ == '__main__':
-    get_net()
+    net = get_pp_test_net()
+    
+    ict_net = create_basic_ict_net(net) # This should create an ict net that fits the pp net
+        
+    print("A")
+    
     # test_net()
     #get_timeseries()
     
