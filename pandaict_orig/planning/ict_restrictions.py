@@ -1,6 +1,6 @@
 from anaplan import Restriction
-import pandaict.simulation as sim
-import pandaict.topology as ict_top
+import pandaict_orig.simulation as sim
+import pandaict_orig.topology as ict_top
 import networkx
 import sys
 # sys.path.append("/media/D/Workspace/Programmieren/scripts/ENSURE/Versuchsskripte")

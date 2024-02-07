@@ -10,6 +10,7 @@ Created on 30.01.2024
 from pandaict.auxiliary import pandaICTNet
 from pandapower.auxiliary import ADict, get_free_id, _preserve_dtypes
 from numpy import dtype, zeros
+import numpy as np
 import pandas as pd
 from pandaict.std_types import add_basic_std_types
 
@@ -94,6 +95,7 @@ def create_ict_node(ict_net, name=None, type=None, index=None, in_service=True, 
 
     dtypes = ict_net.node.dtypes
 
+    link_types = ["test","test2"]
     ict_net.node.loc[index, ["name", "type", "in_service", "link_types"]] = [
         name, type, in_service, link_types]
 

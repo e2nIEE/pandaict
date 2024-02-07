@@ -1,5 +1,5 @@
 import networkx as nx
-import pandaict as pi
+import pandaict_orig as pi
 import topology as top
 from itertools import combinations, chain, product
 

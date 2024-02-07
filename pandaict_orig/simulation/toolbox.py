@@ -2,7 +2,7 @@ from pandaplan.core.outage.resupply import resupplier
 from pandaplan.core.outage.toolbox import find_protection_areas
 import pandas as pd
 from pandaplan.core import pplog
-import pandaict as pi
+import pandaict_orig as pi
 import numpy as np
 logger = pplog.getLogger(__name__)
 

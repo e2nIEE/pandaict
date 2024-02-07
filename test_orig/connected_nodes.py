@@ -269,7 +269,7 @@ ict_net = ict_Netz_islanded_nodes()
 plot_devices = False
 Plot_Net_with_link_failure(ict_net, plot_devices = True, node_size = 0.05, device_size = 0.25, figsize=(10, 8))
 Plot_Net_with_link_failure(ict_net, plot_devices = True, node_size = 0.05, device_size = 0.25, figsize=(10, 8))
-
+plt.show(block=True)
 
 
 

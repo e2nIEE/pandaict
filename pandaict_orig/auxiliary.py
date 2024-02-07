@@ -1,5 +1,5 @@
 from pandapower.auxiliary import ADict, get_free_id, _preserve_dtypes
-import pandaict as pi
+import pandaict_orig as pi
 import pandas as pd
 import random
 

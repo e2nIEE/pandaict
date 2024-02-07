@@ -1,7 +1,7 @@
-from pandaict.planning.ict_measures import REPLMeasureWithHazardRate
-from pandaict.planning.ict_measures import SwitchAutomationMeasure
-from pandaict.planning.ict_measures import ICTLinkMeasure
-from pandaict.planning.ict_measures import ICTAntennaMeasure
+from pandaict_orig.planning.ict_measures import REPLMeasureWithHazardRate
+from pandaict_orig.planning.ict_measures import SwitchAutomationMeasure
+from pandaict_orig.planning.ict_measures import ICTLinkMeasure
+from pandaict_orig.planning.ict_measures import ICTAntennaMeasure
 from anaplan import GroupMeasure
 
 # logging

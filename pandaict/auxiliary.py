@@ -14,18 +14,9 @@ import copy
 import numpy as np
 
 class pandaICTNet(ADict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if isinstance(args[0], self.__class__):
-            net = args[0]
-            self.clear()
-            self.update(**net.deepcopy())
-
-        for key in self:
-            if isinstance(self[key], list):
-                self[key] = pd.DataFrame(np.zeros(0, dtype=self[key]), index=pd.Index([],
-                                         dtype=np.int64))
-
+    def __init__(self, *args, **kwargs):        
+        super(pandaICTNet, self).__init__(*args, **kwargs)
+                
     def deepcopy(self):
         return copy.deepcopy(self)
 
