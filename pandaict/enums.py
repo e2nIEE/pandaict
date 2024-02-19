@@ -33,8 +33,7 @@ class InfoItems:
         SWITCH_POSITION  = 3        
         TAP_POSITION     = 4
         VOLTAGE          = 5
-        
-        
+                
 
 # Definitions for info items
 class NodeType(Enum):        

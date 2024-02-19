@@ -18,7 +18,6 @@ import csv
 net = None
 
 
-
     
 def perform_test_loadflows(): 
     global net
@@ -142,7 +141,11 @@ def get_pp_test_net():
 def create_basic_ict_net(pp_net):
     
     ict_net = pi.create_empty_network("Testnet")
-    pi.create_ict_node(ict_net, name="Testnode", type=enums.NodeType.ROUTER)
+    node1 = pi.create_ict_node(ict_net, name="Testnode", type=enums.NodeType.ROUTER, map_to=["bus", 10])   
+    node2 = pi.create_ict_node(ict_net, name="Testnode", type=enums.NodeType.ROUTER, map_to=["bus", 11])
+    link1 = pi.create_ict_link(ict_net, name="Testlink", type="LTE50", from_node=node1, to_node=node2, length_km=10)
+    dev1  = pi.create_ict_device(ict_net, name="Dev1", map_to=["sgen", 5], controls=["P_kW", "Q_kVA"], protocol="IEC61850")
+    dev2  = pi.create_ict_device(ict_net, name="Dev2", map_to=["trafo", 1], controls=["tap_pos"], protocol="IEC61850")    
     
     # This function should compile a basic ict net structure using the provided pp net elements    
     ict_net = pi.autocreate_from_pp(net, 

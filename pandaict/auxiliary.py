@@ -49,7 +49,7 @@ class pandaICTNet(ADict):
             par + res + res_cost
         return "\n".join(lines)
 
-def plural_s(self, number):
+def plural_s(number):
     if number > 1:
         return "s"
     else:
