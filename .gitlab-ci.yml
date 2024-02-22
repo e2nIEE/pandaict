@@ -1,0 +1,80 @@
+image: python:3.9
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  MONGO_INITDB_ROOT_USERNAME: admin
+  MONGO_INITDB_ROOT_PASSWORD: admin
+  MONGO_INITDB_DATABASE: admin
+  SAST_EXCLUDED_PATHS: doc, pandaict_orig, test_orig, venv
+
+include:
+- template: Code-Quality.gitlab-ci.yml
+- template: Security/SAST.gitlab-ci.yml
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+
+semgrep-sast:
+   variables:
+        SAST_EXCLUDED_PATHS: venv
+   artifacts:
+      paths: [gl-sast-report.json]
+   tags:
+    - leitwarte_iee
+
+stages:
+  - test
+  - build
+
+unit-test:
+    stage: test
+    script:
+        - python3 test/pandaict_test.py
+    tags:
+     - leitwarte_iee
+
+code_quality:
+  stage: test
+  variables:
+    REPORT_FORMAT: html
+  tags:
+   - leitwarte_iee
+  artifacts:
+    paths: [gl-code-quality-report.html]
+
+
+pages:
+  tags:
+   - leitwarte_iee
+  image: python:3.10.0
+  stage: build
+  script:
+  - pip install -U sphinx
+  - pip install -r requirements.txt
+  - sphinx-build -b html doc/sphinx/source public/pandaict
+  artifacts:
+    paths:
+    - public
+
+
+create_artifact_gitlab:
+  stage: build
+  tags: 
+   - leitwarte_iee
+  script:
+    - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install twine
+    - pip install build
+    - python -m build --wheel
+    - export CURL_CA_BUNDLE=""
+    - twine upload --config-file ~/.pypirc -r gitlab dist/*
+  artifacts:
+    paths:
+      - dist/*.whl

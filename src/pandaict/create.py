@@ -7,13 +7,13 @@ Created on 30.01.2024
 @author: jringelstein
 '''
 
-from pandaict.auxiliary import pandaICTNet
-import pandaict.utils as utils
+from auxiliary import pandaICTNet
+import utils as utils
 from pandapower.auxiliary import ADict, get_free_id, _preserve_dtypes
 from numpy import dtype, zeros
 import numpy as np
 import pandas as pd
-from pandaict.std_types import add_basic_std_types
+from std_types import add_basic_std_types
 
 try:
     import pandaplan.core.pplog as logging

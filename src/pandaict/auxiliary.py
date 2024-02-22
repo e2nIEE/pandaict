@@ -8,13 +8,23 @@ Created on 30.01.2024
 '''
 
 from pandapower.auxiliary import ADict, get_free_id, _preserve_dtypes
-import pandaict as pi
+#import pandaict as pi
 import pandas as pd
 import copy
 import numpy as np
 
 class pandaICTNet(ADict):
+    """
+    Example documentation for classes in pandaICTNet
+    """
     def __init__(self, *args, **kwargs):        
+        """
+        Initializes a new instance of pandaICTNet
+
+        Parameters
+        ----------
+        :param args: Example argument
+        """
         super(pandaICTNet, self).__init__(*args, **kwargs)
                 
     def deepcopy(self):

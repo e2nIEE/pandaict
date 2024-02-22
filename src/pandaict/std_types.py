@@ -9,7 +9,7 @@ Created on 2.02.2024
 
 import pandas as pd
 import warnings
-import pandaict.enums as enums
+import enums as enums
 
 try:
     import pandaplan.core.pplog as logging
