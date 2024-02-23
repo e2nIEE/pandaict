@@ -11,6 +11,7 @@ import pandapower.timeseries as timeseries
 from pandapower.timeseries.data_sources.frame_data import DFData
 import pandaict as pi
 import pandaict.enums as enums
+from pandaict.utils import uuid2elt
 import pandas as pd
 import math
 import csv
@@ -138,41 +139,54 @@ def generate_test_pp_network():
 def get_pp_test_net():    
     return pp.from_json('UC4_simple.json')    
 
-def create_basic_ict_net(pp_net):
+def create_test_ict_net(pp_net):
     
-    ict_net = pi.create_empty_network("Testnet")
-    node1 = pi.create_ict_node(ict_net, name="Testnode", type=enums.NodeType.ROUTER, map_to=["bus", 10])   
-    node2 = pi.create_ict_node(ict_net, name="Testnode", type=enums.NodeType.ROUTER, map_to=["bus", 11])
-    link1 = pi.create_ict_link(ict_net, name="Testlink", type="LTE50", from_node=node1, to_node=node2, length_km=10)
-    dev1  = pi.create_ict_device(ict_net, name="Dev1", map_to=["sgen", 5], controls=["P_kW", "Q_kVA"], protocol="IEC61850")
-    dev2  = pi.create_ict_device(ict_net, name="Dev2", map_to=["trafo", 1], controls=["tap_pos"], protocol="IEC61850")    
+    ict_net = pi.create_empty_network("Test network")
+    
+    # Creation with indexes
+    # node1       = pi.create_ict_node(ict_net, name="Testnode1", type=enums.NodeType.ROUTER, map_to=("bus", 10))   
+    # node2       = pi.create_ict_node(ict_net, name="Testnode2", type=enums.NodeType.ROUTER, map_to=("bus", 11))
+    # link1_idx   = pi.create_ict_link(ict_net, name="Testlink1", type="LTE50", from_elt=node1, to_elt=node2, length_km=10)
+    # dev1        = pi.create_ict_device(ict_net, name="Dev1", map_to=("sgen", 5), controls=["P_kW", "Q_kVA"], measures=["P_kW","I_kA", "U_kV"])
+    # dev2        = pi.create_ict_device(ict_net, name="Dev2", map_to=("trafo", 1), controls=["tap_pos"])
+    #
+
+    # Creation with uuids    
+    node1       = pi.create_ict_node_with_uuid(ict_net, name="Testnode1", type=enums.NodeType.ROUTER, map_to=("bus", 10))   
+    node2       = pi.create_ict_node_with_uuid(ict_net, name="Testnode2", type=enums.NodeType.ROUTER, map_to=("bus", 11))
+    uuid2elt(ict_net, node1)
+    # link1_idx   = pi.create_ict_link_with_uuid(ict_net, name="Testlink1", type="LTE50", from_elt=node1, to_elt=node2, length_km=10)
+    # dev1        = pi.create_ict_device_with_uuid(ict_net, name="Dev1", map_to=("sgen", 5), controls=["P_kW", "Q_kVA"], measures=["P_kW","I_kA", "U_kV"])
+    # dev2        = pi.create_ict_device_with_uuid(ict_net, name="Dev2", map_to=("trafo", 1), controls=["tap_pos"])
+    
+    
     
     # This function should compile a basic ict net structure using the provided pp net elements    
-    ict_net = pi.autocreate_from_pp(net, 
-                                 nodes = {'bus': [0,2,5,6]},
-                                 nodenames = ['Node 1', 'Node 2', 'Node 3', 'Node 4'], 
-                                 devices = {'ext_grid': [0], 'switch':[2, 7, 5], 'sgen':[1,0]},
-                                 devnames = ['CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2'],
-                                 std_link = 'LAN1000', 
-                                 std_protocol = 'IEC104_TCP',
-                                 links = [['CC','Node 1'], 
-                                          ['Node 1','Node 2', 'Fiber'], 
-                                          ['Node 2','Node 3', 'ADSL8'],
-                                          ['Node 2','Node 4','LTE50'],
-                                          ['Node 2','PQ1'],
-                                          ['Node 2','PQ2'],
-                                          ['Node 2','SC', 'ADSL8'],
-                                          ['Node 3','PC1','LAN1000', 'IEC61850_MMS'],
-                                          ['Node 4','PC2','LAN1000', 'MODBUS_TCP_SMA']],
-                                 check=True)
+    # ict_net = pi.autocreate_from_pp(net, 
+    #                              nodes = {'bus': [0,2,5,6]},
+    #                              nodenames = ['Node 1', 'Node 2', 'Node 3', 'Node 4'], 
+    #                              devices = {'ext_grid': [0], 'switch':[2, 7, 5], 'sgen':[1,0]},
+    #                              devnames = ['CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2'],
+    #                              std_link = 'LAN1000',                                  
+    #                              links = [['CC','Node 1'], 
+    #                                       ['Node 1','Node 2', 'Fiber'], 
+    #                                       ['Node 2','Node 3', 'ADSL8'],
+    #                                       ['Node 2','Node 4','LTE50'],
+    #                                       ['Node 2','PQ1'],
+    #                                       ['Node 2','PQ2'],
+    #                                       ['Node 2','SC', 'ADSL8'],
+    #                                       ['Node 3','PC1','LAN1000', 'IEC61850_MMS'],
+    #                                       ['Node 4','PC2','LAN1000', 'MODBUS_TCP_SMA']],
+    #                              std_protocol = 'IEC104_TCP',
+    #                              check=True)
     
     
     return ict_net
             
 if __name__ == '__main__':
     net = get_pp_test_net()
-    
-    ict_net = create_basic_ict_net(net) # This should create an ict net that fits the pp net
+    net.name = "Test network"
+    ict_net = create_test_ict_net(net) # This should create an ict net that fits the pp net
         
     print("A")
     
