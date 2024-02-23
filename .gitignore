@@ -14,3 +14,4 @@ src/pandaict/plotting/__pycache__/
 src/pandaict/topology/__pycache__/
 src/pandaict/datamodel/__pycache__/
 
+.idea/
