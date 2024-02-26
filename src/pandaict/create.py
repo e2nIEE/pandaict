@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import uuid
 from pandaict.std_types import add_basic_std_types
+from pandaict.utils import list2str, tuple2str, uuid2elt, elt2uuid
 
 try:
     import pandaplan.core.pplog as logging
@@ -109,9 +110,9 @@ def _create_ict_node(ict_net, name=None, type=None, index=None, in_service=True,
     dtypes = ict_net.node.dtypes
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
     # but current pandapower release won't work with pandas >= 2.0.0
-    lt = utils.list2str(link_types)    
-    cn = utils.list2str(conversions)
-    mt = utils.tuple2str(map_to)
+    lt = list2str(link_types)    
+    cn = list2str(conversions)
+    mt = tuple2str(map_to)
         
     if (use_uuid): 
         randuuid = uuid.uuid4()
@@ -135,10 +136,10 @@ def create_ict_node(ict_net, name=None, type=None, index=None, in_service=True, 
     (index, uid) = _create_ict_node(ict_net, name=name, type=type, index=index, in_service=in_service, use_uuid=False, map_to=map_to,
                                     geodata=geodata, link_types=link_types, conversions=conversions, 
                                     ber=ber, mtbf_h=mtbf_h, mttr_h=mttr_h)
-    return index
+    return ('node', index)
 
     
-def _create_ict_link(ict_net, from_elt, to_elt, name=None, type=None, index=None, in_service=True, use_uuid=False, protocols=None, 
+def _create_ict_link(ict_net, ifrom, ito, name=None, type=None, index=None, in_service=True, use_uuid=False, protocols=None, 
                      map_to=None, length_km=0 ):
     if index is not None and index in ict_net["link"].index:
         raise UserWarning("A link with index %s already exists" % index)
@@ -147,21 +148,23 @@ def _create_ict_link(ict_net, from_elt, to_elt, name=None, type=None, index=None
         index = get_free_id(ict_net["link"])
 
     dtypes = ict_net.link.dtypes
-    # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
-    # but current pandapower release won't work with pandas >= 2.0.0
-    if isinstance(to_elt, list): 
-        tn = utils.list2str(to_elt)
-    else:
-        tn = [str(to_elt)]    
-    pr = utils.list2str(protocols)    
-    mt = utils.tuple2str(map_to)
     
+    # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
+    # but current pandapower release won't work with pandas >= 2.0.0    
     if (use_uuid): 
         randuuid = uuid.uuid4()
+        ifrom = tuple2str(uuid2elt(ict_net, ifrom))
+        if isinstance(ito, list):
+            h = [tuple2str(uuid2elt(ict_net, uid)) for uid in ito]
+            ito = list2str(h)
+        else:
+            ito = tuple2str(uuid2elt(ict_net, ito))
     else: 
-        randuuid = None
+        randuuid = None    
+    pr = list2str(protocols)    
+    mt = tuple2str(map_to)    
         
-    ict_net.link.loc[index, ["name", "type", "in_service", "from", "to", "protocols", "map_to", "length_km", "uuid"]] = [name, type, in_service, from_elt, to_elt, pr, mt, length_km, randuuid]
+    ict_net.link.loc[index, ["name", "type", "in_service", "from", "to", "protocols", "map_to", "length_km", "uuid"]] = [name, type, in_service, ifrom, ito, pr, mt, length_km, randuuid]
 
     _preserve_dtypes(ict_net.link, dtypes)
 
@@ -177,7 +180,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, type=None, index=None,
                     protocols=None, map_to=None, length_km=0 ):
     (index, uid) = _create_ict_link(ict_net, from_elt, to_elt, name, type, index, in_service=in_service, use_uuid=False, 
                                     protocols=protocols, map_to=map_to, length_km=length_km)
-    return index
+    return ('link', index)
 
 
 def _create_ict_device(ict_net, map_to, name=None, type=None, index=None, in_service=True, use_uuid=False,                        
@@ -191,9 +194,9 @@ def _create_ict_device(ict_net, map_to, name=None, type=None, index=None, in_ser
     dtypes = ict_net.device.dtypes
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
     # but current pandapower release won't work with pandas >= 2.0.0    
-    mt = utils.tuple2str(map_to)
-    mr = utils.list2str(measures)     
-    ct = utils.list2str(controls)    
+    mt = tuple2str(map_to)
+    mr = list2str(measures)     
+    ct = list2str(controls)    
     
     if (use_uuid): 
         randuuid = uuid.uuid4()
@@ -217,7 +220,7 @@ def create_ict_device(ict_net, map_to, name=None, type=None, index=None, in_serv
                       measures=None, meas_accur=1, controls=None, mtbf=0, mttr=0 ):
     (index, uid) = _create_ict_device(ict_net, map_to, name=name, type=type, index=index, in_service=in_service, use_uuid=False,  
                                       measures=measures, meas_accur=meas_accur, controls=controls, mtbf=mtbf, mttr=mttr )
-    return index
+    return ('device', index)
 
 def _create_ict_connection(ict_net, name=None, index=None, in_service=True, use_uuid=False, from_elt=None, to_elt=None, 
                            protocol=None, info_items=None, peers=None, producer=None, prod_freq_ms=None):    
@@ -231,18 +234,27 @@ def _create_ict_connection(ict_net, name=None, index=None, in_service=True, use_
     dtypes = ict_net.conn.dtypes
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
     # but current pandapower release won't work with pandas >= 2.0.0
-    ii = utils.list2str(info_items)    
-    pr = utils.list2str(producer) 
-    pf = utils.list2str(prod_freq_ms)    
+    ii = list2str(info_items)    
+    pr = list2str(producer) 
+    pf = list2str(prod_freq_ms)    
     
     if (use_uuid): 
         randuuid = uuid.uuid4()
+        # TODO: add check if peers are devices
+        pdev1 = uuid2elt(ict_net, peers[0])[1]
+        pdev2 = uuid2elt(ict_net, peers[1])[1] 
+        pe = tuple2str( (pdev1, pdev2) )
+        fe = tuple2str(uuid2elt(ict_net, from_elt))
+        te = tuple2str(uuid2elt(ict_net, to_elt))
     else: 
         randuuid = None
+        pe = tuple2str(peers)
+        fe = tuple2str(from_elt)
+        te = tuple2str(from_elt)
         
     ict_net.conn.loc[index, ["name", "in_service", "from", "to", "protocol", "info_items", 
-                             "peers", "producer", "prod_freq_ms", "uuid" ]] = [name, in_service, from_elt, to_elt, protocol, ii, 
-                              peers, pr, pf, randuuid]
+                             "peers", "producer", "prod_freq_ms", "uuid" ]] = [name, in_service, fe, te, protocol, ii, 
+                              pe, pr, pf, randuuid]
     
 
     _preserve_dtypes(ict_net.conn, dtypes)
@@ -261,7 +273,7 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, from_
     (index, uid) = _create_ict_connection(ict_net, name=name, index=index, in_service=in_service, use_uuid=False, 
                                           from_elt=from_elt, to_elt=to_elt, protocol=protocol, info_items=info_items, 
                                           peers=peers, producer=producer, prod_freq_ms=prod_freq_ms)
-    return index   
+    return ('conn', index)   
   
 
 

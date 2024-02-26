@@ -8,10 +8,12 @@ import pandapower as pp
 import pandapower.networks
 import pandapower.control as control
 import pandapower.timeseries as timeseries
-from pandapower.timeseries.data_sources.frame_data import DFData
+from   pandapower.timeseries.data_sources.frame_data import DFData
 import pandaict as pi
-import pandaict.enums as enums
-from pandaict.utils import uuid2elt
+from   pandaict.enums import Measurements as Meas
+from   pandaict.enums import Setpoints as Setp
+from   pandaict.enums import NodeType
+from   pandaict.utils import uuid2elt, elt2uuid
 import pandas as pd
 import math
 import csv
@@ -141,23 +143,65 @@ def get_pp_test_net():
 
 def create_test_ict_net(pp_net):
     
-    ict_net = pi.create_empty_network("Test network")
+    ict_net = pi.create_empty_network("Test network",True)
     
     # Creation with indexes
-    # node1       = pi.create_ict_node(ict_net, name="Testnode1", type=enums.NodeType.ROUTER, map_to=("bus", 10))   
-    # node2       = pi.create_ict_node(ict_net, name="Testnode2", type=enums.NodeType.ROUTER, map_to=("bus", 11))
-    # link1_idx   = pi.create_ict_link(ict_net, name="Testlink1", type="LTE50", from_elt=node1, to_elt=node2, length_km=10)
+    # node1       = pi.create_ict_node(ict_net, name="Testnode1", type=NodeType.ROUTER, map_to=("bus", 10))   
+    # node2       = pi.create_ict_node(ict_net, name="Testnode2", type=NodeType.ROUTER, map_to=("bus", 11))
+    # link1       = pi.create_ict_link(ict_net, name="Testlink1", type="LTE50", from_elt=node1, to_elt=node2, length_km=10)
     # dev1        = pi.create_ict_device(ict_net, name="Dev1", map_to=("sgen", 5), controls=["P_kW", "Q_kVA"], measures=["P_kW","I_kA", "U_kV"])
     # dev2        = pi.create_ict_device(ict_net, name="Dev2", map_to=("trafo", 1), controls=["tap_pos"])
     #
 
     # Creation with uuids    
-    node1       = pi.create_ict_node_with_uuid(ict_net, name="Testnode1", type=enums.NodeType.ROUTER, map_to=("bus", 10))   
-    node2       = pi.create_ict_node_with_uuid(ict_net, name="Testnode2", type=enums.NodeType.ROUTER, map_to=("bus", 11))
-    uuid2elt(ict_net, node1)
-    # link1_idx   = pi.create_ict_link_with_uuid(ict_net, name="Testlink1", type="LTE50", from_elt=node1, to_elt=node2, length_km=10)
-    # dev1        = pi.create_ict_device_with_uuid(ict_net, name="Dev1", map_to=("sgen", 5), controls=["P_kW", "Q_kVA"], measures=["P_kW","I_kA", "U_kV"])
-    # dev2        = pi.create_ict_device_with_uuid(ict_net, name="Dev2", map_to=("trafo", 1), controls=["tap_pos"])
+    node1       = pi.create_ict_node_with_uuid(ict_net, name="Node1", type=NodeType.ROUTER, map_to=("bus", 0))   
+    node2       = pi.create_ict_node_with_uuid(ict_net, name="Node2", type=NodeType.ROUTER, map_to=("bus", 2))
+    node3       = pi.create_ict_node_with_uuid(ict_net, name="Node3", type=NodeType.CONVERTER, map_to=("bus", 5))
+    node4       = pi.create_ict_node_with_uuid(ict_net, name="Node4", type=NodeType.CONVERTER, map_to=("bus", 11))
+    node5       = pi.create_ict_node_with_uuid(ict_net, name="Node5", type=NodeType.CONVERTER, map_to=("bus", 11))
+        
+    cc         = pi.create_ict_device_with_uuid(ict_net, name="CC",  map_to=("ext_grid",  0), controls=[], measures=[])
+    pq1        = pi.create_ict_device_with_uuid(ict_net, name="PQ1",  map_to=("switch",  2), controls=[], measures=["P_kW", "Q_kVA"])
+    pq2        = pi.create_ict_device_with_uuid(ict_net, name="PQ2",  map_to=("switch",  7), controls=[], measures=["P_kW", "Q_kVA"])
+    sc         = pi.create_ict_device_with_uuid(ict_net, name="SC",  map_to=("bus",  6), controls=["closed"], measures=["closed"])    
+    pc1        = pi.create_ict_device_with_uuid(ict_net, name="PC1", map_to=("sgen", 1), controls=["P_kW", "Q_kVA"], measures=["P_kW", "Q_kVA"])
+    pc2        = pi.create_ict_device_with_uuid(ict_net, name="PC2", map_to=("sgen", 0), controls=["P_kW"], measures=["P_kW"])
+        
+    link1      = pi.create_ict_link_with_uuid(ict_net, name="CC_Node1", type="LAN1000", from_elt=cc, to_elt=[node1], length_km=0.01)
+    link2      = pi.create_ict_link_with_uuid(ict_net, name="Node1_Node2", type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
+    link3      = pi.create_ict_link_with_uuid(ict_net, name="Node2_Node3", type="ADSL8", from_elt=node2, to_elt=[node3], length_km=5)
+    link4      = pi.create_ict_link_with_uuid(ict_net, name="Node2_Node4", type="LTE50", from_elt=node1, to_elt=[node2], length_km=10)
+    link5      = pi.create_ict_link_with_uuid(ict_net, name="Node2_Node5", type="ADSL8", from_elt=node1, to_elt=[node2], length_km=5)
+    link6      = pi.create_ict_link_with_uuid(ict_net, name="Node2_PQ1", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
+    link7      = pi.create_ict_link_with_uuid(ict_net, name="Node2_PQ2", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
+    link8      = pi.create_ict_link_with_uuid(ict_net, name="Node3_PC1", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
+    link9      = pi.create_ict_link_with_uuid(ict_net, name="Node4_PC2", type="RS485", from_elt=node1, to_elt=[node2], length_km=0.01)
+    link10     = pi.create_ict_link_with_uuid(ict_net, name="Node5_SC", type="Binary", from_elt=node1, to_elt=[node2], length_km=0.001)
+    
+    conn1      = pi.create_ict_connection_with_uuid(ict_net, name="CC_Node3", from_elt=cc, to_elt=node3, protocol="IEC104-TCP", 
+                    info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
+                    peers=(cc,pc1), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
+    conn2      = pi.create_ict_connection_with_uuid(ict_net, name="Node3_PC1", from_elt=node3, to_elt=pc1, protocol="IEC61850_MMC", 
+                    info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
+                    peers=(cc,pc1), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
+    conn3      = pi.create_ict_connection_with_uuid(ict_net, name="CC_PQ1", from_elt=cc, to_elt=pq1, protocol="IEC104-TCP", 
+                    info_items=[Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
+                    peers=(pq1,cc), producer=[0,0], prod_freq_ms=[6E4, 6E4])    
+    conn4      = pi.create_ict_connection_with_uuid(ict_net, name="CC_Node4", from_elt=cc, to_elt=node4, protocol="MODBUS-TCP", 
+                    info_items=[Setp.ACTIVE_POWER, Meas.ACTIVE_POWER], 
+                    peers=(cc,pc2), producer=[0,1], prod_freq_ms=[3E5, 3E5])
+    conn5      = pi.create_ict_connection_with_uuid(ict_net, name="Node4_PC2", from_elt=node4, to_elt=pq1, protocol="MODBUS-SMA-prop", 
+                    info_items=[Setp.ACTIVE_POWER, Meas.ACTIVE_POWER], 
+                    peers=(cc,pc2), producer=[0,1], prod_freq_ms=[3E5, 3E5])    
+    conn6      = pi.create_ict_connection_with_uuid(ict_net, name="CC_PQ2", from_elt=cc, to_elt=pq2, protocol="IEC104-TCP", 
+                    info_items=[Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
+                    peers=(pq2,cc), producer=[0,0], prod_freq_ms=[6E4, 6E4])
+    conn7      = pi.create_ict_connection_with_uuid(ict_net, name="CC_Node5", from_elt=cc, to_elt=node5, protocol="IEC104-TCP", 
+                    info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
+                    peers=(cc,sc), producer=[0,1], prod_freq_ms=[])
+    conn8      = pi.create_ict_connection_with_uuid(ict_net, name="Node5_SC", from_elt=node5, to_elt=sc, protocol="Binary", 
+                    info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
+                    peers=(cc,sc), producer=[0,1], prod_freq_ms=[])
     
     
     
@@ -182,7 +226,23 @@ def create_test_ict_net(pp_net):
     
     
     return ict_net
-            
+     
+     
+def check(ict_net):
+
+    # Non-standard links used (list them)
+    # Non-standard protocols used (list them) 
+    # Protocols unsupported by links
+    # Elements connected to non existing or non compatible elements
+    # Elements with same name 
+    # Nodes without connection
+    # ict elements mapped to non-existing or non-fitting pp elements
+    # redundant connections
+        
+    return 
+
+
+       
 if __name__ == '__main__':
     net = get_pp_test_net()
     net.name = "Test network"

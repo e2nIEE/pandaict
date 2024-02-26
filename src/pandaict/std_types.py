@@ -9,7 +9,9 @@ Created on 2.02.2024
 
 import pandas as pd
 import warnings
-import enums as enums
+from   pandaict.enums import Measurements as Meas
+from   pandaict.enums import Setpoints as Setp
+from   pandaict.enums import NodeType
 
 try:
     import pandaplan.core.pplog as logging
@@ -75,6 +77,22 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
 def basic_link_std_types():
 
     linktypes = {        
+        "Binary":
+            { "bandwidth_Mbps": (0.001),
+              "latency_ms": 1,
+              "wired": True,
+              "ber_per_km": 0,
+              "mtbf_h": 0,
+              "mttr_h": 0,
+            },
+        "RS485":
+            { "bandwidth_Mbps": (0.1),
+              "latency_ms": 100,
+              "wired": True,
+              "ber_per_km": 0,
+              "mtbf_h": 0,
+              "mttr_h": 0,
+            },
         "LTE50": # LTE with downstream bandwidth of 50 Mbps
             { "bandwidth_Mbps": (50,10),
               "latency_ms": 300,
@@ -118,49 +136,71 @@ def basic_protocol_std_types():
         "IEC104-TCP": {        
             "base_package_size_byte": 1024,
             "info_items":
-                [ enums.InfoItems.Measurements.ACTIVE_POWER,
-                 enums.InfoItems.Measurements.CURRENT,
-                 enums.InfoItems.Measurements.CURRENT_ANGLE,
-                 enums.InfoItems.Measurements.FAULT_CODE,
-                 enums.InfoItems.Measurements.LOADING_PERCENT,
-                 enums.InfoItems.Measurements.LOADING_PERCENT,
-                 enums.InfoItems.Measurements.REACTIVE_POWER,
-                 enums.InfoItems.Measurements.STATUS,
-                 enums.InfoItems.Measurements.SWITCH_POSITION,
-                 enums.InfoItems.Measurements.TAP_POSITION,
-                 enums.InfoItems.Measurements.VOLTAGE,
-                 enums.InfoItems.Measurements.VOLTAGE_ANGLE,
-                 enums.InfoItems.Setpoints.ACTIVE_POWER,
-                 enums.InfoItems.Setpoints.REACTIVE_POWER,
-                 enums.InfoItems.Setpoints.SWITCH_POSITION,
-                 enums.InfoItems.Setpoints.TAP_POSITION,
-                 enums.InfoItems.Setpoints.VOLTAGE,
+                [ Meas.ACTIVE_POWER,
+                 Meas.CURRENT,
+                 Meas.CURRENT_ANGLE,
+                 Meas.FAULT_CODE,
+                 Meas.LOADING_PERCENT,
+                 Meas.LOADING_PERCENT,
+                 Meas.REACTIVE_POWER,
+                 Meas.STATUS,
+                 Meas.SWITCH_POSITION,
+                 Meas.TAP_POSITION,
+                 Meas.VOLTAGE,
+                 Meas.VOLTAGE_ANGLE,
+                 Setp.ACTIVE_POWER,
+                 Setp.REACTIVE_POWER,
+                 Setp.SWITCH_POSITION,
+                 Setp.TAP_POSITION,
+                 Setp.VOLTAGE,
                 ],    
             },
-        
+        "MODBUS-TCP": {        
+            "base_package_size_byte": 1024,
+            "info_items":
+                [ Meas.ACTIVE_POWER,
+                 Meas.CURRENT,
+                 Meas.CURRENT_ANGLE,
+                 Meas.FAULT_CODE,                 
+                 Meas.REACTIVE_POWER,
+                 Meas.STATUS,
+                 Meas.SWITCH_POSITION,                 
+                 Setp.ACTIVE_POWER,
+                 Setp.REACTIVE_POWER,
+                 Setp.SWITCH_POSITION,           
+                ],    
+            },
         "IEC61850_MMC": {
             "name": "IEC61850-MMC",
             "base_package_size_byte": 1024,
             "info_items":
-                [ enums.InfoItems.Measurements.ACTIVE_POWER,
-                 enums.InfoItems.Measurements.CURRENT,
-                 enums.InfoItems.Measurements.CURRENT_ANGLE,
-                 enums.InfoItems.Measurements.FAULT_CODE,
-                 enums.InfoItems.Measurements.LOADING_PERCENT,
-                 enums.InfoItems.Measurements.LOADING_PERCENT,
-                 enums.InfoItems.Measurements.REACTIVE_POWER,
-                 enums.InfoItems.Measurements.STATUS,
-                 enums.InfoItems.Measurements.SWITCH_POSITION,
-                 enums.InfoItems.Measurements.TAP_POSITION,
-                 enums.InfoItems.Measurements.VOLTAGE,
-                 enums.InfoItems.Measurements.VOLTAGE_ANGLE,
-                 enums.InfoItems.Setpoints.ACTIVE_POWER,
-                 enums.InfoItems.Setpoints.REACTIVE_POWER,
-                 enums.InfoItems.Setpoints.SWITCH_POSITION,
-                 enums.InfoItems.Setpoints.TAP_POSITION,
-                 enums.InfoItems.Setpoints.VOLTAGE,
+                [ Meas.ACTIVE_POWER,
+                 Meas.CURRENT,
+                 Meas.CURRENT_ANGLE,
+                 Meas.FAULT_CODE,
+                 Meas.LOADING_PERCENT,
+                 Meas.LOADING_PERCENT,
+                 Meas.REACTIVE_POWER,
+                 Meas.STATUS,
+                 Meas.SWITCH_POSITION,
+                 Meas.TAP_POSITION,
+                 Meas.VOLTAGE,
+                 Meas.VOLTAGE_ANGLE,
+                 Setp.ACTIVE_POWER,
+                 Setp.REACTIVE_POWER,
+                 Setp.SWITCH_POSITION,
+                 Setp.TAP_POSITION,
+                 Setp.VOLTAGE,
                 ],
-            }
+            },
+        "Binary": {        
+            "base_package_size_byte": 1,
+            "info_items":
+                [ Meas.SWITCH_POSITION,
+                 Meas.STATUS,
+                  Setp.SWITCH_POSITION,           
+                ],    
+            },
         }
     
     return protocoltypes
