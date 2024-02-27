@@ -7,3 +7,4 @@ from pandaict.networks import *
 from pandaict.toolbox import *
 from pandaict.plotting import *
 from pandaict.topology import *
+from pandaict.file_io import *

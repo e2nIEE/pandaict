@@ -26,6 +26,10 @@ class pandaICTNet(ADict):
         :param args: Example argument
         """
         super(pandaICTNet, self).__init__(*args, **kwargs)
+        for key in self:
+            if isinstance(self[key], list):
+                self[key] = pd.DataFrame(np.zeros(0, dtype=self[key]), index=pd.Index([],
+                                         dtype=np.int64))
                 
     def deepcopy(self):
         return copy.deepcopy(self)
@@ -58,6 +62,20 @@ class pandaICTNet(ADict):
         lines = ["This pandapower network includes the following parameter tables:"] + \
             par + res + res_cost
         return "\n".join(lines)
+    
+    def equals_excluding_uuids(self, other):
+        keys = list(self.keys())
+        if 'name' in keys:
+            keys.remove('name')
+        if 'std_types' in keys: 
+            keys.remove('std_types')
+        for k in keys:
+            cols = list(self[k].columns)
+            if 'uuid' in cols: 
+                cols.remove('uuid')            
+            if not (self[k][cols].compare(other[k][cols]).empty):
+                return False 
+        return True
 
 def plural_s(number):
     if number > 1:

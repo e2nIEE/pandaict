@@ -160,7 +160,14 @@ def _create_ict_link(ict_net, ifrom, ito, name=None, type=None, index=None, in_s
         else:
             ito = tuple2str(uuid2elt(ict_net, ito))
     else: 
-        randuuid = None    
+        randuuid = None  
+        ifrom = tuple2str(ifrom)
+        if isinstance(ito, list):
+            h = [tuple2str(elt) for elt in ito]
+            ito = list2str(h)
+        else:
+            ito = tuple2str(ito)
+          
     pr = list2str(protocols)    
     mt = tuple2str(map_to)    
         
@@ -248,9 +255,9 @@ def _create_ict_connection(ict_net, name=None, index=None, in_service=True, use_
         te = tuple2str(uuid2elt(ict_net, to_elt))
     else: 
         randuuid = None
-        pe = tuple2str(peers)
+        pe = tuple2str((peers[0][1], peers[1][1]))
         fe = tuple2str(from_elt)
-        te = tuple2str(from_elt)
+        te = tuple2str(to_elt)
         
     ict_net.conn.loc[index, ["name", "in_service", "from", "to", "protocol", "info_items", 
                              "peers", "producer", "prod_freq_ms", "uuid" ]] = [name, in_service, fe, te, protocol, ii, 
