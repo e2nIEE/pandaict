@@ -32,9 +32,14 @@ class Setpoints(Enum):
     TAP_POSITION     = 4
     VOLTAGE          = 5
           
-
 # Definitions for info items
 class NodeType(Enum):        
     SWITCH    = 1
     ROUTER    = 2
-    CONVERTER = 3
+
+class DeviceType(Enum):        
+    CONVERTER      = 1 # Converts between different protocols
+    MEASUREMENT    = 2 # Pure Measurement device (multiple values can be measured) 
+    ACTUATOR       = 3 # Pure Actuation device with no local control capability (German: "Steuerung")  
+    CONTROLLER     = 4 # Combination of Actuator and Measurement type, may perform closed-loop control 
+    CONTROLCENTER  = 5 # Receives/processes measurements, sends setpoints, but doesn't control an appliance

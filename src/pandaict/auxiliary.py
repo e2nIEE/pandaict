@@ -13,10 +13,17 @@ import pandas as pd
 import copy
 import numpy as np
 
+
+import json
+from pandapower.io_utils import FromSerializableRegistry 
+from functools import singledispatch
+
+
 class pandaICTNet(ADict):
     """
     Example documentation for classes in pandaICTNet
     """
+      
     def __init__(self, *args, **kwargs):        
         """
         Initializes a new instance of pandaICTNet
@@ -33,7 +40,17 @@ class pandaICTNet(ADict):
                 
     def deepcopy(self):
         return copy.deepcopy(self)
-
+    
+    @FromSerializableRegistry.from_serializable.register(class_name='pandaICTNet', module_name='pandaICTNet.pandaICTNet')    
+    def pandaICTNet(self):
+        if isinstance(self.obj, str):  # backwards compatibility
+            from pandapower import from_json_string
+            return from_json_string(self.obj)
+        else:            
+            net = create_empty_network()            
+            net.update(self.obj)
+            return net
+        
     def __repr__(self):  # pragma: no cover
         """
         See Also
@@ -63,7 +80,7 @@ class pandaICTNet(ADict):
             par + res + res_cost
         return "\n".join(lines)
     
-    def equals_excluding_uuids(self, other):
+    def equals_excluding_uuids_and_std_types(self, other):
         keys = list(self.keys())
         if 'name' in keys:
             keys.remove('name')

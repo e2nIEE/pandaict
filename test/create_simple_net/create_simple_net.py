@@ -18,6 +18,11 @@ import pandas as pd
 import math
 import csv
 
+# Suppress pandas future warning
+import warnings
+from enums import DeviceType
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 net = None
 
 
@@ -63,7 +68,7 @@ def get_timeseries():
     
     csv_pv   = 'C:/Users/jringelstein/project/RECODE/PandaICT/UseCase4_Simple/ninja_pv_49.3715_8.2791_uncorrected.csv'
     csv_wind = 'C:/Users/jringelstein/project/RECODE/PandaICT/UseCase4_Simple/ninja_wind_49.3819_8.2616_corrected.csv'
-    csv_load = 'c:/Users/jringelstein/git/recode/pandaict/test/testnet/SLP_G0-M.csv'
+    csv_load = 'c:/Users/jringelstein/git/recode/pandaict/test/create_simple_net/SLP_G0-M.csv'
     
     df = pd.DataFrame(index=list(range(365*24)), columns=net.sgen.index, dtype=float)    
     
@@ -106,7 +111,7 @@ def get_timeseries():
     const_load_p = control.ConstControl(net, element='load', element_index=net.load.index, variable='p_mw', data_source=ds_p, profile_name=net.load.index)
     const_load_q = control.ConstControl(net, element='load', element_index=net.load.index, variable='q_mvar', data_source=ds_q, profile_name=net.load.index)
     
-    b = pp.create_bus(net)
+    # b = pp.create_bus(net)
     # ow = timeseries.OutputWriter(net, output_path="./", output_file_type=".xlsx")
     # ow.log_variable('res_bus', 'vm_pu')
     # ow.log_variable('res_load', 'p_mw')
@@ -160,106 +165,107 @@ def create_test_ict_net(pp_net):
     ict_net = pi.create_empty_network("Test network",True)
     node1       = pi.create_ict_node(ict_net, name="Node1", type=NodeType.ROUTER, map_to=("bus", 0))   
     node2       = pi.create_ict_node(ict_net, name="Node2", type=NodeType.ROUTER, map_to=("bus", 2))
-    node3       = pi.create_ict_node(ict_net, name="Node3", type=NodeType.CONVERTER, map_to=("bus", 5))
-    node4       = pi.create_ict_node(ict_net, name="Node4", type=NodeType.CONVERTER, map_to=("bus", 11))
-    node5       = pi.create_ict_node(ict_net, name="Node5", type=NodeType.CONVERTER, map_to=("bus", 11))
     
-    cc         = pi.create_ict_device(ict_net, name="CC",  map_to=("ext_grid",  0), controls=[], measures=[])
-    pq1        = pi.create_ict_device(ict_net, name="PQ1",  map_to=("switch",  2), controls=[], measures=["P_kW", "Q_kVA"])
-    pq2        = pi.create_ict_device(ict_net, name="PQ2",  map_to=("switch",  7), controls=[], measures=["P_kW", "Q_kVA"])
-    sc         = pi.create_ict_device(ict_net, name="SC",  map_to=("bus",  6), controls=["closed"], measures=["closed"])    
-    pc1        = pi.create_ict_device(ict_net, name="PC1", map_to=("sgen", 1), controls=["P_kW", "Q_kVA"], measures=["P_kW", "Q_kVA"])
-    pc2        = pi.create_ict_device(ict_net, name="PC2", map_to=("sgen", 0), controls=["P_kW"], measures=["P_kW"])
+    conv1       = pi.create_ict_device(ict_net, name="Conv1", type=DeviceType.CONVERTER, map_to=("bus", 5))
+    conv2       = pi.create_ict_device(ict_net, name="Conv2", type=DeviceType.CONVERTER, map_to=("bus", 11))
+    conv3       = pi.create_ict_device(ict_net, name="Conv3", type=DeviceType.CONVERTER, map_to=("bus", 11))
+    
+    cc         = pi.create_ict_device(ict_net, name="CC",  type=DeviceType.CONTROLCENTER, map_to=("ext_grid",  0), controls=[], measures=[])
+    pq1        = pi.create_ict_device(ict_net, name="PQ1",  type=DeviceType.MEASUREMENT, map_to=("switch",  2), controls=[], measures=["P_kW", "Q_kVA"])
+    pq2        = pi.create_ict_device(ict_net, name="PQ2",  type=DeviceType.MEASUREMENT, map_to=("switch",  7), controls=[], measures=["P_kW", "Q_kVA"])
+    sc         = pi.create_ict_device(ict_net, name="SC",  type=DeviceType.ACTUATOR, map_to=("bus",  6), controls=["closed"], measures=["closed"])    
+    pc1        = pi.create_ict_device(ict_net, name="PC1", type=DeviceType.CONTROLLER, map_to=("sgen", 1), controls=["P_kW", "Q_kVA"], measures=["P_kW", "Q_kVA"])
+    pc2        = pi.create_ict_device(ict_net, name="PC2", type=DeviceType.CONTROLLER, map_to=("sgen", 0), controls=["P_kW"], measures=["P_kW"])
     
     link1      = pi.create_ict_link(ict_net, name="CC_Node1", type="LAN1000", from_elt=cc, to_elt=[node1], length_km=0.01)
     link2      = pi.create_ict_link(ict_net, name="Node1_Node2", type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
-    link3      = pi.create_ict_link(ict_net, name="Node2_Node3", type="ADSL8", from_elt=node2, to_elt=[node3], length_km=5)
-    link4      = pi.create_ict_link(ict_net, name="Node2_Node4", type="LTE50", from_elt=node1, to_elt=[node2], length_km=10)
-    link5      = pi.create_ict_link(ict_net, name="Node2_Node5", type="ADSL8", from_elt=node1, to_elt=[node2], length_km=5)
-    link6      = pi.create_ict_link(ict_net, name="Node2_PQ1", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link7      = pi.create_ict_link(ict_net, name="Node2_PQ2", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link8      = pi.create_ict_link(ict_net, name="Node3_PC1", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link9      = pi.create_ict_link(ict_net, name="Node4_PC2", type="RS485", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link10     = pi.create_ict_link(ict_net, name="Node5_SC", type="Binary", from_elt=node1, to_elt=[node2], length_km=0.001)
+    link3      = pi.create_ict_link(ict_net, name="Node2_Conv1", type="ADSL8", from_elt=node2, to_elt=[conv1], length_km=5)
+    link4      = pi.create_ict_link(ict_net, name="Node2_Conv2", type="LTE50", from_elt=node2, to_elt=[conv2], length_km=10)
+    link5      = pi.create_ict_link(ict_net, name="Node2_Conv3", type="ADSL8", from_elt=node2, to_elt=[conv3], length_km=5)
+    link6      = pi.create_ict_link(ict_net, name="Node2_PQ1", type="LAN1000", from_elt=node2, to_elt=[pq1], length_km=0.01)
+    link7      = pi.create_ict_link(ict_net, name="Node2_PQ2", type="LAN1000", from_elt=node2, to_elt=[pq2], length_km=0.01)
+    link8      = pi.create_ict_link(ict_net, name="Conv1_PC1", type="LAN1000", from_elt=conv1, to_elt=[pc1], length_km=0.01)
+    link9      = pi.create_ict_link(ict_net, name="Conv2_PC2", type="RS485", from_elt=conv2, to_elt=[pc2], length_km=0.01)
+    link10     = pi.create_ict_link(ict_net, name="Conv3_SC", type="Binary", from_elt=conv3, to_elt=[sc], length_km=0.001)
     
-    conn1      = pi.create_ict_connection(ict_net, name="CC_Node3", from_elt=cc, to_elt=node3, protocol="IEC104-TCP", 
+    conn1      = pi.create_ict_connection(ict_net, name="CC_Conv1", from_elt=cc, to_elt=conv1, protocol="IEC104-TCP", 
                     info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(cc,pc1), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
-    conn2      = pi.create_ict_connection(ict_net, name="Node3_PC1", from_elt=node3, to_elt=pc1, protocol="IEC61850_MMC", 
+    conn2      = pi.create_ict_connection(ict_net, name="Conv1_PC1", from_elt=conv1, to_elt=pc1, protocol="IEC61850_MMC", 
                     info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(cc,pc1), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
     conn3      = pi.create_ict_connection(ict_net, name="CC_PQ1", from_elt=cc, to_elt=pq1, protocol="IEC104-TCP", 
                     info_items=[Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(pq1,cc), producer=[0,0], prod_freq_ms=[6E4, 6E4])    
-    conn4      = pi.create_ict_connection(ict_net, name="CC_Node4", from_elt=cc, to_elt=node4, protocol="MODBUS-TCP", 
+    conn4      = pi.create_ict_connection(ict_net, name="CC_Conv2", from_elt=cc, to_elt=conv2, protocol="MODBUS-TCP", 
                     info_items=[Setp.ACTIVE_POWER, Meas.ACTIVE_POWER], 
                     peers=(cc,pc2), producer=[0,1], prod_freq_ms=[3E5, 3E5])
-    conn5      = pi.create_ict_connection(ict_net, name="Node4_PC2", from_elt=node4, to_elt=pq1, protocol="MODBUS-SMA-prop", 
+    conn5      = pi.create_ict_connection(ict_net, name="Conv2_PC2", from_elt=conv2, to_elt=pc2, protocol="MODBUS-SMA-prop", 
                     info_items=[Setp.ACTIVE_POWER, Meas.ACTIVE_POWER], 
                     peers=(cc,pc2), producer=[0,1], prod_freq_ms=[3E5, 3E5])    
     conn6      = pi.create_ict_connection(ict_net, name="CC_PQ2", from_elt=cc, to_elt=pq2, protocol="IEC104-TCP", 
                     info_items=[Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(pq2,cc), producer=[0,0], prod_freq_ms=[6E4, 6E4])
-    conn7      = pi.create_ict_connection(ict_net, name="CC_Node5", from_elt=cc, to_elt=node5, protocol="IEC104-TCP", 
+    conn7      = pi.create_ict_connection(ict_net, name="CC_Conv3", from_elt=cc, to_elt=conv3, protocol="IEC104-TCP", 
                     info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
                     peers=(cc,sc), producer=[0,1], prod_freq_ms=[])
-    conn8      = pi.create_ict_connection(ict_net, name="Node5_SC", from_elt=node5, to_elt=sc, protocol="Binary", 
+    conn8      = pi.create_ict_connection(ict_net, name="Conv3_SC", from_elt=conv3, to_elt=sc, protocol="Binary", 
                     info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
                     peers=(cc,sc), producer=[0,1], prod_freq_ms=[])        
     
     # Creation with uuids   
     ict_net2 = pi.create_empty_network("Test network",True) 
-    node1       = pi.create_ict_node_with_uuid(ict_net2, name="Node1", type=NodeType.ROUTER, map_to=("bus", 0))   
-    node2       = pi.create_ict_node_with_uuid(ict_net2, name="Node2", type=NodeType.ROUTER, map_to=("bus", 2))
-    node3       = pi.create_ict_node_with_uuid(ict_net2, name="Node3", type=NodeType.CONVERTER, map_to=("bus", 5))
-    node4       = pi.create_ict_node_with_uuid(ict_net2, name="Node4", type=NodeType.CONVERTER, map_to=("bus", 11))
-    node5       = pi.create_ict_node_with_uuid(ict_net2, name="Node5", type=NodeType.CONVERTER, map_to=("bus", 11))
+    node1       = pi.create_ict_node(ict_net2, use_uuid=True, name="Node1", type=NodeType.ROUTER, map_to=("bus", 0))   
+    node2       = pi.create_ict_node(ict_net2, use_uuid=True, name="Node2", type=NodeType.ROUTER, map_to=("bus", 2))
     
-    cc         = pi.create_ict_device_with_uuid(ict_net2, name="CC",  map_to=("ext_grid",  0), controls=[], measures=[])
-    pq1        = pi.create_ict_device_with_uuid(ict_net2, name="PQ1",  map_to=("switch",  2), controls=[], measures=["P_kW", "Q_kVA"])
-    pq2        = pi.create_ict_device_with_uuid(ict_net2, name="PQ2",  map_to=("switch",  7), controls=[], measures=["P_kW", "Q_kVA"])
-    sc         = pi.create_ict_device_with_uuid(ict_net2, name="SC",  map_to=("bus",  6), controls=["closed"], measures=["closed"])    
-    pc1        = pi.create_ict_device_with_uuid(ict_net2, name="PC1", map_to=("sgen", 1), controls=["P_kW", "Q_kVA"], measures=["P_kW", "Q_kVA"])
-    pc2        = pi.create_ict_device_with_uuid(ict_net2, name="PC2", map_to=("sgen", 0), controls=["P_kW"], measures=["P_kW"])
+    conv1       = pi.create_ict_device(ict_net2, use_uuid=True, name="Conv1", type=DeviceType.CONVERTER, map_to=("bus", 5))    
+    conv2       = pi.create_ict_device(ict_net2, use_uuid=True, name="Conv2", type=DeviceType.CONVERTER, map_to=("bus", 11))
+    conv3       = pi.create_ict_device(ict_net2, use_uuid=True, name="Conv3", type=DeviceType.CONVERTER, map_to=("bus", 11))
     
-    link1      = pi.create_ict_link_with_uuid(ict_net2, name="CC_Node1", type="LAN1000", from_elt=cc, to_elt=[node1], length_km=0.01)
-    link2      = pi.create_ict_link_with_uuid(ict_net2, name="Node1_Node2", type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
-    link3      = pi.create_ict_link_with_uuid(ict_net2, name="Node2_Node3", type="ADSL8", from_elt=node2, to_elt=[node3], length_km=5)
-    link4      = pi.create_ict_link_with_uuid(ict_net2, name="Node2_Node4", type="LTE50", from_elt=node1, to_elt=[node2], length_km=10)
-    link5      = pi.create_ict_link_with_uuid(ict_net2, name="Node2_Node5", type="ADSL8", from_elt=node1, to_elt=[node2], length_km=5)
-    link6      = pi.create_ict_link_with_uuid(ict_net2, name="Node2_PQ1", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link7      = pi.create_ict_link_with_uuid(ict_net2, name="Node2_PQ2", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link8      = pi.create_ict_link_with_uuid(ict_net2, name="Node3_PC1", type="LAN1000", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link9      = pi.create_ict_link_with_uuid(ict_net2, name="Node4_PC2", type="RS485", from_elt=node1, to_elt=[node2], length_km=0.01)
-    link10     = pi.create_ict_link_with_uuid(ict_net2, name="Node5_SC", type="Binary", from_elt=node1, to_elt=[node2], length_km=0.001)
+    cc         = pi.create_ict_device(ict_net2, use_uuid=True, name="CC",  type=DeviceType.CONTROLCENTER, map_to=("ext_grid",  0))
+    pq1        = pi.create_ict_device(ict_net2, use_uuid=True, name="PQ1",  type=DeviceType.MEASUREMENT, map_to=("switch",  2), controls=[], measures=["P_kW", "Q_kVA"])
+    pq2        = pi.create_ict_device(ict_net2, use_uuid=True, name="PQ2",  type=DeviceType.MEASUREMENT, map_to=("switch",  7), controls=[], measures=["P_kW", "Q_kVA"])
+    sc         = pi.create_ict_device(ict_net2, use_uuid=True, name="SC",  type=DeviceType.ACTUATOR, map_to=("bus",  6), controls=["closed"], measures=["closed"])    
+    pc1        = pi.create_ict_device(ict_net2, use_uuid=True, name="PC1", type=DeviceType.CONTROLLER, map_to=("sgen", 1), controls=["P_kW", "Q_kVA"], measures=["P_kW", "Q_kVA"])
+    pc2        = pi.create_ict_device(ict_net2, use_uuid=True, name="PC2", type=DeviceType.CONTROLLER, map_to=("sgen", 0), controls=["P_kW"], measures=["P_kW"])
     
-    conn1      = pi.create_ict_connection_with_uuid(ict_net2, name="CC_Node3", from_elt=cc, to_elt=node3, protocol="IEC104-TCP", 
+    link1      = pi.create_ict_link(ict_net2, use_uuid=True, name="CC_Node1", type="LAN1000", from_elt=cc, to_elt=[node1], length_km=0.01)
+    link2      = pi.create_ict_link(ict_net2, use_uuid=True, name="Node1_Node2", type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
+    link3      = pi.create_ict_link(ict_net2, use_uuid=True, name="Node2_Conv1", type="ADSL8", from_elt=node2, to_elt=[conv1], length_km=5)
+    link4      = pi.create_ict_link(ict_net2, use_uuid=True, name="Node2_Conv2", type="LTE50", from_elt=node2, to_elt=[conv2], length_km=10)
+    link5      = pi.create_ict_link(ict_net2, use_uuid=True, name="Node2_Conv3", type="ADSL8", from_elt=node2, to_elt=[conv3], length_km=5)
+    link6      = pi.create_ict_link(ict_net2, use_uuid=True, name="Node2_PQ1", type="LAN1000", from_elt=node2, to_elt=[pq1], length_km=0.01)
+    link7      = pi.create_ict_link(ict_net2, use_uuid=True, name="Node2_PQ2", type="LAN1000", from_elt=node2, to_elt=[pq2], length_km=0.01)
+    link8      = pi.create_ict_link(ict_net2, use_uuid=True, name="Conv1_PC1", type="LAN1000", from_elt=conv1, to_elt=[pc1], length_km=0.01)
+    link9      = pi.create_ict_link(ict_net2, use_uuid=True, name="Conv2_PC2", type="RS485", from_elt=conv2, to_elt=[pc2], length_km=0.01)
+    link10     = pi.create_ict_link(ict_net2, use_uuid=True, name="Conv3_SC", type="Binary", from_elt=conv3, to_elt=[sc], length_km=0.001)
+    
+    conn1      = pi.create_ict_connection(ict_net2, use_uuid=True, name="CC_Conv1", from_elt=cc, to_elt=conv1, protocol="IEC104-TCP", 
                     info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(cc,pc1), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
-    conn2      = pi.create_ict_connection_with_uuid(ict_net2, name="Node3_PC1", from_elt=node3, to_elt=pc1, protocol="IEC61850_MMC", 
+    conn2      = pi.create_ict_connection(ict_net2, use_uuid=True, name="Conv1_PC1", from_elt=conv1, to_elt=pc1, protocol="IEC61850_MMC", 
                     info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(cc,pc1), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
-    conn3      = pi.create_ict_connection_with_uuid(ict_net2, name="CC_PQ1", from_elt=cc, to_elt=pq1, protocol="IEC104-TCP", 
+    conn3      = pi.create_ict_connection(ict_net2, use_uuid=True, name="CC_PQ1", from_elt=cc, to_elt=pq1, protocol="IEC104-TCP", 
                     info_items=[Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(pq1,cc), producer=[0,0], prod_freq_ms=[6E4, 6E4])    
-    conn4      = pi.create_ict_connection_with_uuid(ict_net2, name="CC_Node4", from_elt=cc, to_elt=node4, protocol="MODBUS-TCP", 
+    conn4      = pi.create_ict_connection(ict_net2, use_uuid=True, name="CC_Conv2", from_elt=cc, to_elt=conv2, protocol="MODBUS-TCP", 
                     info_items=[Setp.ACTIVE_POWER, Meas.ACTIVE_POWER], 
                     peers=(cc,pc2), producer=[0,1], prod_freq_ms=[3E5, 3E5])
-    conn5      = pi.create_ict_connection_with_uuid(ict_net2, name="Node4_PC2", from_elt=node4, to_elt=pq1, protocol="MODBUS-SMA-prop", 
+    conn5      = pi.create_ict_connection(ict_net2, use_uuid=True, name="Conv2_PC2", from_elt=conv2, to_elt=pc2, protocol="MODBUS-SMA-prop", 
                     info_items=[Setp.ACTIVE_POWER, Meas.ACTIVE_POWER], 
                     peers=(cc,pc2), producer=[0,1], prod_freq_ms=[3E5, 3E5])    
-    conn6      = pi.create_ict_connection_with_uuid(ict_net2, name="CC_PQ2", from_elt=cc, to_elt=pq2, protocol="IEC104-TCP", 
+    conn6      = pi.create_ict_connection(ict_net2, use_uuid=True, name="CC_PQ2", from_elt=cc, to_elt=pq2, protocol="IEC104-TCP", 
                     info_items=[Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
                     peers=(pq2,cc), producer=[0,0], prod_freq_ms=[6E4, 6E4])
-    conn7      = pi.create_ict_connection_with_uuid(ict_net2, name="CC_Node5", from_elt=cc, to_elt=node5, protocol="IEC104-TCP", 
+    conn7      = pi.create_ict_connection(ict_net2, use_uuid=True, name="CC_Conv3", from_elt=cc, to_elt=conv3, protocol="IEC104-TCP", 
                     info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
                     peers=(cc,sc), producer=[0,1], prod_freq_ms=[])
-    conn8      = pi.create_ict_connection_with_uuid(ict_net2, name="Node5_SC", from_elt=node5, to_elt=sc, protocol="Binary", 
+    conn8      = pi.create_ict_connection(ict_net2, use_uuid=True, name="Conv3_SC", from_elt=conv3, to_elt=sc, protocol="Binary", 
                     info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
                     peers=(cc,sc), producer=[0,1], prod_freq_ms=[])
     
-    
-    #pi.to_json(ict_net, "UC4_simple_ict.json")
+        
     #ict_net_reloaded = pi.from_json("UC4_simple_ict.json")
     
     # This function should compile a basic ict net structure using the provided pp net elements    
@@ -301,12 +307,16 @@ def check(ict_net):
 
        
 if __name__ == '__main__':
+    # generate_test_pp_network()
+    # get_timeseries()
+    net2 = pp.create_empty_network()
     net = get_pp_test_net()
     net.name = "Test network"
     ict_net = create_test_ict_net(net) # This should create an ict net that fits the pp net
-        
+    #pp.to_json(net2, "dummy.json")
+    pi.to_json(ict_net, "UC4_simple_ict.json")    
+    ict_net_reloaded = pi.from_json("UC4_simple_ict.json")
     print("A")
-    
     # test_net()
     #get_timeseries()
     
