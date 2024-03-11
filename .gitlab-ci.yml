@@ -31,7 +31,7 @@ stages:
   - build
 
 unit-test:
-    image: python:3.12.2
+    image: python:3.9
     stage: test
     script:
         - pip install -r requirements.txt
@@ -64,6 +64,7 @@ pages:
 
 
 create_artifact_gitlab:
+  image: python:3.9
   stage: build
   tags: 
    - leitwarte_iee
