@@ -9,9 +9,7 @@ Created on 2.02.2024
 
 import pandas as pd
 import warnings
-from   pandaict.enums import Measurements as Meas
-from   pandaict.enums import Setpoints as Setp
-from   pandaict.enums import NodeType
+from   pandaict.enums import InfoItems
 
 try:
     import pandaplan.core.pplog as logging
@@ -41,6 +39,9 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
     
     """
 
+    if data is None: 
+        return 
+    
     if type(data) != dict:
         raise UserWarning("type data has to be given as a dictionary of parameters")
 
@@ -132,76 +133,27 @@ def basic_link_std_types():
 
 def basic_protocol_std_types():
 
-    protocoltypes = { 
-        "IEC104-TCP": {        
-            "base_package_size_byte": 1024,
+    protocoltypes = {
+        "FTP": {        
+            "base_package_size_byte": 4096,
             "info_items":
-                [ Meas.ACTIVE_POWER,
-                 Meas.CURRENT,
-                 Meas.CURRENT_ANGLE,
-                 Meas.FAULT_CODE,
-                 Meas.LOADING_PERCENT,
-                 Meas.LOADING_PERCENT,
-                 Meas.REACTIVE_POWER,
-                 Meas.STATUS,
-                 Meas.SWITCH_POSITION,
-                 Meas.TAP_POSITION,
-                 Meas.VOLTAGE,
-                 Meas.VOLTAGE_ANGLE,
-                 Setp.ACTIVE_POWER,
-                 Setp.REACTIVE_POWER,
-                 Setp.SWITCH_POSITION,
-                 Setp.TAP_POSITION,
-                 Setp.VOLTAGE,
+                [ InfoItems.REQUEST,
+                  InfoItems.RESPONSE, 
+                  InfoItems.TEXT,
+                  InfoItems.FILE, 
+                  InfoItems.STATUS,
                 ],    
             },
-        "MODBUS-TCP": {        
-            "base_package_size_byte": 1024,
+        "HTTP": {        
+            "base_package_size_byte": 4096,
             "info_items":
-                [ Meas.ACTIVE_POWER,
-                 Meas.CURRENT,
-                 Meas.CURRENT_ANGLE,
-                 Meas.FAULT_CODE,                 
-                 Meas.REACTIVE_POWER,
-                 Meas.STATUS,
-                 Meas.SWITCH_POSITION,                 
-                 Setp.ACTIVE_POWER,
-                 Setp.REACTIVE_POWER,
-                 Setp.SWITCH_POSITION,           
+                [ InfoItems.REQUEST,
+                  InfoItems.RESPONSE, 
+                  InfoItems.WEBPAGE, 
+                  InfoItems.STATUS,                 
                 ],    
             },
-        "IEC61850_MMC": {
-            "name": "IEC61850-MMC",
-            "base_package_size_byte": 1024,
-            "info_items":
-                [ Meas.ACTIVE_POWER,
-                 Meas.CURRENT,
-                 Meas.CURRENT_ANGLE,
-                 Meas.FAULT_CODE,
-                 Meas.LOADING_PERCENT,
-                 Meas.LOADING_PERCENT,
-                 Meas.REACTIVE_POWER,
-                 Meas.STATUS,
-                 Meas.SWITCH_POSITION,
-                 Meas.TAP_POSITION,
-                 Meas.VOLTAGE,
-                 Meas.VOLTAGE_ANGLE,
-                 Setp.ACTIVE_POWER,
-                 Setp.REACTIVE_POWER,
-                 Setp.SWITCH_POSITION,
-                 Setp.TAP_POSITION,
-                 Setp.VOLTAGE,
-                ],
-            },
-        "Binary": {        
-            "base_package_size_byte": 1,
-            "info_items":
-                [ Meas.SWITCH_POSITION,
-                 Meas.STATUS,
-                  Setp.SWITCH_POSITION,           
-                ],    
-            },
-        }
+        }    
     
     return protocoltypes
 
@@ -220,8 +172,8 @@ def add_basic_std_types(ict_net):
 
     Parameters
     ----------
-    ict_net : pandapowerNet
-        pandaict net which should receive the basic standard types
+    ict_net : pandaICT
+        pandaICT net which should receive the basic standard types
 
     Returns
     -------

@@ -1,0 +1,256 @@
+{
+  "name": "Test network",
+  "_module": "pandaict.auxiliary",
+  "_class": "pandaICTNet",
+  "node": {
+    "_module": "pandas.core.frame",
+    "_class": "DataFrame",
+    "_object": "{\"columns\":[\"name\",\"type\",\"in_service\",\"uuid\",\"geodata\",\"link_types\",\"ber\",\"mtbf_h\",\"mttr_h\",\"map_to\"],\"index\":[0,1],\"data\":[[\"Node1\",\"NodeType.ROUTER\",true,null,null,null,0.0,0.0,0.0,\"bus#0\"],[\"Node2\",\"NodeType.ROUTER\",true,null,null,null,0.0,0.0,0.0,\"bus#2\"]]}",
+    "orient": "split",
+    "dtype": {
+      "name": "object",
+      "type": "object",
+      "in_service": "bool",
+      "uuid": "object",
+      "geodata": "object",
+      "link_types": "object",
+      "ber": "float64",
+      "mtbf_h": "float64",
+      "mttr_h": "float64",
+      "map_to": "object"
+    },
+    "is_multiindex": false,
+    "is_multicolumn": false
+  },
+  "link": {
+    "_module": "pandas.core.frame",
+    "_class": "DataFrame",
+    "_object": "{\"columns\":[\"name\",\"type\",\"in_service\",\"uuid\",\"protocols\",\"from\",\"to\",\"length_km\",\"map_to\"],\"index\":[0,1,2,3,4,5,6,7,8,9],\"data\":[[\"CC_Node1\",\"LAN1000\",true,null,null,\"device#3\",\"node#0\",0.01,null],[\"Node1_Node2\",\"Fiber\",true,null,null,\"node#0\",\"node#1\",25.0,null],[\"Node2_Conv1\",\"ADSL8\",true,null,null,\"node#1\",\"device#0\",5.0,null],[\"Node2_Conv2\",\"LTE50\",true,null,null,\"node#1\",\"device#1\",10.0,null],[\"Node2_Conv3\",\"ADSL8\",true,null,null,\"node#1\",\"device#2\",5.0,null],[\"Node2_PQ1\",\"LAN1000\",true,null,null,\"node#1\",\"device#4\",0.01,null],[\"Node2_PQ2\",\"LAN1000\",true,null,null,\"node#1\",\"device#5\",0.01,null],[\"Conv1_PC1\",\"LAN1000\",true,null,null,\"device#0\",\"device#7\",0.01,null],[\"Conv2_PC2\",\"RS485\",true,null,null,\"device#1\",\"device#8\",0.01,null],[\"Conv3_SC\",\"Binary\",true,null,null,\"device#2\",\"device#6\",0.001,null]]}",
+    "orient": "split",
+    "dtype": {
+      "name": "object",
+      "type": "object",
+      "in_service": "bool",
+      "uuid": "object",
+      "protocols": "object",
+      "from": "object",
+      "to": "object",
+      "length_km": "float64",
+      "map_to": "object"
+    },
+    "is_multiindex": false,
+    "is_multicolumn": false
+  },
+  "device": {
+    "_module": "pandas.core.frame",
+    "_class": "DataFrame",
+    "_object": "{\"columns\":[\"name\",\"type\",\"in_service\",\"uuid\",\"conversions\",\"mtbf_h\",\"mttr_h\",\"mtbf\",\"mttr\",\"map_to\",\"measures\",\"meas_accur\",\"controls\"],\"index\":[0,1,2,3,4,5,6,7,8],\"data\":[[\"Conv1\",\"DeviceType.CONVERTER\",true,null,null,null,null,0,0,\"bus#5\",null,null,null],[\"Conv2\",\"DeviceType.CONVERTER\",true,null,null,null,null,0,0,\"bus#6\",null,null,null],[\"Conv3\",\"DeviceType.CONVERTER\",true,null,null,null,null,0,0,\"bus#6\",null,null,null],[\"CC\",\"ppDeviceType.CONTROLCENTER\",true,null,null,null,null,0,0,\"ext_grid#0\",null,null,null],[\"PQ1\",\"ppDeviceType.MEASUREMENT\",true,null,null,null,null,0,0,\"switch#2\",\"P_kW;Q_kVA\",null,null],[\"PQ2\",\"ppDeviceType.MEASUREMENT\",true,null,null,null,null,0,0,\"switch#7\",\"P_kW;Q_kVA\",null,null],[\"SC\",\"ppDeviceType.ACTUATOR\",true,null,null,null,null,0,0,\"bus#6\",\"closed\",null,\"closed\"],[\"PC1\",\"ppDeviceType.CONTROLLER\",true,null,null,null,null,0,0,\"sgen#1\",\"P_kW;Q_kVA\",null,\"P_kW;Q_kVA\"],[\"PC2\",\"ppDeviceType.CONTROLLER\",true,null,null,null,null,0,0,\"sgen#0\",\"P_kW\",null,\"P_kW\"]]}",
+    "orient": "split",
+    "dtype": {
+      "name": "object",
+      "type": "object",
+      "in_service": "bool",
+      "uuid": "object",
+      "conversions": "object",
+      "mtbf_h": "float64",
+      "mttr_h": "float64",
+      "mtbf": "object",
+      "mttr": "object",
+      "map_to": "object",
+      "measures": "object",
+      "meas_accur": "object",
+      "controls": "object"
+    },
+    "is_multiindex": false,
+    "is_multicolumn": false
+  },
+  "conn": {
+    "_module": "pandas.core.frame",
+    "_class": "DataFrame",
+    "_object": "{\"columns\":[\"name\",\"in_service\",\"uuid\",\"from\",\"to\",\"protocol\",\"info_items\",\"peers\",\"producer\",\"prod_freq_ms\"],\"index\":[0,1,2,3,4,5,6,7],\"data\":[[\"CC_Conv1\",true,null,\"device#3\",\"device#0\",\"IEC104-TCP\",\"ppSetpoints.ACTIVE_POWER;ppSetpoints.REACTIVE_POWER;ppMeasurements.ACTIVE_POWER;ppMeasurements.REACTIVE_POWER\",\"3#7\",\"0;0;1;1\",\"-1;-1;300000.0;300000.0\"],[\"Conv1_PC1\",true,null,\"device#0\",\"device#7\",\"IEC61850_MMC\",\"ppSetpoints.ACTIVE_POWER;ppSetpoints.REACTIVE_POWER;ppMeasurements.ACTIVE_POWER;ppMeasurements.REACTIVE_POWER\",\"3#7\",\"0;0;1;1\",\"-1;-1;300000.0;300000.0\"],[\"CC_PQ1\",true,null,\"device#3\",\"device#4\",\"IEC104-TCP\",\"ppMeasurements.ACTIVE_POWER;ppMeasurements.REACTIVE_POWER\",\"4#3\",\"0;0\",\"60000.0;60000.0\"],[\"CC_Conv2\",true,null,\"device#3\",\"device#1\",\"MODBUS-TCP\",\"ppSetpoints.ACTIVE_POWER;ppMeasurements.ACTIVE_POWER\",\"3#8\",\"0;1\",\"300000.0;300000.0\"],[\"Conv2_PC2\",true,null,\"device#1\",\"device#8\",\"MODBUS-SMA-prop\",\"ppSetpoints.ACTIVE_POWER;ppMeasurements.ACTIVE_POWER\",\"3#8\",\"0;1\",\"300000.0;300000.0\"],[\"CC_PQ2\",true,null,\"device#3\",\"device#5\",\"IEC104-TCP\",\"ppMeasurements.ACTIVE_POWER;ppMeasurements.REACTIVE_POWER\",\"5#3\",\"0;0\",\"60000.0;60000.0\"],[\"CC_Conv3\",true,null,\"device#3\",\"device#2\",\"IEC104-TCP\",\"ppSetpoints.SWITCH_POSITION;ppMeasurements.SWITCH_POSITION\",\"3#6\",\"0;1\",null],[\"Conv3_SC\",true,null,\"device#2\",\"device#6\",\"Binary\",\"ppSetpoints.SWITCH_POSITION;ppMeasurements.SWITCH_POSITION\",\"3#6\",\"0;1\",null]]}",
+    "orient": "split",
+    "dtype": {
+      "name": "object",
+      "in_service": "bool",
+      "uuid": "object",
+      "from": "object",
+      "to": "object",
+      "protocol": "object",
+      "info_items": "object",
+      "peers": "object",
+      "producer": "object",
+      "prod_freq_ms": "object"
+    },
+    "is_multiindex": false,
+    "is_multicolumn": false
+  },
+  "std_types": {
+    "link": {
+      "Binary": {
+        "bandwidth_Mbps": 0.001,
+        "latency_ms": 1,
+        "wired": true,
+        "ber_per_km": 0,
+        "mtbf_h": 0,
+        "mttr_h": 0
+      },
+      "RS485": {
+        "bandwidth_Mbps": 0.1,
+        "latency_ms": 100,
+        "wired": true,
+        "ber_per_km": 0,
+        "mtbf_h": 0,
+        "mttr_h": 0
+      },
+      "LTE50": {
+        "bandwidth_Mbps": {
+          "_module": "builtins",
+          "_class": "tuple",
+          "_object": [
+            50,
+            10
+          ]
+        },
+        "latency_ms": 300,
+        "wired": false,
+        "ber_per_km": 0,
+        "mtbf_h": 0,
+        "mttr_h": 0
+      },
+      "LAN1000": {
+        "bandwidth_Mbps": {
+          "_module": "builtins",
+          "_class": "tuple",
+          "_object": [
+            1000,
+            1000
+          ]
+        },
+        "latency_ms": 100,
+        "wired": true,
+        "ber_per_km": 0,
+        "mtbf_h": 0,
+        "mttr_h": 0
+      },
+      "ADSL8": {
+        "bandwidth_Mbps": {
+          "_module": "builtins",
+          "_class": "tuple",
+          "_object": [
+            8,
+            1
+          ]
+        },
+        "latency_ms": 100,
+        "wired": true,
+        "ber_per_km": 0,
+        "mtbf_h": 0,
+        "mttr_h": 0
+      },
+      "Fiber": {
+        "bandwidth_Mbps": {
+          "_module": "builtins",
+          "_class": "tuple",
+          "_object": [
+            1000,
+            1000
+          ]
+        },
+        "latency_ms": 100,
+        "wired": true,
+        "ber_per_km": 0,
+        "mtbf_h": 0,
+        "mttr_h": 0
+      }
+    },
+    "protocol": {
+      "FTP": {
+        "base_package_size_byte": 4096,
+        "info_items": [
+          "InfoItems.REQUEST",
+          "InfoItems.RESPONSE",
+          "InfoItems.TEXT",
+          "InfoItems.FILE",
+          "InfoItems.STATUS"
+        ]
+      },
+      "HTTP": {
+        "base_package_size_byte": 4096,
+        "info_items": [
+          "InfoItems.REQUEST",
+          "InfoItems.RESPONSE",
+          "InfoItems.WEBPAGE",
+          "InfoItems.STATUS"
+        ]
+      },
+      "IEC104-TCP": {
+        "base_package_size_byte": 1024,
+        "info_items": [
+          "ppMeasurements.ACTIVE_POWER",
+          "ppMeasurements.CURRENT",
+          "ppMeasurements.CURRENT_ANGLE",
+          "ppMeasurements.FAULT_CODE",
+          "ppMeasurements.LOADING_PERCENT",
+          "ppMeasurements.LOADING_PERCENT",
+          "ppMeasurements.REACTIVE_POWER",
+          "ppMeasurements.STATUS",
+          "ppMeasurements.SWITCH_POSITION",
+          "ppMeasurements.TAP_POSITION",
+          "ppMeasurements.VOLTAGE",
+          "ppMeasurements.VOLTAGE_ANGLE",
+          "ppSetpoints.ACTIVE_POWER",
+          "ppSetpoints.REACTIVE_POWER",
+          "ppSetpoints.SWITCH_POSITION",
+          "ppSetpoints.TAP_POSITION",
+          "ppSetpoints.VOLTAGE"
+        ]
+      },
+      "MODBUS-TCP": {
+        "base_package_size_byte": 1024,
+        "info_items": [
+          "ppMeasurements.ACTIVE_POWER",
+          "ppMeasurements.CURRENT",
+          "ppMeasurements.CURRENT_ANGLE",
+          "ppMeasurements.FAULT_CODE",
+          "ppMeasurements.REACTIVE_POWER",
+          "ppMeasurements.STATUS",
+          "ppMeasurements.SWITCH_POSITION",
+          "ppSetpoints.ACTIVE_POWER",
+          "ppSetpoints.REACTIVE_POWER",
+          "ppSetpoints.SWITCH_POSITION"
+        ]
+      },
+      "IEC61850_MMC": {
+        "name": "IEC61850-MMC",
+        "base_package_size_byte": 1024,
+        "info_items": [
+          "ppMeasurements.ACTIVE_POWER",
+          "ppMeasurements.CURRENT",
+          "ppMeasurements.CURRENT_ANGLE",
+          "ppMeasurements.FAULT_CODE",
+          "ppMeasurements.LOADING_PERCENT",
+          "ppMeasurements.LOADING_PERCENT",
+          "ppMeasurements.REACTIVE_POWER",
+          "ppMeasurements.STATUS",
+          "ppMeasurements.SWITCH_POSITION",
+          "ppMeasurements.TAP_POSITION",
+          "ppMeasurements.VOLTAGE",
+          "ppMeasurements.VOLTAGE_ANGLE",
+          "ppSetpoints.ACTIVE_POWER",
+          "ppSetpoints.REACTIVE_POWER",
+          "ppSetpoints.SWITCH_POSITION",
+          "ppSetpoints.TAP_POSITION",
+          "ppSetpoints.VOLTAGE"
+        ]
+      },
+      "Binary": {
+        "base_package_size_byte": 1,
+        "info_items": [
+          "ppMeasurements.SWITCH_POSITION",
+          "ppMeasurements.STATUS",
+          "ppSetpoints.SWITCH_POSITION"
+        ]
+      }
+    }
+  }
+}

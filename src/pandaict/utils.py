@@ -18,24 +18,24 @@ def set_str_delim(d):
 
 def list2str(l):
     global list_delim
-    if not isinstance(l, list):
-        return ""
+    if not isinstance(l, list) or len(l)==0:
+        return None
     s = list_delim.join([str(ele) for ele in l])
     return s 
 
 def str2list(s):
     global list_delim
-    if not isinstance(s, str):
+    if not isinstance(s, str) or s=='':
         return []
     l = s.split(list_delim)
     return l
 
 def tuple2str(t):
     global tuple_delim
-    if not isinstance(t, tuple):
-        return ""
+    if not isinstance(t, tuple) or len(t)==0:
+        return None
     s = tuple_delim.join([str(ele) for ele in t])
-    return s 
+    return s    
 
 def str2tuple(s):
     global tuple_delim

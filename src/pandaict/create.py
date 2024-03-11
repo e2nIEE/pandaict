@@ -16,6 +16,7 @@ import pandas as pd
 import uuid
 from pandaict.std_types import add_basic_std_types
 from pandaict.utils import list2str, tuple2str, uuid2elt, elt2uuid
+from debugpy._vendored.pydevd.stubs._django_manager_body import none
 
 try:
     import pandaplan.core.pplog as logging
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def create_empty_network(name="", add_stdtypes=True):
     """
-    Creates an empty pandaict network datastructure.
+    Creates an empty pandaict core network datastructure.
 
     OPTIONAL:        
         **name** (string, None) - name for the network
@@ -36,15 +37,14 @@ def create_empty_network(name="", add_stdtypes=True):
     OUTPUT:
         **ict_net** (attrdict) - pandaict attrdict with empty tables:
 
-    """
+    """    
     ict_net = pandaICTNet({
         "name": name,
         "node": [
             ("name", dtype(object)),
             ("type", dtype(object)),
             ("in_service", "bool"),
-            ("uuid", dtype(object)),
-            ("map_to", dtype(object)),
+            ("uuid", dtype(object)),            
             ("geodata", dtype(object)),
             ("link_types", dtype(object)),            
             ("ber", "f8"),
@@ -58,8 +58,7 @@ def create_empty_network(name="", add_stdtypes=True):
             ("uuid", dtype(object)),
             ("protocols", dtype(object)),
             ("from", dtype(object)),
-            ("to", dtype(object)),
-            ("map_to", dtype(object)),
+            ("to", dtype(object)),        
             ("length_km", "f8"),           
             ],        
         "device": [
@@ -67,11 +66,7 @@ def create_empty_network(name="", add_stdtypes=True):
             ("type", dtype(object)),
             ("in_service", "bool"),
             ("uuid", dtype(object)),            
-            ("map_to", dtype(object)),
-            ("conversions", dtype(object)),
-            ("measures", dtype(object)),
-            ("meas_accur", "f8"),
-            ("controls", dtype(object)),
+            ("conversions", dtype(object)),            
             ("mtbf_h", "f8"),
             ("mttr_h", "f8"),            
             ],        
@@ -100,7 +95,7 @@ def create_empty_network(name="", add_stdtypes=True):
     return ict_net
 
 def create_ict_node(ict_net, name=None, type=None, index=None, in_service=True, use_uuid=False, uid=None, 
-                     map_to=None, geodata=None, link_types=None, ber=0, mtbf_h=0, mttr_h=0):
+                     geodata=None, link_types=None, ber=0, mtbf_h=0, mttr_h=0):
     if index is not None and index in ict_net["node"].index:
         raise UserWarning("A node with index %s already exists" % index)
 
@@ -111,8 +106,7 @@ def create_ict_node(ict_net, name=None, type=None, index=None, in_service=True, 
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
     # but current pandapower release won't work with pandas >= 2.0.0
     lt = list2str(link_types)        
-    mt = tuple2str(map_to)
-        
+           
     if (use_uuid): 
         if uid is None:
             ruuid = uuid.uuid4()
@@ -120,7 +114,7 @@ def create_ict_node(ict_net, name=None, type=None, index=None, in_service=True, 
             ruuid = uid
     else: 
         ruuid = None
-    ict_net.node.loc[index, ["name", "type", "in_service", "map_to", "geodata", "link_types", "ber", "mtbf_h", "mttr_h", "uuid"]] = [name, type, in_service, mt, geodata, lt, ber, mtbf_h, mttr_h, ruuid]
+    ict_net.node.loc[index, ["name", "type", "in_service", "geodata", "link_types", "ber", "mtbf_h", "mttr_h", "uuid"]] = [name, type, in_service, geodata, lt, ber, mtbf_h, mttr_h, ruuid]
 
     _preserve_dtypes(ict_net.node, dtypes)
 
@@ -131,7 +125,7 @@ def create_ict_node(ict_net, name=None, type=None, index=None, in_service=True, 
 
     
 def create_ict_link(ict_net, from_elt, to_elt, name=None, type=None, index=None, in_service=True, use_uuid=False, uid=None,
-                    protocols=None, map_to=None, length_km=0 ):
+                    protocols=None, length_km=0 ):
     if index is not None and index in ict_net["link"].index:
         raise UserWarning("A link with index %s already exists" % index)
 
@@ -163,9 +157,8 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, type=None, index=None,
             to_elt = tuple2str(to_elt)
           
     pr = list2str(protocols)    
-    mt = tuple2str(map_to)    
         
-    ict_net.link.loc[index, ["name", "type", "in_service", "from", "to", "protocols", "map_to", "length_km", "uuid"]] = [name, type, in_service, from_elt, to_elt, pr, mt, length_km, ruuid]
+    ict_net.link.loc[index, ["name", "type", "in_service", "from", "to", "protocols", "length_km", "uuid"]] = [name, type, in_service, from_elt, to_elt, pr, length_km, ruuid]
 
     _preserve_dtypes(ict_net.link, dtypes)
 
@@ -175,8 +168,8 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, type=None, index=None,
         return ('link', index)
 
 
-def create_ict_device(ict_net, map_to, name=None, type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
-                      conversions=None, measures=None, meas_accur=1, controls=None, mtbf=0, mttr=0 ):
+def create_ict_device(ict_net, name=None, type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
+                      conversions=None, mtbf=0, mttr=0 ):
     if index is not None and index in ict_net["device"].index:
         raise UserWarning("A device with index %s already exists" % index)
 
@@ -185,12 +178,9 @@ def create_ict_device(ict_net, map_to, name=None, type=None, index=None, in_serv
 
     dtypes = ict_net.device.dtypes
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
-    # but current pandapower release won't work with pandas >= 2.0.0    
-    mt = tuple2str(map_to)
+    # but current pandapower release won't work with pandas >= 2.0.0        
     cn = list2str(conversions)
-    mr = list2str(measures)     
-    ct = list2str(controls)    
-    
+        
     if (use_uuid): 
         if uid is None:
             ruuid = uuid.uuid4()
@@ -199,8 +189,7 @@ def create_ict_device(ict_net, map_to, name=None, type=None, index=None, in_serv
     else: 
         ruuid = None
         
-    ict_net.device.loc[index, ["name", "type", "in_service", "map_to", "conversions", "measures", "meas_accur", "controls",                              
-                             "mtbf", "mttr", "uuid" ]] = [name, type, in_service, mt, cn, mr, meas_accur, ct, mtbf, mttr, ruuid]
+    ict_net.device.loc[index, ["name", "type", "in_service", "conversions", "mtbf", "mttr", "uuid" ]] = [name, type, in_service, cn, mtbf, mttr, ruuid]
 
     _preserve_dtypes(ict_net.device, dtypes)
 
@@ -217,6 +206,11 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
 
     if index is None:
         index = get_free_id(ict_net["conn"])
+        
+    if peers:
+        if not (peers[0][0]=='device' and peers[1][0]=='device'): 
+            raise UserWarning("Wrong parameter for peers (must be device elements)")
+            return 
 
     dtypes = ict_net.conn.dtypes
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
@@ -231,14 +225,20 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
         else:
             ruuid = uid
         # TODO: add check if peers are devices
-        pdev1 = uuid2elt(ict_net, peers[0])[1]
-        pdev2 = uuid2elt(ict_net, peers[1])[1] 
-        pe = tuple2str( (pdev1, pdev2) )
+        if peers is not None:
+            pdev1 = uuid2elt(ict_net, peers[0])[1]
+            pdev2 = uuid2elt(ict_net, peers[1])[1]
+            pe = tuple2str( (pdev1, pdev2) )
+        else:
+            pe = None        
         fe = tuple2str(uuid2elt(ict_net, from_elt))
         te = tuple2str(uuid2elt(ict_net, to_elt))
     else: 
         ruuid = None
-        pe = tuple2str((peers[0][1], peers[1][1]))
+        if peers is not None: 
+            pe = tuple2str((peers[0][1], peers[1][1]))
+        else:
+            pe = None
         fe = tuple2str(from_elt)
         te = tuple2str(to_elt)
         
@@ -255,8 +255,5 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
         return ('conn', index)
 
 
-def autocreate_from_pp(pp_net, nodes=None, devices=None, std_link=None, check=True):
-    return    
-
-def check_net(pp_net, ict_net):
+def check_net(ict_net):
     return

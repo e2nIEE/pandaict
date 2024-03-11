@@ -1,0 +1,148 @@
+'''
+Created on 24.01.2024
+
+@author: jringelstein
+'''
+
+import pandapower as pp
+#import pandapower.networks
+import pandapower.control as control
+import pandapower.timeseries as timeseries
+from   pandapower.timeseries.data_sources.frame_data import DFData
+import pandas as pd
+import math
+import csv
+
+# Suppress pandas future warning
+import warnings
+from   pandaict.enums import DeviceType
+from   ppcoupling.enums import ppDeviceType
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+net = None
+
+
+    
+def perform_test_loadflows(): 
+    global net
+    cosphi_gen = 0.98
+    cosphi_load = 0.95    
+    
+    with open('results.csv', 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(['pWPP','qWPP','pPV','qPV','pload','qload','vmax','vimax','vmin','vimin','lmax','limax','ltrafo'])
+        for pWPP in range(0,11,1):
+            # for qWPP in range(-4,4,4):
+            qWPP = pWPP * math.tan(math.acos(cosphi_gen))
+            for pPV in range(0,11,1):
+                # for qPV in range(-4,4,4):
+                qPV = pPV * math.tan(math.acos(cosphi_gen))
+                for pload in range(0,13,3):
+                    # for qload in range(0,25,25):
+                    qload = pload * math.tan(math.acos(cosphi_load))
+                    net.sgen.at[0,'p_mw'] = pPV
+                    net.sgen.at[0,'q_mvar'] = qPV
+                    net.sgen.at[1,'p_mw'] = pWPP
+                    net.sgen.at[1,'q_mvar'] = qWPP
+                    net.load.at[0,'p_mw'] = pload
+                    net.load.at[0,'q_mvar'] = qload
+                    pp.runpp(net, numba=False)                            
+                    vmax = max(net.res_bus.vm_pu)
+                    vimax = net.res_bus.vm_pu.idxmax()
+                    vmin = min(net.res_bus.vm_pu)
+                    vimin = net.res_bus.vm_pu.idxmin()
+                    lmax = max(net.res_line.loading_percent)
+                    limax = net.res_line.loading_percent.idxmax()
+                    ltrafo = net.res_trafo.loading_percent.iloc[0]
+                    csvwriter.writerow([str(pWPP),str(qWPP),str(pPV),str(qPV),str(pload),str(qload),str(vmax),str(vimax),str(vmin),str(vimin),str(lmax),str(limax), str(ltrafo)])
+                    csvfile.flush()                        
+                print("using next qWPP..")
+            print("using next pWPP..")
+
+
+def get_timeseries():
+    global net 
+    
+    csv_pv   = './ninja_pv_49.3715_8.2791_uncorrected.csv'
+    csv_wind = './ninja_wind_49.3819_8.2616_corrected.csv'
+    csv_load = './SLP_G0-M.csv'
+    
+    df = pd.DataFrame(index=list(range(365*24)), columns=net.sgen.index, dtype=float)    
+    
+    with open(csv_pv, 'r', newline='') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        i = 0
+        for row in csvreader:
+            if not('2022' in row[0]):
+                continue            
+            df.at[i,0] = float(row[2])/1000.0
+            i += 1
+    
+    with open(csv_wind, 'r', newline='') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        i = 0
+        for row in csvreader:
+            if not('2022' in row[0]):
+                continue            
+            df.at[i,1] = float(row[2])/1000.0
+            i += 1           
+    
+    ds = DFData(df)
+    const_sgen = control.ConstControl(net, element='sgen', element_index=net.sgen.index, variable='p_mw', data_source=ds, profile_name=net.sgen.index)
+    
+    dfl_p = pd.DataFrame(index=list(range(365*24)), columns=net.load.index, dtype=float)
+    dfl_q = pd.DataFrame(index=list(range(365*24)), columns=net.load.index, dtype=float)
+    
+    with open(csv_load, 'r', newline='') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=';', quotechar='|')
+        i = 0
+        for row in csvreader:
+            if not('2016' in row[0] and ':00' in row[0]):
+                continue            
+            dfl_q.at[i,0] = float(row[1])*4.0
+            dfl_p.at[i,0] = float(row[2])*4.0            
+            i += 1   
+            
+    ds_p = DFData(dfl_p)
+    ds_q = DFData(dfl_q)
+    const_load_p = control.ConstControl(net, element='load', element_index=net.load.index, variable='p_mw', data_source=ds_p, profile_name=net.load.index)
+    const_load_q = control.ConstControl(net, element='load', element_index=net.load.index, variable='q_mvar', data_source=ds_q, profile_name=net.load.index)
+    
+    # b = pp.create_bus(net)
+    # ow = timeseries.OutputWriter(net, output_path="./", output_file_type=".xlsx")
+    # ow.log_variable('res_bus', 'vm_pu')
+    # ow.log_variable('res_load', 'p_mw')
+    # ow.log_variable('res_load', 'q_mvar')
+    # ow.log_variable('res_sgen', 'p_mw')
+    # ow.log_variable('res_sgen', 'q_mvar')
+    # ow.log_variable('res_line', 'loading_percent')
+    # ow.log_variable('res_trafo', 'loading_percent')
+    # timeseries.run_timeseries(net)    
+    
+    return
+    
+            
+def generate_test_pp_network():
+    global net
+    net = pp.networks.example_simple()
+    
+    # Mod's
+    #net.line.at[1,'length_km'] = 8.0
+    #net.line.at[3,'length_km'] = 10.0
+    pp.change_std_type(net,1,'NA2XS2Y 1x95 RM/25 12/20 kV','line')
+    pp.change_std_type(net,3,'NA2XS2Y 1x95 RM/25 12/20 kV','line')    
+    net.gen = net.gen.drop(0) # drop gen at bus 7        
+    pp.create_sgen(net, 5, p_mw=10, q_mvar=0, sn_mva=12, name="WPP", index=1) # create new 'PV' sgen at bus 7 
+    net.sgen.at[0,'name'] = 'PV' # make other sgen 'WPP' 
+    net.sgen.at[0,'q_mvar'] = 0 
+    net.load.at[0,'scaling'] = 1
+    return
+
+      
+if __name__ == '__main__':
+    generate_test_pp_network()
+    get_timeseries()    
+    net.name = "Test network"
+    pp.to_json(net, 'UC4_simple.json')
+    
+    
