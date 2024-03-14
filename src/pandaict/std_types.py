@@ -9,6 +9,7 @@ Created on 2.02.2024
 
 import pandas as pd
 import warnings
+import uuid
 from   pandaict.enums import InfoItems
 
 try:
@@ -129,6 +130,9 @@ def basic_link_std_types():
         }
     
     
+    for key in linktypes.keys():
+        linktypes[key].update({'uuid': uuid.uuid4()})
+    
     return linktypes
 
 def basic_protocol_std_types():
@@ -154,6 +158,10 @@ def basic_protocol_std_types():
                 ],    
             },
         }    
+    
+    
+    for key in protocoltypes.keys():
+        protocoltypes[key].update({'uuid': uuid.uuid4()})
     
     return protocoltypes
 
