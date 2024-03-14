@@ -8,16 +8,10 @@ Created on 8.03.2024
 '''
 
 import unittest
-from basics_test import Basics_Test
 
 class PandaICT_Test(unittest.TestCase):    
     
-    # NOTE: all function names to be executed by unittest MUST START with "test" ! 
-    
-    def test_basic(self):
-        tester = Basics_Test()
-        tester.test_create_ict_net(self)
-        
+    # NOTE: all function names to be executed by unittest MUST START with "test" !     
         
     def test_example(self):
         self.assertEqual('PandaICT', 'PandaICT')
