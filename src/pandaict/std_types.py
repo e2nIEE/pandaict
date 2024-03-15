@@ -86,6 +86,7 @@ def basic_link_std_types():
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
+              "uuid": uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"),
             },
         "RS485":
             { "bandwidth_Mbps": (0.1),
@@ -94,6 +95,7 @@ def basic_link_std_types():
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
+              "uuid": uuid.UUID("77fbef84-195f-40de-882b-3d8824c0d3a5"),
             },
         "LTE50": # LTE with downstream bandwidth of 50 Mbps
             { "bandwidth_Mbps": (50,10),
@@ -102,6 +104,7 @@ def basic_link_std_types():
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
+              "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
             },
         "LAN1000": # Gigabit LAN
             { "bandwidth_Mbps": (1000, 1000),
@@ -110,6 +113,7 @@ def basic_link_std_types():
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
+              "uuid": uuid.UUID("4d5b388f-ce1c-407e-81c6-5caa23f1832b"),
             },
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
             { "bandwidth_Mbps": (8, 1),
@@ -118,6 +122,7 @@ def basic_link_std_types():
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
+              "uuid": uuid.UUID("6dd01923-0bce-4f07-8ef0-65a0f214d2cf"),
             },
         "Fiber": # Glass fiber
             { "bandwidth_Mbps": (1000, 1000),
@@ -126,12 +131,9 @@ def basic_link_std_types():
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
+              "uuid": uuid.UUID("eebc167b-b816-468f-bb9a-5e75c7ccd79b"),
             }
-        }
-    
-    
-    for key in linktypes.keys():
-        linktypes[key].update({'uuid': uuid.uuid4()})
+        }    
     
     return linktypes
 
@@ -146,7 +148,8 @@ def basic_protocol_std_types():
                   InfoItems.TEXT,
                   InfoItems.FILE, 
                   InfoItems.STATUS,
-                ],    
+                ], 
+            "uuid": uuid.UUID("30e8be5c-06d8-4914-b99b-31f015473599"),   
             },
         "HTTP": {        
             "base_package_size_byte": 4096,
@@ -156,12 +159,9 @@ def basic_protocol_std_types():
                   InfoItems.WEBPAGE, 
                   InfoItems.STATUS,                 
                 ],    
+            "uuid": uuid.UUID("9bd957a0-1e02-4925-bef6-8cf04c5e9ead"),
             },
-        }    
-    
-    
-    for key in protocoltypes.keys():
-        protocoltypes[key].update({'uuid': uuid.uuid4()})
+        }        
     
     return protocoltypes
 
