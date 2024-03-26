@@ -7,10 +7,10 @@ Created on 30.01.2024
 @author: jringelstein
 '''
 
-from enum import Enum
+from aenum import Enum
 
 # Definitions for info items
-class InfoItems(Enum):
+class InfoItem(Enum):
     ACK         = 1
     REQUEST     = 2
     RESPONSE    = 3

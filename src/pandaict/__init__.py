@@ -3,4 +3,4 @@ from pandaict.create import *
 from pandaict.auxiliary import *
 from pandaict.enums import *
 from pandaict.std_types import *
-from pandaict.io_utils import *
+from pandaict.file_io import *

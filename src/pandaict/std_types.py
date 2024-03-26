@@ -10,7 +10,7 @@ Created on 2.02.2024
 import pandas as pd
 import warnings
 import uuid
-from   pandaict.enums import InfoItems
+from   pandaict.enums import InfoItem
 
 try:
     import pandaplan.core.pplog as logging
@@ -143,21 +143,21 @@ def basic_protocol_std_types():
         "FTP": {        
             "base_package_size_byte": 4096,
             "info_items":
-                [ InfoItems.REQUEST,
-                  InfoItems.RESPONSE, 
-                  InfoItems.TEXT,
-                  InfoItems.FILE, 
-                  InfoItems.STATUS,
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE, 
+                  InfoItem.TEXT,
+                  InfoItem.FILE, 
+                  InfoItem.STATUS,
                 ], 
             "uuid": uuid.UUID("30e8be5c-06d8-4914-b99b-31f015473599"),   
             },
         "HTTP": {        
             "base_package_size_byte": 4096,
             "info_items":
-                [ InfoItems.REQUEST,
-                  InfoItems.RESPONSE, 
-                  InfoItems.WEBPAGE, 
-                  InfoItems.STATUS,                 
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE, 
+                  InfoItem.WEBPAGE, 
+                  InfoItem.STATUS,                 
                 ],    
             "uuid": uuid.UUID("9bd957a0-1e02-4925-bef6-8cf04c5e9ead"),
             },
