@@ -10,7 +10,7 @@ from pandaict import __version__
 import numpy
 from io import StringIO
 from win32comext.internet import inetcon
-from pandaict.enums import NodeType, DeviceType, InfoItem
+from pandaict.enums import NodeType, DeviceType, AppType, InfoItem
 
 try:
     import pplog as logging
@@ -40,9 +40,11 @@ def _json_to_df(df, dfto):
             df.at[i,"type"] = NodeType(s["value"])        
     elif dfto=="device":
         for i, s in enumerate(df["type"]):            
-            df.at[i,"type"] = DeviceType(s["value"])   
-    
-               
+            df.at[i,"type"] = DeviceType(s["value"])  
+    elif dfto=="app":
+        for i, s in enumerate(df["type"]):            
+            df.at[i,"type"] = AppType(s["value"]) 
+                
     return df
 
 def to_json(ict_net, filename, save_std_types=False):
@@ -64,7 +66,8 @@ def to_json(ict_net, filename, save_std_types=False):
             jnode = _df_to_json(ict_net.node)
             jlink = _df_to_json(ict_net.link)
             jdevc = _df_to_json(ict_net.device)
-            jconn = _df_to_json(ict_net.conn)
+            jappc = _df_to_json(ict_net.app)
+            jconn = _df_to_json(ict_net.conn)            
             if save_std_types:
                 jstdt = _df_to_json(ict_net.std_types)
             else:
@@ -73,6 +76,7 @@ def to_json(ict_net, filename, save_std_types=False):
                                 "node":       json.loads(jnode),
                                 "link":       json.loads(jlink),
                                 "device":     json.loads(jdevc),
+                                "app":        json.loads(jappc),
                                 "conn":       json.loads(jconn),
                                 "std_type":   json.loads(jstdt),
                                 }, pifile, indent=2)                            
@@ -109,11 +113,12 @@ def from_json(filename):
         logger.error("Not a valid pandaICT file: "+filename)
         return    
     
-    ict_net.name = jall["name"]
-    ict_net.node = _json_to_df(pd.DataFrame(jall["node"]),"node")
-    ict_net.link = _json_to_df(pd.DataFrame(jall["link"]),"link")
-    ict_net.device = _json_to_df(pd.DataFrame(jall["device"]),"device")
-    ict_net.conn = _json_to_df(pd.DataFrame(jall["conn"]),"conn")
+    ict_net.name     = jall["name"]
+    ict_net.node     = _json_to_df(pd.DataFrame(jall["node"]),"node")
+    ict_net.link     = _json_to_df(pd.DataFrame(jall["link"]),"link")
+    ict_net.device   = _json_to_df(pd.DataFrame(jall["device"]),"device")
+    ict_net.app      = _json_to_df(pd.DataFrame(jall["app"]),"app")
+    ict_net.conn     = _json_to_df(pd.DataFrame(jall["conn"]),"conn")
     ict_net.std_type = _json_to_df(pd.DataFrame(jall["std_type"]),"std_type")
 
     return ict_net

@@ -67,6 +67,12 @@ def uuid2elt(ict_net, uid):
         pass
     
     try:
+        idx = np.where(ict_net.app['uuid']==uid)[0][0]
+        return ('app', idx)
+    except:
+        pass
+    
+    try:
         idx = np.where(ict_net.conn['uuid']==uid)[0][0]
         return ('conn', idx)
     except:

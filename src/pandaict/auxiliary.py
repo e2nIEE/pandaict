@@ -274,12 +274,12 @@ class pandaICTNet(ADict):
             keys.remove('name')
         if 'std_types' in keys: 
             keys.remove('std_types')
-        for k in keys:
+        for k in keys:            
             cols = list(self[k].columns)
             if 'uuid' in cols: 
                 cols.remove('uuid')            
             if not (self[k][cols].compare(other[k][cols]).empty):
-                return False 
+                return False             
         return True
 
 def plural_s(number):

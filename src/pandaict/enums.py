@@ -29,8 +29,13 @@ class NodeType(Enum):
     ROUTER    = 2
 
 class DeviceType(Enum):        
-    CONVERTER      = 1 # Converts between different protocols
+    CONVERTER      = 1 # Hosts Converter type app
     SERVER         = 2
+    RTU            = 3
+    
+class AppType(Enum):  
+    CONVERTER      = 1 # Converts between different protocolss          
     WEBSERVER      = 3
     FILESERVER     = 4 
     CLIENT         = 5
+
