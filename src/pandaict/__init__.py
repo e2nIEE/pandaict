@@ -3,8 +3,9 @@ from pandaict.create import *
 from pandaict.auxiliary import *
 from pandaict.enums import *
 from pandaict.std_types import *
-from pandaict.networks import *
-from pandaict.toolbox import *
-from pandaict.plotting import *
-from pandaict.topology import *
 from pandaict.file_io import *
+
+import logging
+logger = logging.getLogger("pandaICT_Core")
+logging.basicConfig(filename='pandaICT_Core.log', encoding='utf-8', level=logging.INFO)
+logger.info("-------------- pandaICT_Core startup ---------------")

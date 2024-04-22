@@ -18,24 +18,24 @@ def set_str_delim(d):
 
 def list2str(l):
     global list_delim
-    if not isinstance(l, list):
-        return ""
+    if not isinstance(l, list) or len(l)==0:
+        return None
     s = list_delim.join([str(ele) for ele in l])
     return s 
 
 def str2list(s):
     global list_delim
-    if not isinstance(s, str):
+    if not isinstance(s, str) or s=='':
         return []
     l = s.split(list_delim)
     return l
 
 def tuple2str(t):
     global tuple_delim
-    if not isinstance(t, tuple):
-        return ""
+    if not isinstance(t, tuple) or len(t)==0:
+        return None
     s = tuple_delim.join([str(ele) for ele in t])
-    return s 
+    return s    
 
 def str2tuple(s):
     global tuple_delim
@@ -67,6 +67,12 @@ def uuid2elt(ict_net, uid):
         pass
     
     try:
+        idx = np.where(ict_net.app['uuid']==uid)[0][0]
+        return ('app', idx)
+    except:
+        pass
+    
+    try:
         idx = np.where(ict_net.conn['uuid']==uid)[0][0]
         return ('conn', idx)
     except:
@@ -91,6 +97,27 @@ def get_elt(ict_net, elt):
 
 def get_elt_by_uuid(ict_net, uid):
     return get_elt(uuid2elt(uid))
-    
-    
+
+def getAppsOnDevice(ict_net, device):
+    applist = []
+    for i, a in ict_net.app.iterrows():    
+        if a.device==device[1]:
+            applist += [i]
+    return applist
+
+def getLinksAt(ict_net, elt):
+    linklist = []
+    if not(elt[0]=="node" or elt[0]=="device"):
+        return []  
+    elt = tuple2str(elt)
+    for i, l in ict_net.link.iterrows():    
+        if (isinstance(l['to'], list)):
+            if elt==l['from'] or elt in l['to']:
+                linklist += [i]
+        else:
+            if elt==l['from'] or elt==l['to']:
+                linklist += [i]
+    return linklist
+
+
     
