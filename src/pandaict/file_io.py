@@ -44,7 +44,7 @@ def _json_to_df(df, dfto):
     elif dfto=="app":
         for i, s in enumerate(df["type"]):            
             df.at[i,"type"] = AppType(s["value"]) 
-                
+           
     return df
 
 def to_json(ict_net, filename, save_std_types=False):

@@ -97,6 +97,27 @@ def get_elt(ict_net, elt):
 
 def get_elt_by_uuid(ict_net, uid):
     return get_elt(uuid2elt(uid))
-    
-    
+
+def getAppsOnDevice(ict_net, device):
+    applist = []
+    for i, a in ict_net.app.iterrows():    
+        if a.device==device[1]:
+            applist += [i]
+    return applist
+
+def getLinksAt(ict_net, elt):
+    linklist = []
+    if not(elt[0]=="node" or elt[0]=="device"):
+        return []  
+    elt = tuple2str(elt)
+    for i, l in ict_net.link.iterrows():    
+        if (isinstance(l['to'], list)):
+            if elt==l['from'] or elt in l['to']:
+                linklist += [i]
+        else:
+            if elt==l['from'] or elt==l['to']:
+                linklist += [i]
+    return linklist
+
+
     
