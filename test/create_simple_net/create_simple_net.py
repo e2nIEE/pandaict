@@ -5,7 +5,7 @@ Created on 24.01.2024
 '''
 
 import pandapower as pp
-import pandapower.networks
+import networkx # for graphic
 import pandapower.control as control
 import pandapower.timeseries as timeseries
 from   pandapower.timeseries.data_sources.frame_data import DFData
@@ -265,6 +265,25 @@ def create_test_ict_net(pp_net):
                     info_items=[Setp.SWITCH_POSITION, Meas.SWITCH_POSITION], 
                     peers=(cc,sc), producer=[0,1], prod_freq_ms=[])
     
+    
+  
+            
+    #Creating a simple net for plot by GB
+    ict_net_plot = pi.create_empty_network("Test network",True)
+    
+    node       = pi.create_ict_node(ict_net_plot, name="Node", type=NodeType.ROUTER, map_to=("bus", 0)) 
+    
+    cc         = pi.create_ict_device(ict_net_plot, name="CC",  type=DeviceType.CONTROLCENTER, map_to=("ext_grid",  0), controls=[], measures=[])
+    
+    conv       = pi.create_ict_device(ict_net_plot, name="Conv", type=DeviceType.CONVERTER, map_to=("bus", 5))
+    
+    link1      = pi.create_ict_link(ict_net_plot, name="CC_Node", type="LAN1000", from_elt=cc, to_elt=[node], length_km=0.01)
+    link2      = pi.create_ict_link(ict_net_plot, name="Node_Conv", type="LTE50", from_elt=node, to_elt=[conv], length_km=5)
+    
+    conn      = pi.create_ict_connection(ict_net_plot, name="CC_Conv", from_elt=cc, to_elt=conv, protocol="IEC104-TCP", 
+                    info_items=[Setp.ACTIVE_POWER, Setp.REACTIVE_POWER, Meas.ACTIVE_POWER, Meas.REACTIVE_POWER], 
+                    peers=(cc,conv), producer=[0,0,1,1], prod_freq_ms=[-1, -1, 3E5, 3E5])
+    
         
     #ict_net_reloaded = pi.from_json("UC4_simple_ict.json")
     
@@ -288,7 +307,7 @@ def create_test_ict_net(pp_net):
     #                              check=True)
     
     matching = ict_net.equals_excluding_uuids_and_std_types(ict_net2)
-    return ict_net
+    return ict_net, ict_net2, matching, ict_net_plot # ict_net2, matching added by GB
      
      
 def check(ict_net):
@@ -302,8 +321,7 @@ def check(ict_net):
     # ict elements mapped to non-existing or non-fitting pp elements
     # redundant connections
         
-    return 
-
+   return 
 
        
 if __name__ == '__main__':
@@ -312,7 +330,7 @@ if __name__ == '__main__':
     net2 = pp.create_empty_network()
     net = get_pp_test_net()
     net.name = "Test network"
-    ict_net = create_test_ict_net(net) # This should create an ict net that fits the pp net
+    ict_net, ict_net2, matching, ict_net_plot = create_test_ict_net(net) # This should create an ict net that fits the pp net ## ict_net2, matching added by GB
     #pp.to_json(net2, "dummy.json")
     pi.to_json(ict_net, "UC4_simple_ict.json")    
     ict_net_reloaded = pi.from_json("UC4_simple_ict.json")
