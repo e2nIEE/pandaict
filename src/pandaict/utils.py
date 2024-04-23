@@ -23,8 +23,16 @@ def list2str(l):
     s = list_delim.join([str(ele) for ele in l])
     return s 
 
+def islist(s):
+    global list_delim
+    if list_delim in s:
+        return True 
+    return False
+    
 def str2list(s):
     global list_delim
+    if isinstance(s,list):
+        return s
     if not isinstance(s, str) or s=='':
         return []
     l = s.split(list_delim)
@@ -39,8 +47,12 @@ def tuple2str(t):
 
 def str2tuple(s):
     global tuple_delim
-    if not isinstance(s, str):
+    if isinstance(s,tuple):
+        return s
+    if not isinstance(s, str) or s=='':
         return []
+    if (list_delim in s):
+        s = s.split(list_delim)[0]
     l = tuple(s.split(tuple_delim))
     return l
 
@@ -119,5 +131,19 @@ def getLinksAt(ict_net, elt):
                 linklist += [i]
     return linklist
 
-
+def getLinksBetween(ict_net, elt1, elt2):
+    elt1 = str2tuple(elt1)
+    elt2 = str2tuple(elt2)
+    if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):
+        return []
+    linklist = []
+    for i, l in ict_net.link.iterrows():
+        lfrom = str2tuple(l['from'])
+        if islist(l['to']):
+            continue
+        lto   = str2tuple(l['to']) # only takes first element if it's a list               
+        if (lfrom==elt1 and lto==elt2) or (lfrom==elt2 and lto==elt1):
+            linklist += [i]
+    return linklist
+            
     

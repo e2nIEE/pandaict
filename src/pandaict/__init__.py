@@ -4,6 +4,7 @@ from pandaict.auxiliary import *
 from pandaict.enums import *
 from pandaict.std_types import *
 from pandaict.file_io import *
+from pandaict.diagnosis import *
 
 import logging
 logger = logging.getLogger("pandaICT_Core")
