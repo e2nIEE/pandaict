@@ -16,7 +16,7 @@ import pandas as pd
 import uuid
 from pandaict.std_types import add_basic_std_types
 from pandaict.utils import list2str, tuple2str, uuid2elt, elt2uuid
-from enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.enums import InfoItem, NodeType, DeviceType, AppType
 
 import logging
 logger = logging.getLogger("pandaICT_Core")
@@ -52,7 +52,6 @@ def create_empty_network(name="", add_stdtypes=True):
             ("type", dtype(object)),
             ("in_service", "bool"),
             ("uuid", dtype(object)),
-            ("protocols", dtype(object)),
             ("from", dtype(object)),
             ("to", dtype(object)),        
             ("length_km", "f8"),           
@@ -79,7 +78,6 @@ def create_empty_network(name="", add_stdtypes=True):
             ("uuid", dtype(object)),
             ("from", "u4"),
             ("to", "u4"),
-            ("protocol", dtype(object)),
             ("info_items", dtype(object)),
             ("peers", dtype(object)),
             ("producer", dtype(object)),

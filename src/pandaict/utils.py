@@ -53,8 +53,10 @@ def str2tuple(s):
         return []
     if (list_delim in s):
         s = s.split(list_delim)[0]
-    l = tuple(s.split(tuple_delim))
-    return l
+    l = list(s.split(tuple_delim))
+    if l[0]=='node' or l[0]=='device' or l[0]=='conn' or l[0]=='app':
+        l[1] = int(l[1]) 
+    return tuple(l)
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
@@ -110,14 +112,14 @@ def get_elt(ict_net, elt):
 def get_elt_by_uuid(ict_net, uid):
     return get_elt(uuid2elt(uid))
 
-def getAppsOnDevice(ict_net, device):
+def get_apps_on_device(ict_net, device):
     applist = []
     for i, a in ict_net.app.iterrows():    
         if a.device==device[1]:
             applist += [i]
     return applist
 
-def getLinksAt(ict_net, elt):
+def get_links_at(ict_net, elt):
     linklist = []
     if not(elt[0]=="node" or elt[0]=="device"):
         return []  
@@ -131,7 +133,7 @@ def getLinksAt(ict_net, elt):
                 linklist += [i]
     return linklist
 
-def getLinksBetween(ict_net, elt1, elt2):
+def get_links_between(ict_net, elt1, elt2):
     elt1 = str2tuple(elt1)
     elt2 = str2tuple(elt2)
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):

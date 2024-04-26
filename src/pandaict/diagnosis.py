@@ -33,7 +33,7 @@ def inspect(ict_net):
             logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has no link_types")
             passed = False   
         # check if all nodes have two or more links connected
-        l = utils.getLinksAt(ict_net, ('node', i))
+        l = utils.get_links_at(ict_net, ('node', i))
         if len(l)<2:
             logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has less than two links")
             passed = False  
@@ -53,12 +53,12 @@ def inspect(ict_net):
             logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") has no type")
             passed = False
         # check if all devices with converter apps have two or more links connected
-        apps = utils.getAppsOnDevice(ict_net, ('device', i))
+        apps = utils.get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps==[]:
             logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") does not run any apps")
             passed = False
         if (any([ict_net.app.iloc[a]['type']==AppType.CONVERTER for a in apps])):
-            l = utils.getLinksAt(ict_net, ('device', i))
+            l = utils.get_links_at(ict_net, ('device', i))
             if len(l)<2:
                 logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") is running converter type app(s) but has less than two links")
                 passed = False
@@ -89,18 +89,31 @@ def inspect(ict_net):
     for i, l in ict_net.link.iterrows():
         from_elt = l["from"]
         to_elt   = l["to"]
-        linklist = utils.getLinksBetween(ict_net, from_elt, to_elt)
+        linklist = utils.get_links_between(ict_net, from_elt, to_elt)
         if len(linklist) > 1: 
             linklist.remove(i)
             logger.info(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")")
             passed = False
-            
+    
+    # check std types
+    for linktype in ict_net.std_types['link'].keys():
+        protocols = ict_net.std_types['link'][linktype]['protocols']
+        for p in protocols:
+            if p not in ict_net.std_types['protocol'].keys():
+                logger.info(" std link type '"+str(linktype)+"' has unknown protocol '"+str(p)+"'")
+                passed = False
+    
+    # check if nodes are connected by links with unsupported protocols
+    #TODO 
+           
     # check for isolated network areas    
     # check if all connections have at least one possible route (including protocols) 
         
     if passed:
+        print("----------- INSPECTION PASSED -----------")
         logger.info("----------- INSPECTION PASSED -----------")
     else:        
+        print("----------- INSPECTION FAILED -----------")
         logger.info("----------- INSPECTION FAILED -----------")        
         
     logger.setLevel(origlevel)    
