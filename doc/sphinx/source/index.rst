@@ -1,23 +1,52 @@
-.. pandaICT documentation master file, created by
-   sphinx-quickstart on Mon Jan 29 14:39:08 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+############################
+pandaict
+############################
 
-Welcome to pandaICT's documentation!
-====================================
+pandaict is an easy to use communication network modeling and calculation program that connects to pandapower
+aimed at analysis of combined ICT and electric networks.
+
+.. image:: /pics/pict.jpg
+		:width: 250em
+		:align: left
+
+.. |br| raw:: html
+
+    <br />
+
+|br|
+|br|
+|br|
+
+More information about pandaict can be found on `www.pandaict.org <https://www.pandaict.org>`_.
+
+If you are interested in the newest pandaict developments, subscribe to our `mailing list <https://www.pandaict.org/contact/#list>`_!
+
+pandaict is a joint development of the research group Energy Management and Power System Operation, University of Kassel and the Department for Distribution System
+Operation at the Fraunhofer Institute for Energy Economics and Energy System Technology (IEE), Kassel.
+
+.. image:: /pics/iee.png
+		:width: 18em
+		:align: left
+
+.. image:: /pics/e2n.png
+		:width: 22em
+		:align: right
+
+
+
+|br|
+|br|
+|br|
+|br|
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-   
-   pandaict
+    :maxdepth: 2
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
-
+    about
+    elements
+    std_types    
+    networks
+    diagnosis
+    plotting
+    
+    

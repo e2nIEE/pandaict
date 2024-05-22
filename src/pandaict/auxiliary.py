@@ -30,7 +30,7 @@ def _preserve_dtypes(df, dtypes):
                 df[item] = df[item].astype(float)
 
 
-def get_free_id(df):
+def _get_free_id(df):
     """
     Returns next free ID in a dataframe
     """

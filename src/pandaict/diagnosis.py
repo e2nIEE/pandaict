@@ -102,9 +102,14 @@ def inspect(ict_net):
             if p not in ict_net.std_types['protocol'].keys():
                 logger.info(" std link type '"+str(linktype)+"' has unknown protocol '"+str(p)+"'")
                 passed = False
-    
-    # check if nodes are connected by links with unsupported protocols
-    #TODO 
+         
+    # check if Apps with conversions run on converter type devices
+    for i, a in ict_net.app.iterrows():
+        if a['type'] == AppType.CONVERTER:
+            d = a.device 
+            if not ict_net.device.iloc[d]['type'] == DeviceType.CONVERTER:
+                logger.info(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.iloc[d]['name'])+"'")
+                passed = False
            
     # check for isolated network areas    
     # check if all connections have at least one possible route (including protocols) 
