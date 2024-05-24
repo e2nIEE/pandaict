@@ -28,7 +28,8 @@ semgrep-sast:
 
 stages:
   - test
-  - build
+  - pages
+  - deploy
 
 unit-test:
     stage: test
@@ -52,7 +53,7 @@ pages:
   tags:
    - leitwarte_iee
   image: python:3.10.0
-  stage: build
+  stage: pages
   script:
   - pip install -U sphinx
   - pip install -r requirements.txt
@@ -66,9 +67,9 @@ pages:
 
 
 create_artifact_gitlab:
-  stage: build
   tags: 
    - leitwarte_iee
+  stage: deploy
   script:
     - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
     - pip install virtualenv
