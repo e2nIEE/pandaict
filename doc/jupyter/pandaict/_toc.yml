@@ -1,0 +1,10 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: pandaICT_tools
+chapters:
+- file: pandaICT_links_and_connections
+- file: pandaICT_reqirements_design_devgoals
+- file: pandaICT_scenario_useCases
+- file: pandaICT_datamodel
