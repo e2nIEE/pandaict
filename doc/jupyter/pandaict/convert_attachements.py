@@ -15,16 +15,15 @@ def convert_attachments_to_files(notebook_path, output_dir):
         if cell.cell_type == 'markdown' and 'attachments' in cell:
             attachments = cell['attachments']
             for attachment_name, attachment_content in attachments.items():
-                for mime, data in attachment_content.items():
-                    if mime.startswith('attachment'):
+                for mime, data in attachment_content.items():                    
+					if mime.startswith('image'):
                         # Decodiere das Bild und speichere es als Datei
                         img_data = base64.b64decode(data)
                         img_filename = os.path.join(output_dir, attachment_name)
                         with open(img_filename, 'wb') as img_file:
                             img_file.write(img_data)
-                        # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz
-                        img_filename = img_filename.replace("\\", "/")
-                        cell.source = cell.source.replace(f'attachment:{attachment_name}', img_filename)
+                        # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                  						
+                        cell.source = cell.source.replace(f'attachment:{attachment_name}', img_filename)		
     
     # Speichere das angepasste Notebook
     with open(notebook_path, 'w', encoding='utf-8') as f:
