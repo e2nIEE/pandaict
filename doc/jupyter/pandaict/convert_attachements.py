@@ -16,7 +16,7 @@ def convert_attachments_to_files(notebook_path, output_dir):
             attachments = cell['attachments']
             for attachment_name, attachment_content in attachments.items():
                 for mime, data in attachment_content.items():
-                    if mime.startswith('image'):
+                    if mime.startswith('attachment'):
                         # Decodiere das Bild und speichere es als Datei
                         img_data = base64.b64decode(data)
                         img_filename = os.path.join(output_dir, attachment_name)
