@@ -13,6 +13,7 @@ from collections.abc import MutableMapping
 import pandas as pd
 import copy
 import numpy as np
+from pandapower import from_json_string # ToDo: dependency?
 
 from functools import singledispatch
 
@@ -231,9 +232,8 @@ class pandaICTNet(ADict):
     
     # @FromSerializableRegistry.from_serializable.register(class_name='pandaICTNet', module_name='pandaICTNet.pandaICTNet')    
     def pandaICTNet(self):
-        if isinstance(self.obj, str):  # backwards compatibility
-            from pandapower import from_json_string
-            return from_json_string(self.obj)
+        if isinstance(self.obj, str):  # backwards compatibility            
+            return from_json_string(self.obj) # TODO: dependency on pandapower ??
         else:            
             net = create_empty_network()            
             net.update(self.obj)

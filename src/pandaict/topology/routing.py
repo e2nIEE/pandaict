@@ -8,7 +8,6 @@ Created on 30.01.2024
 '''
 
 import networkx as nx
-from   pandaict.utils import str2tuple, str2list, islist
 
 import logging
 logger = logging.getLogger("pandaICT_Core")
@@ -38,12 +37,8 @@ def _validate_multidigraph(ict_net, mdg, protocol=None):
             logger.debug("_validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
             passed = False
         else:
-            pifrom = str2tuple(ict_net.link.iloc[pilink[1]]['from'])
-            pito = ict_net.link.iloc[pilink[1]]['to']
-            if islist(pito):
-                pito = [str2tuple(e) for e in str2list(pito)]
-            else:
-                pito = [str2tuple(pito)]
+            pifrom = ict_net.link.iloc[pilink[1]]['from']
+            pito = ict_net.link.iloc[pilink[1]]['to']            
             bw = ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['bandwidth_Mbps']
             if (isinstance(bw, float) or len(bw)<2 or bw[1]==0):
                 bidir = False 
@@ -55,10 +50,10 @@ def _validate_multidigraph(ict_net, mdg, protocol=None):
                 passed = False
                 
             if protocol is not None:
-               if protocol not in ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['protocols']:
-                   logger.debug("_validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
+                if protocol not in ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['protocols']:
+                    logger.debug("_validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
-                   passed = False  
+                    passed = False  
         
     if not passed:
         logger.warn("_validate_multidigraph FAILED, check out reasons above if debuglevel DEBUG")
@@ -70,11 +65,10 @@ def _create_multidigraph(ict_net, protocol, in_service_only = True, validate = F
     
     # Add devices and nodes as nodes
     idx = 0
-    for i, n in ict_net.node.iterrows():
-        if protocol in n['link_types'] or n['link_types']=='all':
-            if (in_service_only and n['in_service']) or not in_service_only:
-                mdg.add_node(idx, pielt=("node", i))
-                idx+=1
+    for i, n in ict_net.node.iterrows():        
+        if (in_service_only and n['in_service']) or not in_service_only:
+            mdg.add_node(idx, pielt=("node", i))
+            idx+=1
     for i, d in ict_net.device.iterrows():
         if (in_service_only and d['in_service']) or not in_service_only:
             mdg.add_node(idx, pielt=("device", i))
@@ -95,17 +89,14 @@ def _create_multidigraph(ict_net, protocol, in_service_only = True, validate = F
             bidir = True
         
         # find nx nodes connected by the link
-        from_elt = str2tuple(l['from'])
-        if islist(l['to']):
-            to_elt = [str2tuple(e) for e in str2list(l['to'])]
-        else:
-            to_elt = [str2tuple(l['to'])]
+        from_elt = l['from']        
+        to_elt = l['to']
         
         nxn1 = _get_nx_node_for_elt(mdg, from_elt)
         nxn2 = [_get_nx_node_for_elt(mdg, e) for e in to_elt]        
          
         for n2 in nxn2: 
-            mdg.add_edge(nxn1, n2, pielt = ("link", i))
+            mdg.add_edge(nxn1, n2, pielt = ("link", i))            
             if bidir:
                 mdg.add_edge(n2, nxn1, pielt = ("link", i))    
                 

@@ -9,55 +9,6 @@ Created on 8.02.2024
 
 import numpy as np 
 
-list_delim = ";"
-tuple_delim = "#"
-
-def set_str_delim(d):
-    global list_delim
-    list_delim = d
-
-def list2str(l):
-    global list_delim
-    if not isinstance(l, list) or len(l)==0:
-        return None
-    s = list_delim.join([str(ele) for ele in l])
-    return s 
-
-def islist(s):
-    global list_delim
-    if list_delim in s:
-        return True 
-    return False
-    
-def str2list(s):
-    global list_delim
-    if isinstance(s,list):
-        return s
-    if not isinstance(s, str) or s=='':
-        return []
-    l = s.split(list_delim)
-    return l
-
-def tuple2str(t):
-    global tuple_delim
-    if not isinstance(t, tuple) or len(t)==0:
-        return None
-    s = tuple_delim.join([str(ele) for ele in t])
-    return s    
-
-def str2tuple(s):
-    global tuple_delim
-    if isinstance(s,tuple):
-        return s
-    if not isinstance(s, str) or s=='':
-        return []
-    if (list_delim in s):
-        s = s.split(list_delim)[0]
-    l = list(s.split(tuple_delim))
-    if l[0]=='node' or l[0]=='device' or l[0]=='conn' or l[0]=='app':
-        l[1] = int(l[1]) 
-    return tuple(l)
-
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
 def uuid2elt(ict_net, uid):    
@@ -123,7 +74,7 @@ def get_links_at(ict_net, elt):
     linklist = []
     if not(elt[0]=="node" or elt[0]=="device"):
         return []  
-    elt = tuple2str(elt)
+    
     for i, l in ict_net.link.iterrows():    
         if (isinstance(l['to'], list)):
             if elt==l['from'] or elt in l['to']:
@@ -133,17 +84,15 @@ def get_links_at(ict_net, elt):
                 linklist += [i]
     return linklist
 
-def get_links_between(ict_net, elt1, elt2):
-    elt1 = str2tuple(elt1)
-    elt2 = str2tuple(elt2)
+def get_links_between(ict_net, elt1, elt2):    
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):
         return []
     linklist = []
     for i, l in ict_net.link.iterrows():
-        lfrom = str2tuple(l['from'])
-        if islist(l['to']):
+        lfrom = l['from']
+        if isinstance(l['to'], list):
             continue
-        lto   = str2tuple(l['to']) # only takes first element if it's a list               
+        lto   = l['to'] # only takes first element if it's a list #ToDo does this make sense?              
         if (lfrom==elt1 and lto==elt2) or (lfrom==elt2 and lto==elt1):
             linklist += [i]
     return linklist

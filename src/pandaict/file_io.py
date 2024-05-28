@@ -1,8 +1,20 @@
+'''
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
+
+Created on 8.03.2024
+
+@authors: jringelstein
+@note: file_io is not threadsave through the use of copy.deepcopy 
+
+'''
+
 import pandas as pd
 import os
 import json
 from numpy import int64
 import csv
+import copy
 import pandapower as pp 
 import uuid
 from pandaict import create_empty_network
@@ -19,8 +31,8 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-def _df_to_json(df):
-    dfc = df.copy(deep=True)
+def __df_to_json(df):
+    dfc = copy.deepcopy(df)
     for i,row in df.iterrows():
         for j, cell in enumerate(row):
             if isinstance(cell,uuid.UUID):
@@ -28,8 +40,20 @@ def _df_to_json(df):
              
     return dfc.to_json()
 
-def _json_to_df(df, dfto):
-    df.index = df.index.astype(int)
+def __std_type_dict_to_json(di):
+    dic = copy.deepcopy(di)    
+    for etype in dic.keys():
+        for stdtype in dic[etype].keys():
+            if 'uuid' in dic[etype][stdtype].keys():            
+                dic[etype][stdtype].update({'uuid': str(dic[etype][stdtype]['uuid'])})
+            if 'info_items' in dic[etype][stdtype].keys():            
+                dic[etype][stdtype].update({'info_items': [{'name': ii.name, 'value': ii.value} for ii in dic[etype][stdtype]['info_items']]})
+                 
+    return json.dumps(dic)
+
+def __json_to_df(df, dfto):
+    if df.index[0].isnumeric():
+        df.index = df.index.astype(int)
     
     if "uuid" in df.keys():
         for i, s in enumerate(df["uuid"]):
@@ -37,14 +61,53 @@ def _json_to_df(df, dfto):
                 
     if dfto=="node":
         for i, s in enumerate(df["type"]):            
-            df.at[i,"type"] = NodeType(s["value"])        
+            df.at[i,"type"] = NodeType(s["value"])  
+        for i, s in enumerate(df["map_to"]):
+            if s is not None:
+                df.at[i,"map_to"] = tuple(s)
+        for i, s in enumerate(df["geodata"]):
+            if s is not None:
+                df.at[i,"geodata"] = tuple(s)        
     elif dfto=="device":
         for i, s in enumerate(df["type"]):            
             df.at[i,"type"] = DeviceType(s["value"])  
+    elif dfto=="link":
+        for i, s in enumerate(df["protocols"]):
+            if s is not None:
+                df.at[i,"protocols"] = list(s) 
+        for i, s in enumerate(df["from"]):
+            if s is not None:
+                df.at[i,"from"] = tuple(s)
+        for i, s in enumerate(df["to"]):
+            if s is not None:                
+                df.at[i,"to"] = [tuple(e) for e in s]
+        for i, s in enumerate(df["map_to"]):
+            if s is not None:
+                df.at[i,"map_to"] = tuple(s)            
     elif dfto=="app":
         for i, s in enumerate(df["type"]):            
             df.at[i,"type"] = AppType(s["value"]) 
-           
+        for i, s in enumerate(df["conversions"]):
+            if s is not None:                
+                df.at[i,"conversions"] = [tuple(e) for e in s]
+        for i, s in enumerate(df["map_to"]):
+            if s is not None:
+                df.at[i,"map_to"] = tuple(s) 
+    elif dfto == "conn":
+        for i, s in enumerate(df["peers"]):
+            if s is not None:
+                df.at[i,"peers"] = tuple(s)
+        for i, s in enumerate(df["info_items"]):        
+            df.at[i,"info_items"] = [InfoItem(v['value']) for v in s]           
+    elif dfto == "std_type":
+        for pr in df['protocol'].keys():
+            if isinstance(df['protocol'][pr], dict):
+                df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
+                df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
+        for li in df['link'].keys():
+            if isinstance(df['link'][li], dict):          
+                df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
+                
     return df
 
 def to_json(ict_net, filename, save_std_types=False):
@@ -63,13 +126,13 @@ def to_json(ict_net, filename, save_std_types=False):
     """            
     with open(filename, 'w') as pifile: 
         try:
-            jnode = _df_to_json(ict_net.node)
-            jlink = _df_to_json(ict_net.link)
-            jdevc = _df_to_json(ict_net.device)
-            jappc = _df_to_json(ict_net.app)
-            jconn = _df_to_json(ict_net.conn)            
+            jnode = __df_to_json(ict_net.node)
+            jlink = __df_to_json(ict_net.link)
+            jdevc = __df_to_json(ict_net.device)
+            jappc = __df_to_json(ict_net.app)
+            jconn = __df_to_json(ict_net.conn)            
             if save_std_types:
-                jstdt = _df_to_json(ict_net.std_types)
+                jstdt = __std_type_dict_to_json(ict_net.std_types)
             else:
                 jstdt = "{}"
             jall  = json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name,
@@ -113,13 +176,13 @@ def from_json(filename):
         logger.error("Not a valid pandaICT file: "+filename)
         return    
     
-    ict_net.name     = jall["name"]
-    ict_net.node     = _json_to_df(pd.DataFrame(jall["node"]),"node")
-    ict_net.link     = _json_to_df(pd.DataFrame(jall["link"]),"link")
-    ict_net.device   = _json_to_df(pd.DataFrame(jall["device"]),"device")
-    ict_net.app      = _json_to_df(pd.DataFrame(jall["app"]),"app")
-    ict_net.conn     = _json_to_df(pd.DataFrame(jall["conn"]),"conn")
-    ict_net.std_type = _json_to_df(pd.DataFrame(jall["std_type"]),"std_type")
+    ict_net.name      = jall["name"]
+    ict_net.node      = __json_to_df(pd.DataFrame(jall["node"]),"node")
+    ict_net.link      = __json_to_df(pd.DataFrame(jall["link"]),"link")
+    ict_net.device    = __json_to_df(pd.DataFrame(jall["device"]),"device")
+    ict_net.app       = __json_to_df(pd.DataFrame(jall["app"]),"app")
+    ict_net.conn      = __json_to_df(pd.DataFrame(jall["conn"]),"conn")
+    ict_net.std_types = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
 
     return ict_net
 

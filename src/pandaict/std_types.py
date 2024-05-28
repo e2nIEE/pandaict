@@ -177,7 +177,7 @@ def basic_std_types():
         "protocol"   : basic_protocol_std_types(),           
     }
     
-def add_basic_std_types(ict_net):
+def add_basic_std_types(ict_net): # ToDo: make private?
     """Adds basic standard types of the pandaict library to the ict_net provided. These standard types
     are the same types that are available with output of `pandapower.create_empty_network()` and
     `pandapower.create_empty_network(add_stdtypes=True)` respectively.

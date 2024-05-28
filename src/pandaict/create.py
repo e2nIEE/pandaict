@@ -8,14 +8,14 @@ Created on 30.01.2024
 '''
 
 from pandaict.auxiliary import pandaICTNet
-import pandaict.utils as utils
+import pandaict.utils as utils # TODO: needed?
 from pandapower.auxiliary import ADict, get_free_id, _preserve_dtypes
 from numpy import dtype, zeros
 import numpy as np
 import pandas as pd
 import uuid
 from pandaict.std_types import add_basic_std_types
-from pandaict.utils import list2str, tuple2str, uuid2elt, elt2uuid
+from pandaict.utils import uuid2elt, elt2uuid
 from pandaict.enums import InfoItem, NodeType, DeviceType, AppType
 
 import logging
@@ -95,68 +95,57 @@ def create_empty_network(name="", add_stdtypes=True):
             ict_net[s] = pd.DataFrame(zeros(0, dtype=ict_net[s]), index=[])
     return ict_net
 
-def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=True, use_uuid=False, uid=None, 
-                     geodata=None, link_types=None, ber=0, mtbf_h=0, mttr_h=0):
-    
+
+def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_types):
     if ict_net is None:
         raise UserWarning("ict_net must not be None")
     if node_type is not None and not isinstance(node_type, NodeType):
-        raise UserWarning("node_type must be NodeType")    
+        raise UserWarning("node_type must be NodeType")
     if index is not None and index in ict_net["node"].index:
         raise UserWarning("A node with index %s already exists" % index)
     if geodata is not None:
         if not isinstance(geodata, tuple) or len(geodata) != 2:
             raise UserWarning("geodata must be given as (x, y) tuple")
-    if link_types is not None: 
+    if link_types is not None:
         if isinstance(link_types, list):
-            for lt in link_types: 
+            for lt in link_types:
                 if not lt in ict_net.std_types['link'].keys():
-                    raise UserWarning("link_type "+str(lt)+" not found in std_types")
+                    raise UserWarning("link_type " + str(lt) + " not found in std_types")
+        
         elif not link_types in ict_net.std_types['link'].keys():
-            raise UserWarning("link_type "+str(link_types)+" not found in std_types")
-    if uid is not None: 
-            if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
-                raise UserWarning("uid must be None, uuid4 or string")                        
-            try:
-                uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
-            except:
-                raise UserWarning("uid '"+str(uid)+"' can not be converted to UUID object")  
-            if uelt is not None:
-                raise UserWarning("uid already in use for "+str(uuid2elt(ict_net, uuid.UUID(str(uid))))) 
-            
-    if index is None:
-        index = get_free_id(ict_net["node"])
+            raise UserWarning("link_type " + str(link_types) + " not found in std_types")
+    if uid is not None:
+        if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
+            raise UserWarning("uid must be None, uuid4 or string")
+        try:
+            uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
+        except:
+            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
+        if uelt is not None:
+            raise UserWarning("uid already in use for " + str(uuid2elt(ict_net, uuid.UUID(str(uid)))))
+    return 
+
+
+def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=True, use_uuid=False, uid=None, 
+                     geodata=None, link_types=None, ber=0, mtbf_h=0, mttr_h=0):
+    
+    __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_types)
 
     dtypes = ict_net.node.dtypes
-    # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
-    # but current pandapower release won't work with pandas >= 2.0.0
-    if isinstance(link_types, list):
-        lt = list2str(link_types)
-    elif link_types is not None:
-        lt = str(link_types) 
-    else:
-        lt = 'all'
-        
-    if geodata is not None:
-        gd = tuple2str(geodata)
-    else:
-        gd = None
-           
-    if (use_uuid): 
-        if uid is None:
-            ruuid = uuid.uuid4()
-        else:
-            ruuid = uuid.UUID(str(uid))
+    if index is None:
+        index = get_free_id(ict_net["node"])                
+    if (use_uuid):  # TODO: shift in extra method?        
+        ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))        
     else: 
         ruuid = None
-    ict_net.node.loc[index, ["name", "type", "in_service", "geodata", "link_types", "ber", "mtbf_h", "mttr_h", "uuid"]] = [name, node_type, in_service, gd, lt, ber, mtbf_h, mttr_h, ruuid]
+        
+    ict_net.node.loc[index, ["name", "type", "in_service", "ber", "mtbf_h", "mttr_h", "uuid"]] = [name, node_type, in_service, ber, mtbf_h, mttr_h, ruuid]
+    ict_net.node.at[index,'geodata'] = geodata
+    ict_net.node.at[index,'link_types'] = link_types or 'all'
 
     _preserve_dtypes(ict_net.node, dtypes)
-
-    if use_uuid:
-        return ruuid
-    else:
-        return ('node', index)
+    
+    return ruuid if use_uuid else ('node', index)
 
     
 def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=None, in_service=True, use_uuid=False, uid=None,
@@ -227,60 +216,43 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
     # but current pandapower release won't work with pandas >= 2.0.0    
     if (use_uuid):         
-        if uid is None:
-            ruuid = uuid.uuid4()
-        else:        
-            ruuid = uuid.UUID(str(uid))
+        ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))
         from_elt = uuid2elt(ict_net, from_elt)
         if from_elt is None:
             raise UserWarning("from_elt not found by uuid") 
         if not (from_elt[0]=='device' or from_elt[0]=='node'):
             raise UserWarning("from_elt is "+str(from_elt[0])+", must be device or node") 
-        from_elt = tuple2str(from_elt) 
+        
         if isinstance(to_elt, list):
-            h = [tuple2str(uuid2elt(ict_net, uid)) for uid in to_elt]
+            h = [uuid2elt(ict_net, uid) for uid in to_elt]
             if h is None or None in h:                
                 raise UserWarning("at least one to_elt not found by uuid")
             if not all(('device' in e or 'node' in e) for e in h):
                 raise UserWarning("all to_elt must be device or node") 
-            to_elt = list2str(h)
+            to_elt = h
         else:
             to_elt = uuid2elt(ict_net, to_elt)
             if to_elt is None:                
                 raise UserWarning("to_elt not found by uuid")
             if not (to_elt[0]=='device' or to_elt[0]=='node'):
                 raise UserWarning("to_elt is "+str(to_elt[0])+", must be device or node")                  
-            to_elt = tuple2str(to_elt)
             
     else: 
         ruuid = None  
-        from_elt = tuple2str(from_elt)
-        if isinstance(to_elt, list):
-            h = [tuple2str(elt) for elt in to_elt]
-            to_elt = list2str(h)
-        else:
-            to_elt = tuple2str(to_elt)
-          
+        
     if from_elt==to_elt: 
         raise UserWarning("from_elt and to_elt must not be equal") 
     if from_elt in to_elt:
         raise UserWarning("to_elt must not contain from_elt") 
-        
-    if isinstance(protocols, list):
-        pr = list2str(protocols)
-    elif protocols is not None:
-        pr = str(protocols) 
-    else:
-        pr = None    
-    
-    ict_net.link.loc[index, ["name", "type", "in_service", "from", "to", "protocols", "length_km", "uuid"]] = [name, link_type, in_service, from_elt, to_elt, pr, length_km, ruuid]
+            
+    ict_net.link.loc[index, ["name", "type", "in_service", "length_km", "uuid"]] = [name, link_type, in_service, length_km, ruuid]
+    ict_net.link.at[index,'from'] = from_elt
+    ict_net.link.at[index,'to'] = to_elt
+    ict_net.link.at[index,'protocols'] = protocols
 
     _preserve_dtypes(ict_net.link, dtypes)
 
-    if use_uuid:
-        return ruuid
-    else:
-        return ('link', index)
+    return ruuid if use_uuid else ('link', index)
 
 
 def create_ict_device(ict_net, name=None, device_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
@@ -319,10 +291,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
 
     _preserve_dtypes(ict_net.device, dtypes)
 
-    if use_uuid:
-        return ruuid
-    else:
-        return ('device', index)
+    return ruuid if use_uuid else ('device', index)
     
     
 def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
@@ -364,18 +333,9 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
         index = get_free_id(ict_net["app"])
 
     dtypes = ict_net.app.dtypes
-    # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
-    # but current pandapower release won't work with pandas >= 2.0.0        
-    if conversions is not None:
-        cn = list2str(conversions)
-    else:
-        cn = None
         
     if (use_uuid): 
-        if uid is None:
-            ruuid = uuid.uuid4()
-        else:
-            ruuid = uuid.UUID(str(uid))
+        ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))        
         rdevice = uuid2elt(ict_net, device) 
         if rdevice is None:
             raise UserWarning("device not found by uuid") 
@@ -388,14 +348,12 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
             raise UserWarning("device parameter is "+str(device[0])+", must be device")  
         rdevice = device[1]
         
-    ict_net.app.loc[index, ["name", "type", "in_service", "conversions", "uuid", "device" ]] = [name, app_type, in_service, cn, ruuid, rdevice]
+    ict_net.app.loc[index, ["name", "type", "in_service", "uuid", "device" ]] = [name, app_type, in_service, ruuid, rdevice]
+    ict_net.app.at[index, "conversions"] = conversions
 
     _preserve_dtypes(ict_net.app, dtypes)
 
-    if use_uuid:
-        return ruuid
-    else:
-        return ('app', index)
+    return ruuid if use_uuid else ('app', index)
 
 
 def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_service=True, use_uuid=False,            
@@ -479,26 +437,9 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
         index = get_free_id(ict_net["conn"])
         
     dtypes = ict_net.conn.dtypes
-    # NOTE: lists need to be converted to str because pandas dataframes can not use lists for pandas < 2.0.0
-    # but current pandapower release won't work with pandas >= 2.0.0
-    if info_items is not None: 
-        ii = list2str(info_items)
-    else:
-        ii = None    
-    if producer is not None:
-        pr = list2str(producer)
-    else:
-        pr = None 
-    if prod_freq_ms is not None:
-        pf = list2str(prod_freq_ms)            
-    else:
-        pf = None
         
     if (use_uuid): 
-        if uid is None:
-            ruuid = uuid.uuid4()
-        else:
-            ruuid = uuid.UUID(str(uid))
+        ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))        
         if peers is not None:
             pdev1 = uuid2elt(ict_net, peers[0])  
             if pdev1 is None:                
@@ -510,7 +451,7 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
                 raise UserWarning("pdev2 not found by uuid") 
             if not (pdev2[0]=='app'):
                 raise UserWarning("pdev2 is "+str(pdev2[0])+", must be app")                     
-            pe = tuple2str( (pdev1[1], pdev2[1]) )
+            peers = (pdev1[1], pdev2[1])
         else:
             pe = None        
         from_app = uuid2elt(ict_net, from_app) 
@@ -526,26 +467,20 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
             raise UserWarning("to_app is "+str(to_app[0])+", must be app")
         to_app = to_app[1]
     else: 
-        ruuid = None
-        if peers is not None: 
-            pe = tuple2str((peers[0][1], peers[1][1]))
-        else:
-            pe = None
+        ruuid = None        
         from_app = from_app[1] # elt type already checked above
         to_app   = to_app[1]   # elt type already checked above
         
     if from_app==to_app: 
         raise UserWarning("from_app and to_app must not be equal") 
             
-    ict_net.conn.loc[index, ["name", "in_service", "from", "to", "protocol", "info_items", 
-                             "peers", "producer", "prod_freq_ms", "uuid" ]] = [name, in_service, from_app, to_app, protocol, ii, 
-                              pe, pr, pf, ruuid]
-    
+    ict_net.conn.loc[index, ["name", "in_service", "from", "to", "protocol", "uuid" ]] = [name, in_service, from_app, to_app, protocol, ruuid]
+    ict_net.conn.at[index,'info_items'] = info_items
+    ict_net.conn.at[index,'peers'] = peers
+    ict_net.conn.at[index,'producer'] = producer
+    ict_net.conn.at[index,'prod_freq_ms'] = prod_freq_ms
 
     _preserve_dtypes(ict_net.conn, dtypes)
 
-    if use_uuid:
-        return ruuid
-    else:
-        return ('conn', index)
+    return ruuid if use_uuid else ('conn', index)
 
