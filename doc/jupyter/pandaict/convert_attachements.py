@@ -24,7 +24,7 @@ def convert_attachments_to_files(notebook_path, output_dir):
                         with open(img_filename, 'wb') as img_file:
                             img_file.write(img_data)
                         # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                  						
-                        cell.source = cell.source.replace(f'attachment:{attachment_name}', img_filename).replace("\\","/")
+                        cell.source = cell.source.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
                         		
     
     # Speichere das angepasste Notebook
