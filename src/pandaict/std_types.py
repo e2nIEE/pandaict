@@ -10,7 +10,7 @@ Created on 2.02.2024
 import pandas as pd
 import warnings
 import uuid
-from   pandaict.enums import InfoItem
+from   pandaict.utils.enums import InfoItem
 
 try:
     import pandaplan.core.pplog as logging
@@ -76,7 +76,7 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
                         check_required=check_required)
 
 
-def basic_link_std_types():
+def __basic_link_std_types():
 
     linktypes = {        
         "Binary":
@@ -141,7 +141,7 @@ def basic_link_std_types():
     
     return linktypes
 
-def basic_protocol_std_types():
+def __basic_protocol_std_types():
 
     protocoltypes = {
         "FTP": {        
@@ -171,10 +171,10 @@ def basic_protocol_std_types():
 
 
 
-def basic_std_types():
+def __basic_std_types():
     return {
-        "link"       : basic_link_std_types(), 
-        "protocol"   : basic_protocol_std_types(),           
+        "link"       : __basic_link_std_types(), 
+        "protocol"   : __basic_protocol_std_types(),           
     }
     
 def add_basic_std_types(ict_net): # ToDo: make private?
@@ -197,8 +197,8 @@ def add_basic_std_types(ict_net): # ToDo: make private?
         ict_net.std_types = {"link": {}}
         ict_net.std_types.update({"protocol": {}})
 
-    linktypes = basic_link_std_types()
-    protocols = basic_protocol_std_types()
+    linktypes = __basic_link_std_types()
+    protocols = __basic_protocol_std_types()
 
     create_std_types(ict_net, data=linktypes, element="link")
     create_std_types(ict_net, data=protocols, element="protocol")  

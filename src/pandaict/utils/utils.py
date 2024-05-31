@@ -11,7 +11,7 @@ import numpy as np
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
-def uuid2elt(ict_net, uid):    
+def __uuid2elt(ict_net, uid):    
     idx = None
     try:
         idx = np.where(ict_net.node['uuid']==uid)[0][0]
@@ -45,7 +45,7 @@ def uuid2elt(ict_net, uid):
     
 # Convert (elt_type, index) of element in ict_net to uuid
 # Returns None if uuid not available
-def elt2uuid(ict_net, elt):    
+def __elt2uuid(ict_net, elt):    
     uid = None
     try:
         uid = ict_net[elt[0]].loc[elt[1]]['uuid']
@@ -60,17 +60,17 @@ def get_elt(ict_net, elt):
     except:
         return None
 
-def get_elt_by_uuid(ict_net, uid):
-    return get_elt(uuid2elt(uid))
+def __get_elt_by_uuid(ict_net, uid):
+    return get_elt(__uuid2elt(uid))
 
-def get_apps_on_device(ict_net, device):
+def __get_apps_on_device(ict_net, device):
     applist = []
     for i, a in ict_net.app.iterrows():    
         if a.device==device[1]:
             applist += [i]
     return applist
 
-def get_links_at(ict_net, elt):
+def __get_links_at(ict_net, elt):
     linklist = []
     if not(elt[0]=="node" or elt[0]=="device"):
         return []  
@@ -84,7 +84,7 @@ def get_links_at(ict_net, elt):
                 linklist += [i]
     return linklist
 
-def get_links_between(ict_net, elt1, elt2):    
+def __get_links_between(ict_net, elt1, elt2):    
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):
         return []
     linklist = []

@@ -1,7 +1,7 @@
 __version__ = '0.0.1preview'
 from pandaict.create import *
 from pandaict.auxiliary import *
-from pandaict.enums import *
+from pandaict.utils import *
 from pandaict.std_types import *
 from pandaict.file_io import *
 from pandaict.diagnosis import *

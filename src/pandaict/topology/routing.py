@@ -12,10 +12,10 @@ import networkx as nx
 import logging
 logger = logging.getLogger("pandaICT_Core")
 
-def _get_nx_node_for_elt(mdg, elt):
+def __get_nx_node_for_elt(mdg, elt):
     node = [n for n in range(0,mdg.number_of_nodes()) if mdg.nodes[n]['pielt']==elt]
     if len(node)>1:
-        logger.debug("_get_nx_node_for_elt found nodes "+str(node)+" sharing same pielt "+str(elt)+" - this shouldn't happen")
+        logger.debug("__get_nx_node_for_elt found nodes "+str(node)+" sharing same pielt "+str(elt)+" - this shouldn't happen")
     if node is None or node==[]:
         return None
     else:
@@ -23,7 +23,7 @@ def _get_nx_node_for_elt(mdg, elt):
     pass
 
 
-def _validate_multidigraph(ict_net, mdg, protocol=None):
+def __validate_multidigraph(ict_net, mdg, protocol=None):
     
     passed = True
     # check edges
@@ -34,7 +34,7 @@ def _validate_multidigraph(ict_net, mdg, protocol=None):
         pinode2  = mdg.nodes[nxnode2]['pielt']
         pilink   = nxedge[1][2]['pielt']
         if not pilink[0]=='link':
-            logger.debug("_validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
+            logger.debug("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
             passed = False
         else:
             pifrom = ict_net.link.iloc[pilink[1]]['from']
@@ -46,20 +46,20 @@ def _validate_multidigraph(ict_net, mdg, protocol=None):
                 bidir = True
             
             if not((pinode1==pifrom and pinode2 in pito) or (bidir and pinode2==pifrom and pinode1 in pito)):
-                logger.debug("_validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
+                logger.debug("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
                 passed = False
                 
             if protocol is not None:
                 if protocol not in ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['protocols']:
-                    logger.debug("_validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
+                    logger.debug("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
                     passed = False  
         
     if not passed:
-        logger.warn("_validate_multidigraph FAILED, check out reasons above if debuglevel DEBUG")
+        logger.warn("__validate_multidigraph FAILED, check out reasons above if debuglevel DEBUG")
     return passed
 
-def _create_multidigraph(ict_net, protocol, in_service_only = True, validate = False):
+def __create_multidigraph(ict_net, protocol, in_service_only = True, validate = False):
     
     mdg = nx.MultiDiGraph()
     
@@ -92,8 +92,8 @@ def _create_multidigraph(ict_net, protocol, in_service_only = True, validate = F
         from_elt = l['from']        
         to_elt = l['to']
         
-        nxn1 = _get_nx_node_for_elt(mdg, from_elt)
-        nxn2 = [_get_nx_node_for_elt(mdg, e) for e in to_elt]        
+        nxn1 = __get_nx_node_for_elt(mdg, from_elt)
+        nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]        
          
         for n2 in nxn2: 
             mdg.add_edge(nxn1, n2, pielt = ("link", i))            
@@ -101,12 +101,12 @@ def _create_multidigraph(ict_net, protocol, in_service_only = True, validate = F
                 mdg.add_edge(n2, nxn1, pielt = ("link", i))    
                 
     if validate:
-        passed = _validate_multidigraph(ict_net, mdg, protocol)
+        passed = __validate_multidigraph(ict_net, mdg, protocol)
         if not passed:                        
             if not(logger.level==logging.DEBUG):
-                print("Warning from _create_multidigraph: validation FAIL, set loglevel to debug and check the log")
+                print("Warning from __create_multidigraph: validation FAIL, set loglevel to debug and check the log")
             else:
-                print("Warning from _create_multidigraph: validation fail, check the log")
+                print("Warning from __create_multidigraph: validation fail, check the log")
     
     return mdg
 
@@ -116,7 +116,7 @@ def calc_routes_for_connection(ict_net, conn):
 def calc_routes_between_devices(ict_net, conn, verbose=False):
     
     # Create the nxgraph
-    mdg = _create_multidigraph(ict_net, conn['protocol'], validate=True)
+    mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)
     
     # Fetch devices used by the connection
     try:
@@ -129,13 +129,13 @@ def calc_routes_between_devices(ict_net, conn, verbose=False):
         logger.debug("Failed to obtain from device for conn "+str(conn['name']))
                
     # Fetch nynodes representing the devices
-    n1 = _get_nx_node_for_elt(mdg, dev1)
-    n2 = _get_nx_node_for_elt(mdg, dev2)
+    n1 = __get_nx_node_for_elt(mdg, dev1)
+    n2 = __get_nx_node_for_elt(mdg, dev2)
     if (n1 is None):
-        logger.debug("_get_nx_node_for_elt failed for "+str(n1))
+        logger.debug("__get_nx_node_for_elt failed for "+str(n1))
         return None 
     if (n2 is None):
-        logger.debug("_get_nx_node_for_elt failed for "+str(n2))
+        logger.debug("__get_nx_node_for_elt failed for "+str(n2))
         return None
     
     # Calculate paths between nxnodes and translate back to pandaICT elt representation

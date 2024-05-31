@@ -22,7 +22,7 @@ from pandaict import __version__
 import numpy
 from io import StringIO
 from win32comext.internet import inetcon
-from pandaict.enums import NodeType, DeviceType, AppType, InfoItem
+from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem
 
 try:
     import pplog as logging

@@ -8,15 +8,14 @@ Created on 30.01.2024
 '''
 
 from pandaict.auxiliary import pandaICTNet
-import pandaict.utils as utils # TODO: needed?
-from pandapower.auxiliary import ADict, get_free_id, _preserve_dtypes
+from pandaict.auxiliary import ADict, __get_free_id, __preserve_dtypes
 from numpy import dtype, zeros
 import numpy as np
 import pandas as pd
 import uuid
 from pandaict.std_types import add_basic_std_types
-from pandaict.utils import uuid2elt, elt2uuid
-from pandaict.enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.utils.utils import __uuid2elt, __elt2uuid
+from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
 
 import logging
 logger = logging.getLogger("pandaICT_Core")
@@ -118,11 +117,11 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
         if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
             raise UserWarning("uid must be None, uuid4 or string")
         try:
-            uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
+            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
         except:
             raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
         if uelt is not None:
-            raise UserWarning("uid already in use for " + str(uuid2elt(ict_net, uuid.UUID(str(uid)))))
+            raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
     return 
 
 
@@ -133,7 +132,7 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
 
     dtypes = ict_net.node.dtypes
     if index is None:
-        index = get_free_id(ict_net["node"])                
+        index = __get_free_id(ict_net["node"])                
     if (use_uuid):  # TODO: shift in extra method?        
         ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))        
     else: 
@@ -143,7 +142,7 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
     ict_net.node.at[index,'geodata'] = geodata
     ict_net.node.at[index,'link_types'] = link_types or 'all'
 
-    _preserve_dtypes(ict_net.node, dtypes)
+    __preserve_dtypes(ict_net.node, dtypes)
     
     return ruuid if use_uuid else ('node', index)
 
@@ -171,11 +170,11 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
             if str(to_elt)==str(uid): 
                 raise UserWarning("to_elt and uid must not be equal") 
             try:
-                uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
+                uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
             except:
                 raise UserWarning("uid '"+str(uid)+"' can not be converted to UUID object")   
             if uelt is not None:
-                raise UserWarning("uid already in use for "+str(uuid2elt(ict_net, uuid.UUID(str(uid))))) 
+                raise UserWarning("uid already in use for "+str(__uuid2elt(ict_net, uuid.UUID(str(uid))))) 
     else:        
         if not isinstance(from_elt, tuple):
             raise UserWarning("from_elt must be (str, int) tuple")     
@@ -209,7 +208,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
             raise UserWarning("protocol "+str(protocols)+" not found in std_types")
 
     if index is None:
-        index = get_free_id(ict_net["link"])
+        index = __get_free_id(ict_net["link"])
 
     dtypes = ict_net.link.dtypes
     
@@ -217,21 +216,21 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     # but current pandapower release won't work with pandas >= 2.0.0    
     if (use_uuid):         
         ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))
-        from_elt = uuid2elt(ict_net, from_elt)
+        from_elt = __uuid2elt(ict_net, from_elt)
         if from_elt is None:
             raise UserWarning("from_elt not found by uuid") 
         if not (from_elt[0]=='device' or from_elt[0]=='node'):
             raise UserWarning("from_elt is "+str(from_elt[0])+", must be device or node") 
         
         if isinstance(to_elt, list):
-            h = [uuid2elt(ict_net, uid) for uid in to_elt]
+            h = [__uuid2elt(ict_net, uid) for uid in to_elt]
             if h is None or None in h:                
                 raise UserWarning("at least one to_elt not found by uuid")
             if not all(('device' in e or 'node' in e) for e in h):
                 raise UserWarning("all to_elt must be device or node") 
             to_elt = h
         else:
-            to_elt = uuid2elt(ict_net, to_elt)
+            to_elt = __uuid2elt(ict_net, to_elt)
             if to_elt is None:                
                 raise UserWarning("to_elt not found by uuid")
             if not (to_elt[0]=='device' or to_elt[0]=='node'):
@@ -250,7 +249,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     ict_net.link.at[index,'to'] = to_elt
     ict_net.link.at[index,'protocols'] = protocols
 
-    _preserve_dtypes(ict_net.link, dtypes)
+    __preserve_dtypes(ict_net.link, dtypes)
 
     return ruuid if use_uuid else ('link', index)
 
@@ -268,14 +267,14 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
         if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
             raise UserWarning("uid must be None, uuid4 or string")                        
         try:
-            uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
+            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
         except:
             raise UserWarning("uid '"+str(uid)+"' can not be converted to UUID object") 
         if uelt is not None:
-            raise UserWarning("uid already in use for "+str(uuid2elt(ict_net, uuid.UUID(str(uid)))))  
+            raise UserWarning("uid already in use for "+str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))  
 
     if index is None:
-        index = get_free_id(ict_net["device"])
+        index = __get_free_id(ict_net["device"])
 
     dtypes = ict_net.device.dtypes
            
@@ -289,7 +288,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
         
     ict_net.device.loc[index, ["name", "type", "in_service", "mtbf", "mttr", "uuid" ]] = [name, device_type, in_service, mtbf, mttr, ruuid]
 
-    _preserve_dtypes(ict_net.device, dtypes)
+    __preserve_dtypes(ict_net.device, dtypes)
 
     return ruuid if use_uuid else ('device', index)
     
@@ -307,11 +306,11 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
         if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
             raise UserWarning("uid must be None, uuid4 or string")                        
         try:
-            uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
+            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
         except:
             raise UserWarning("uid '"+str(uid)+"' can not be converted to UUID object") 
         if uelt is not None:
-            raise UserWarning("uid already in use for "+str(uuid2elt(ict_net, uuid.UUID(str(uid)))))  
+            raise UserWarning("uid already in use for "+str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))  
     if device is None:
         raise UserWarning("device must not be None")
     if conversions is not None:
@@ -330,13 +329,13 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
                 raise UserWarning("conversion protocol '"+str(cn[1])+"' for app  '"+str(name)+"' not found in std_types")
                 
     if index is None:
-        index = get_free_id(ict_net["app"])
+        index = __get_free_id(ict_net["app"])
 
     dtypes = ict_net.app.dtypes
         
     if (use_uuid): 
         ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))        
-        rdevice = uuid2elt(ict_net, device) 
+        rdevice = __uuid2elt(ict_net, device) 
         if rdevice is None:
             raise UserWarning("device not found by uuid") 
         if not rdevice[0]=='device': 
@@ -351,7 +350,7 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
     ict_net.app.loc[index, ["name", "type", "in_service", "uuid", "device" ]] = [name, app_type, in_service, ruuid, rdevice]
     ict_net.app.at[index, "conversions"] = conversions
 
-    _preserve_dtypes(ict_net.app, dtypes)
+    __preserve_dtypes(ict_net.app, dtypes)
 
     return ruuid if use_uuid else ('app', index)
 
@@ -391,11 +390,11 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
             if str(to_app)==str(uid): 
                 raise UserWarning("to_app and uid must not be equal") 
             try:
-                uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
+                uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
             except:
                 raise UserWarning("uid '"+str(uid)+"' can not be converted to UUID object")   
             if uelt is not None:
-                raise UserWarning("uid already in use for "+str(uuid2elt(ict_net, uuid.UUID(str(uid))))) 
+                raise UserWarning("uid already in use for "+str(__uuid2elt(ict_net, uuid.UUID(str(uid))))) 
     else:        
         if not isinstance(from_app, tuple):
             raise UserWarning("from_app must be (str, int) tuple")      
@@ -434,19 +433,19 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
             raise UserWarning("prod_freq_ms length must be the same as info_items, and all entries must be float.")
 
     if index is None:
-        index = get_free_id(ict_net["conn"])
+        index = __get_free_id(ict_net["conn"])
         
     dtypes = ict_net.conn.dtypes
         
     if (use_uuid): 
         ruuid = uuid.uuid4() if uid is None else uuid.UUID(str(uid))        
         if peers is not None:
-            pdev1 = uuid2elt(ict_net, peers[0])  
+            pdev1 = __uuid2elt(ict_net, peers[0])  
             if pdev1 is None:                
                 raise UserWarning("pdev1 not found by uuid") 
             if not (pdev1[0]=='app'):
                 raise UserWarning("pdev1 is "+str(pdev1[0])+", must be app")         
-            pdev2 = uuid2elt(ict_net, peers[1])
+            pdev2 = __uuid2elt(ict_net, peers[1])
             if pdev2 is None:                
                 raise UserWarning("pdev2 not found by uuid") 
             if not (pdev2[0]=='app'):
@@ -454,13 +453,13 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
             peers = (pdev1[1], pdev2[1])
         else:
             pe = None        
-        from_app = uuid2elt(ict_net, from_app) 
+        from_app = __uuid2elt(ict_net, from_app) 
         if from_app is None:                
                 raise UserWarning("from_app not found by uuid")
         if not (from_app[0]=='app'):
             raise UserWarning("from_app is "+str(from_app[0])+", must be app")
         from_app = from_app[1]
-        to_app   = uuid2elt(ict_net, to_app)
+        to_app   = __uuid2elt(ict_net, to_app)
         if to_app is None:                
             raise UserWarning("to_app not found by uuid")
         if not (to_app[0]=='app'):
@@ -480,7 +479,7 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     ict_net.conn.at[index,'producer'] = producer
     ict_net.conn.at[index,'prod_freq_ms'] = prod_freq_ms
 
-    _preserve_dtypes(ict_net.conn, dtypes)
+    __preserve_dtypes(ict_net.conn, dtypes)
 
     return ruuid if use_uuid else ('conn', index)
 

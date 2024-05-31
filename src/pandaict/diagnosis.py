@@ -7,8 +7,9 @@ Created on 23.04.2024
 @author: jringelstein
 '''
 
-import utils
-from pandaict.enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.utils.utils import __get_links_at, __get_apps_on_device, __get_links_between
+
 import logging
 logger = logging.getLogger("pandaICT_Core")
 
@@ -33,7 +34,7 @@ def inspect(ict_net):
             logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has no link_types")
             passed = False   
         # check if all nodes have two or more links connected
-        l = utils.get_links_at(ict_net, ('node', i))
+        l = __get_links_at(ict_net, ('node', i))
         if len(l)<2:
             logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has less than two links")
             passed = False  
@@ -53,12 +54,12 @@ def inspect(ict_net):
             logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") has no type")
             passed = False
         # check if all devices with converter apps have two or more links connected
-        apps = utils.get_apps_on_device(ict_net, ('device', i))
+        apps = __get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps==[]:
             logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") does not run any apps")
             passed = False
         if (any([ict_net.app.iloc[a]['type']==AppType.CONVERTER for a in apps])):
-            l = utils.get_links_at(ict_net, ('device', i))
+            l = __get_links_at(ict_net, ('device', i))
             if len(l)<2:
                 logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") is running converter type app(s) but has less than two links")
                 passed = False
@@ -89,7 +90,7 @@ def inspect(ict_net):
     for i, l in ict_net.link.iterrows():
         from_elt = l["from"]
         to_elt   = l["to"]
-        linklist = utils.get_links_between(ict_net, from_elt, to_elt)
+        linklist = __get_links_between(ict_net, from_elt, to_elt)
         if len(linklist) > 1: 
             linklist.remove(i)
             logger.info(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")")

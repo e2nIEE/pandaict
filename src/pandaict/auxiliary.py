@@ -18,7 +18,7 @@ from pandapower import from_json_string # ToDo: dependency?
 from functools import singledispatch
 
 
-def _preserve_dtypes(df, dtypes):
+def __preserve_dtypes(df, dtypes):
     for item, dtype in list(dtypes.items()):
         if df.dtypes.at[item] != dtype:
             if (dtype == bool or dtype == np.bool_) and np.any(df[item].isnull()):
@@ -31,7 +31,7 @@ def _preserve_dtypes(df, dtypes):
                 df[item] = df[item].astype(float)
 
 
-def _get_free_id(df):
+def __get_free_id(df):
     """
     Returns next free ID in a dataframe
     """
@@ -43,10 +43,10 @@ class ADict(dict, MutableMapping):
         super().__init__(*args, **kwargs)
 
         # to prevent overwrite of internal attributes by new keys
-        # see _valid_name()
-        self._setattr('_allow_invalid_attributes', False)
+        # see __valid_name()
+        self.__setattr('_allow_invalid_attributes', False)
 
-    def _build(self, obj, **kwargs):
+    def __build(self, obj, **kwargs):
         """
         We only want dict like elements to be treated as recursive AttrDicts.
         """
@@ -63,15 +63,15 @@ class ADict(dict, MutableMapping):
     def __setstate__(self, state):
         mapping, allow_invalid_attributes = state
         self.update(mapping)
-        self._setattr('_allow_invalid_attributes', allow_invalid_attributes)
+        self.__setattr('_allow_invalid_attributes', allow_invalid_attributes)
 
     @classmethod
-    def _constructor(cls, mapping):
+    def __constructor(cls, mapping):
         return cls(mapping)
 
     # --- taken from MutableAttr
 
-    def _setattr(self, key, value):
+    def __setattr(self, key, value):
         """
         Add an attribute to the object, without attempting to add it as
         a key to the mapping (i.e. internals)
@@ -85,7 +85,7 @@ class ADict(dict, MutableMapping):
         key: The name of the attribute
         value: The attributes contents
         """
-        if self._valid_name(key):
+        if self.__valid_name(key):
             self[key] = value
         elif getattr(self, '_allow_invalid_attributes', True):
             super(MutableMapping, self).__setattr__(key, value)
@@ -96,7 +96,7 @@ class ADict(dict, MutableMapping):
                 )
             )
 
-    def _delattr(self, key):
+    def __delattr(self, key):
         """
         Delete an attribute from the object, without attempting to
         remove it from the mapping (i.e. internals)
@@ -109,7 +109,7 @@ class ADict(dict, MutableMapping):
 
         key: The name of the attribute
         """
-        if self._valid_name(key):
+        if self.__valid_name(key):
             del self[key]
         elif getattr(self, '_allow_invalid_attributes', True):
             super(MutableMapping, self).__delattr__(key)
@@ -136,20 +136,20 @@ class ADict(dict, MutableMapping):
                 )
             )
 
-        return self._build(self[key])
+        return self.__build(self[key])
 
     def __getattr__(self, key):
         """
         Access an item as an attribute.
         """
-        if key not in self or not self._valid_name(key):
+        if key not in self or not self.__valid_name(key):
             raise AttributeError(
                 "'{cls}' instance has no attribute '{name}'".format(
                     cls=self.__class__.__name__, name=key
                 )
             )
 
-        return self._build(self[key])
+        return self.__build(self[key])
 
     def __deepcopy__(self, memo):
         """
@@ -178,15 +178,15 @@ class ADict(dict, MutableMapping):
                         result[k][col] = v[col].apply(lambda x: copy.deepcopy(x, memo))
                     else:
                         result[k][col] = copy.deepcopy(v[col], memo)
-                _preserve_dtypes(result[k], v.dtypes)
+                __preserve_dtypes(result[k], v.dtypes)
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
 
-        result._setattr('_allow_invalid_attributes', self._allow_invalid_attributes)
+        result.__setattr('_allow_invalid_attributes', self._allow_invalid_attributes)
         return result
 
     @classmethod
-    def _valid_name(cls, key):
+    def __valid_name(cls, key):
         """
         Check whether a key is a valid attribute name.
 
@@ -251,13 +251,13 @@ class pandaICTNet(ADict):
             if not et.startswith("_") and isinstance(self[et], pd.DataFrame) and len(self[et]) > 0:
                 n_rows = self[et].shape[0]
                 if 'res_' in et:
-                    res.append("   - %s (%i %s)" % (et, n_rows, "element" + plural_s(n_rows)))
+                    res.append("   - %s (%i %s)" % (et, n_rows, "element" + _plural_s(n_rows)))
                 elif et == 'group':
                     n_groups = len(set(self[et].index))
                     par.append('   - %s (%i %s, %i %s)' % (
-                        et, n_groups, "group" + plural_s(n_groups), n_rows, "row" + plural_s(n_rows)))
+                        et, n_groups, "group" + _plural_s(n_groups), n_rows, "row" + _plural_s(n_rows)))
                 else:
-                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + plural_s(n_rows)))
+                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + _plural_s(n_rows)))
         res_cost = [" and the following result values:",
                     "   - %s" % "res_cost"] if "res_cost" in self.keys() else []
         if not len(par) + len(res):
@@ -282,7 +282,7 @@ class pandaICTNet(ADict):
                 return False             
         return True
 
-def plural_s(number):
+def _plural_s(number):
     if number > 1:
         return "s"
     else:
