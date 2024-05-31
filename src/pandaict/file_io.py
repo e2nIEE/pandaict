@@ -66,7 +66,7 @@ def __json_to_df(df, dfto):
             if s is not None:
                 df.at[i,"map_to"] = tuple(s)
         for i, s in enumerate(df["geodata"]):
-            if s is not None:
+            if s is not None and not (isinstance(s, dict)):
                 df.at[i,"geodata"] = tuple(s)        
     elif dfto=="device":
         for i, s in enumerate(df["type"]):            
@@ -126,6 +126,7 @@ def to_json(ict_net, filename, save_std_types=False):
     """            
     with open(filename, 'w') as pifile: 
         try:
+            jconn = __df_to_json(ict_net.connectors)
             jnode = __df_to_json(ict_net.node)
             jlink = __df_to_json(ict_net.link)
             jdevc = __df_to_json(ict_net.device)
@@ -135,7 +136,7 @@ def to_json(ict_net, filename, save_std_types=False):
                 jstdt = __std_type_dict_to_json(ict_net.std_types)
             else:
                 jstdt = "{}"
-            jall  = json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name,
+            jall  = json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
                                 "node":       json.loads(jnode),
                                 "link":       json.loads(jlink),
                                 "device":     json.loads(jdevc),
@@ -176,13 +177,19 @@ def from_json(filename):
         logger.error("Not a valid pandaICT file: "+filename)
         return    
     
-    ict_net.name      = jall["name"]
-    ict_net.node      = __json_to_df(pd.DataFrame(jall["node"]),"node")
-    ict_net.link      = __json_to_df(pd.DataFrame(jall["link"]),"link")
-    ict_net.device    = __json_to_df(pd.DataFrame(jall["device"]),"device")
-    ict_net.app       = __json_to_df(pd.DataFrame(jall["app"]),"app")
-    ict_net.conn      = __json_to_df(pd.DataFrame(jall["conn"]),"conn")
-    ict_net.std_types = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
+    ict_net.name       = jall["name"]        
+    ict_net.connectors = pd.DataFrame(jall['connectors'])
+    from pandaict import connectors_installed # NOTE: leave this here. It won't work if moved to the top.
+    for s in ict_net.connectors[0]:
+        if s not in connectors_installed:
+            logger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
+            print("Warning: Network file "+filename+" uses connector "+s+" which is currently not installed")
+    ict_net.node       = __json_to_df(pd.DataFrame(jall["node"]),"node")
+    ict_net.link       = __json_to_df(pd.DataFrame(jall["link"]),"link")
+    ict_net.device     = __json_to_df(pd.DataFrame(jall["device"]),"device")
+    ict_net.app        = __json_to_df(pd.DataFrame(jall["app"]),"app")
+    ict_net.conn       = __json_to_df(pd.DataFrame(jall["conn"]),"conn")
+    ict_net.std_types  = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
 
     return ict_net
 

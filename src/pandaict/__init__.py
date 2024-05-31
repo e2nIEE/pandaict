@@ -11,3 +11,6 @@ import logging
 logger = logging.getLogger("pandaICT_Core")
 logging.basicConfig(filename='pandaICT_Core.log', encoding='utf-8', level=logging.INFO)
 logger.info("-------------- pandaICT_Core startup ---------------")
+
+# Track which connectors have been used
+connectors_installed = [] 

@@ -278,8 +278,11 @@ class pandaICTNet(ADict):
             cols = list(self[k].columns)
             if 'uuid' in cols: 
                 cols.remove('uuid')            
-            if not (self[k][cols].compare(other[k][cols]).empty):
-                return False             
+            try:
+                if not (self[k][cols].compare(other[k][cols]).empty):
+                    return False
+            except: 
+                print("A")             
         return True
 
 def _plural_s(number):

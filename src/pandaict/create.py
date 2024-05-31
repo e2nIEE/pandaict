@@ -35,6 +35,7 @@ def create_empty_network(name="", add_stdtypes=True):
     """    
     ict_net = pandaICTNet({
         "name": name,
+        "connectors": [],
         "node": [
             ("name", dtype(object)),
             ("type", dtype(object)),
