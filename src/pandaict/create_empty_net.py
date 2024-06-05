@@ -1,0 +1,105 @@
+'''
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
+
+Created on 30.01.2024
+
+@author: jringelstein
+'''
+
+from pandaict.auxiliary import pandaICTNet
+from pandaict.std_types import add_basic_std_types
+from numpy import dtype, zeros
+import pandas as pd
+
+import logging
+logger = logging.getLogger("pandaICT_Core")
+
+def __get_node_structure():
+    return [
+        ("name", dtype(object)), 
+        ("type", dtype(object)), 
+        ("in_service", "bool"), 
+        ("uuid", dtype(object)), 
+        ("geodata", dtype(object)), 
+        ("link_types", dtype(object)), 
+        ("ber", "f8"), 
+        ("mtbf_h", "f8"), 
+        ("mttr_h", "f8")]
+
+
+def __get_link_structure():
+    return [
+        ("name", dtype(object)), 
+        ("type", dtype(object)), 
+        ("in_service", "bool"), 
+        ("uuid", dtype(object)), 
+        ("from", dtype(object)), 
+        ("to", dtype(object)), 
+        ("length_km", "f8")]
+
+
+def __get_device_structure():
+    return [
+        ("name", dtype(object)), 
+        ("type", dtype(object)), 
+        ("in_service", "bool"), 
+        ("uuid", dtype(object)), 
+        ("mtbf_h", "f8"), 
+        ("mttr_h", "f8")]
+
+
+def __get_app_structure():
+    return [
+        ("name", dtype(object)), 
+        ("type", dtype(object)), 
+        ("in_service", "bool"), 
+        ("uuid", dtype(object)), 
+        ("device", "u4"), 
+        ("conversions", dtype(object))]
+
+
+def __get_conn_structure():
+    return [
+        ("name", dtype(object)), 
+        ("in_service", "bool"), 
+        ("uuid", dtype(object)), 
+        ("from", "u4"), 
+        ("to", "u4"), 
+        ("info_items", dtype(object)), 
+        ("peers", dtype(object)), 
+        ("producer", dtype(object)), 
+        ("prod_freq_ms", dtype(object))]
+
+def create_empty_network(name="", add_stdtypes=True):
+    """
+    Creates an empty pandaict core network datastructure.
+
+    OPTIONAL:        
+        **name** (string, None) - name for the network
+
+        **add_stdtypes** (boolean, True) - Includes standard types to net
+
+    OUTPUT:
+        **ict_net** (attrdict) - pandaict attrdict with empty tables:
+
+    """    
+    ict_net = pandaICTNet({
+        "name": name,
+        "connectors": [],
+        "node": __get_node_structure(),
+        "link": __get_link_structure(),        
+        "device": __get_device_structure(),  
+        "app": __get_app_structure(),       
+        "conn": __get_conn_structure()
+        })
+
+    if add_stdtypes:
+        add_basic_std_types(ict_net)
+    else:
+        ict_net.std_types = {"link": {}, "protocol": {}}
+
+    for s in ict_net:
+        if isinstance(ict_net[s], list):
+            ict_net[s] = pd.DataFrame(zeros(0, dtype=ict_net[s]), index=[])
+    return ict_net

@@ -55,8 +55,12 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
                     passed = False  
         
-    if not passed:
-        logger.warn("__validate_multidigraph FAILED, check out reasons above if debuglevel DEBUG")
+    if not passed:        
+        if not(logger.level==logging.DEBUG):
+            print("__validate_multidigraph FAILED, set loglevel to debug and check the log")
+        else:
+            print("__validate_multidigraph FAILED, check the log")
+    
     return passed
 
 def __create_multidigraph(ict_net, protocol, in_service_only = True, validate = False):
@@ -72,47 +76,53 @@ def __create_multidigraph(ict_net, protocol, in_service_only = True, validate = 
     for i, d in ict_net.device.iterrows():
         if (in_service_only and d['in_service']) or not in_service_only:
             mdg.add_node(idx, pielt=("device", i))
-            idx+=1
-            
+            idx+=1        
     # Add edges
     idx = 0
     for i, l in ict_net.link.iterrows():
         # check protocol and in_service
         if protocol not in ict_net.std_types['link'][l['type']]['protocols'] or (in_service_only and not l['in_service']):
-            continue 
-        
+            continue         
         # check directionality
         bw = ict_net.std_types['link'][l['type']]['bandwidth_Mbps']
         if (isinstance(bw, float) or len(bw)<2 or bw[1]==0):
             bidir = False 
         else:
-            bidir = True
-        
+            bidir = True        
         # find nx nodes connected by the link
         from_elt = l['from']        
-        to_elt = l['to']
-        
+        to_elt = l['to']        
         nxn1 = __get_nx_node_for_elt(mdg, from_elt)
-        nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]        
-         
+        nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
         for n2 in nxn2: 
             mdg.add_edge(nxn1, n2, pielt = ("link", i))            
             if bidir:
                 mdg.add_edge(n2, nxn1, pielt = ("link", i))    
                 
     if validate:
-        passed = __validate_multidigraph(ict_net, mdg, protocol)
-        if not passed:                        
-            if not(logger.level==logging.DEBUG):
-                print("Warning from __create_multidigraph: validation FAIL, set loglevel to debug and check the log")
-            else:
-                print("Warning from __create_multidigraph: validation fail, check the log")
+        passed = __validate_multidigraph(ict_net, mdg, protocol)        
     
     return mdg
 
 def calc_routes_for_connection(ict_net, conn):
     pass
     
+
+def __print_paths(ict_net, conn, paths):
+    lhops = []
+    for p in paths:
+        hops = ""
+        for elt in p:
+            if elt[0] == 'device':
+                hops += ict_net.device.iloc[elt[1]]['name'] + "-"
+            elif elt[0] == 'node':
+                hops += ict_net.node.iloc[elt[1]]['name'] + "-"
+        
+        hops = hops[:-1]
+        lhops += [hops]
+    
+    print("Paths for connection " + str(conn['name']) + " over " + str(conn['protocol']) + ": " + str(lhops))
+
 def calc_routes_between_devices(ict_net, conn, verbose=False):
     
     # Create the nxgraph
@@ -126,7 +136,7 @@ def calc_routes_between_devices(ict_net, conn, verbose=False):
     try:
         dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
     except:
-        logger.debug("Failed to obtain from device for conn "+str(conn['name']))
+        logger.debug("Failed to obtain to device for conn "+str(conn['name']))
                
     # Fetch nynodes representing the devices
     n1 = __get_nx_node_for_elt(mdg, dev1)
@@ -150,15 +160,6 @@ def calc_routes_between_devices(ict_net, conn, verbose=False):
         paths += [p] 
     
     if verbose:            
-        lhops = []
-        for p in paths:
-            hops = ""
-            for elt in p:
-                if elt[0]=='device':
-                    hops += ict_net.device.iloc[elt[1]]['name']+"-"
-                elif elt[0]=='node':
-                    hops += ict_net.node.iloc[elt[1]]['name']+"-"
-            hops = hops[:-1]
-            lhops += [hops]            
-        print("Paths for connection "+str(conn['name'])+" over "+str(conn['protocol'])+": "+str(lhops))
+        __print_paths(ict_net, conn, paths, p)
+        
     return paths

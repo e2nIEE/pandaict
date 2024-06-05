@@ -76,10 +76,8 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
                         check_required=check_required)
 
 
-def __basic_link_std_types():
-
-    linktypes = {        
-        "Binary":
+def __controller_area_linktypes():
+    lt = {"Binary":
             { "bandwidth_Mbps": (0.001),
               "latency_ms": 1,
               "wired": True,
@@ -96,18 +94,12 @@ def __basic_link_std_types():
               "mtbf_h": 0,
               "mttr_h": 0,
               "uuid": uuid.UUID("77fbef84-195f-40de-882b-3d8824c0d3a5"),
-            },
-        "LTE50": # LTE with downstream bandwidth of 50 Mbps
-            { "bandwidth_Mbps": (50,10),
-              "latency_ms": 300,
-              "wired": False,
-              "protocols": ['FTP','HTTP'],
-              "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
-              "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
-            },
-        "LAN1000": # Gigabit LAN
+            }
+        }
+    return lt
+    
+def __local_area_linktypes():
+    lt = { "LAN1000": # Gigabit LAN
             { "bandwidth_Mbps": (1000, 1000),
               "latency_ms": 100,
               "wired": True,
@@ -116,7 +108,21 @@ def __basic_link_std_types():
               "mtbf_h": 0,
               "mttr_h": 0,
               "uuid": uuid.UUID("4d5b388f-ce1c-407e-81c6-5caa23f1832b"),
-            },
+            }
+        }
+    return lt 
+
+def __wide_area_linktypes():
+    lt = {"LTE50": # LTE with downstream bandwidth of 50 Mbps
+            { "bandwidth_Mbps": (50,10),
+              "latency_ms": 300,
+              "wired": False,
+              "protocols": ['FTP','HTTP'],
+              "ber_per_km": 0,
+              "mtbf_h": 0,
+              "mttr_h": 0,
+              "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
+            },        
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
             { "bandwidth_Mbps": (8, 1),
               "latency_ms": 100,
@@ -137,13 +143,57 @@ def __basic_link_std_types():
               "mttr_h": 0,
               "uuid": uuid.UUID("eebc167b-b816-468f-bb9a-5e75c7ccd79b"),
             }
-        }    
-    
+        }
+    return lt
+
+def __basic_link_std_types():
+
+    linktypes = __controller_area_linktypes()
+    linktypes.update(__local_area_linktypes())
+    linktypes.update(__wide_area_linktypes())    
     return linktypes
 
-def __basic_protocol_std_types():
+def __transmission_protocoltypes():
+    pt = {"TCP": {        
+            "base_package_size_byte": 20,
+            "info_items":
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE,                   
+                ], 
+            "uuid": uuid.UUID("fdb0612d-3791-437a-b570-139c49c9dea9"),   
+            },
+        "UDP": {        
+            "base_package_size_byte": 8,
+            "info_items":
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE,                   
+                ],                                
+            "uuid": uuid.UUID("1eec8609-e112-4e7c-ae40-037fac9bdf81"),   
+            }
+        }
+    return pt
 
-    protocoltypes = {
+def __application_protocoltypes():
+    pt = {"HTTP": {        
+            "base_package_size_byte": 4096,
+            "info_items":
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE, 
+                  InfoItem.WEBPAGE, 
+                  InfoItem.STATUS,                 
+                ],    
+            "uuid": uuid.UUID("9bd957a0-1e02-4925-bef6-8cf04c5e9ead"),
+            },
+        "HTTPS": {        
+            "base_package_size_byte": 4096,
+            "info_items":
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE, 
+                  InfoItem.WEBPAGE, 
+                  InfoItem.STATUS,                 
+                ],    
+            "uuid": uuid.UUID("1ab747c1-dd2c-44ca-9915-7f9ae06da7c2"),
+            },   
         "FTP": {        
             "base_package_size_byte": 4096,
             "info_items":
@@ -154,21 +204,15 @@ def __basic_protocol_std_types():
                   InfoItem.STATUS,
                 ], 
             "uuid": uuid.UUID("30e8be5c-06d8-4914-b99b-31f015473599"),   
-            },
-        "HTTP": {        
-            "base_package_size_byte": 4096,
-            "info_items":
-                [ InfoItem.REQUEST,
-                  InfoItem.RESPONSE, 
-                  InfoItem.WEBPAGE, 
-                  InfoItem.STATUS,                 
-                ],    
-            "uuid": uuid.UUID("9bd957a0-1e02-4925-bef6-8cf04c5e9ead"),
-            },
-        }        
-    
-    return protocoltypes
+            }
+        }
+    return pt  
 
+def __basic_protocol_std_types():
+
+    protocoltypes = __transmission_protocoltypes()
+    protocoltypes.update(__application_protocoltypes())                
+    return protocoltypes
 
 
 def __basic_std_types():

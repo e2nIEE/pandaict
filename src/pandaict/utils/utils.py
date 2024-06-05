@@ -43,6 +43,8 @@ def __uuid2elt(ict_net, uid):
     except:
         pass
     
+    return None
+    
 # Convert (elt_type, index) of element in ict_net to uuid
 # Returns None if uuid not available
 def __elt2uuid(ict_net, elt):    

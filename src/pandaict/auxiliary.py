@@ -14,9 +14,10 @@ import pandas as pd
 import copy
 import numpy as np
 from pandapower import from_json_string # ToDo: dependency?
+from pandaict.utils.utils import __uuid2elt
 
-from functools import singledispatch
-
+import logging
+logger = logging.getLogger("pandaICT_Core")
 
 def __preserve_dtypes(df, dtypes):
     for item, dtype in list(dtypes.items()):
@@ -202,8 +203,6 @@ class ADict(dict, MutableMapping):
         )
 
 
-
-
 class pandaICTNet(ADict):
     """
     Example documentation for classes in pandaICTNet
@@ -277,14 +276,55 @@ class pandaICTNet(ADict):
         for k in keys:            
             cols = list(self[k].columns)
             if 'uuid' in cols: 
-                cols.remove('uuid')            
-            try:
-                if not (self[k][cols].compare(other[k][cols]).empty):
-                    return False
-            except: 
-                print("A")             
+                cols.remove('uuid')                        
+            if not (self[k][cols].compare(other[k][cols]).empty):
+                return False                        
         return True
-
+    
+    def get_elts_by_name_dict(self, typefilter=None):
+        if typefilter is None:
+            typefilter = ["node","link","device","app","conn"]            
+        elif isinstance(typefilter, str):
+            if typefilter not in ["node","link","device","app","conn"]:
+                return None
+            typefilter = [typefilter]
+        elif isinstance(typefilter, list):
+            typefilter = [tf for tf in typefilter if tf in ["node","link","device","app","conn"]]
+        else:
+            return None
+                
+        alldict = {}        
+        for tf in typefilter:
+            typedict = {}     
+            for i,e in self[tf].iterrows():
+                if e['name'] in typedict.keys():
+                    logger.warn("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
+                    print("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
+                typedict.update({e['name']: (tf, i)})
+            alldict.update({tf: typedict})
+            
+        return alldict
+        
+    def get_elts_by_uuid_dict(self, typefilter=None):
+        if typefilter is None:
+            typefilter = ["node","link","device","app","conn"]            
+        elif isinstance(typefilter, str):
+            if typefilter not in ["node","link","device","app","conn"]:
+                return None
+            typefilter = [typefilter]
+        elif isinstance(typefilter, list):
+            typefilter = [tf for tf in typefilter if tf in ["node","link","device","app","conn"]]
+        else:
+            return None
+        
+        alldict = {}     
+        for tf in typefilter:
+            typedict = {}
+            for i,e in self[tf].iterrows():
+                typedict.update({e['name']: e['uuid']})
+            alldict.update({tf: typedict})
+        return alldict
+        
 def _plural_s(number):
     if number > 1:
         return "s"
