@@ -15,9 +15,7 @@ import copy
 import numpy as np
 from pandapower import from_json_string # ToDo: dependency?
 from pandaict.utils.utils import __uuid2elt
-
-import logging
-logger = logging.getLogger("pandaICT_Core")
+from pandaict.pilogger import pilogger
 
 def __preserve_dtypes(df, dtypes):
     for item, dtype in list(dtypes.items()):
@@ -277,7 +275,7 @@ class pandaICTNet(ADict):
             cols = list(self[k].columns)
             if 'uuid' in cols: 
                 cols.remove('uuid')                        
-            if not (self[k][cols].compare(other[k][cols]).empty):
+            if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
                 return False                        
         return True
     

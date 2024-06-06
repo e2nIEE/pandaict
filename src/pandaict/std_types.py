@@ -11,13 +11,7 @@ import pandas as pd
 import warnings
 import uuid
 from   pandaict.utils.enums import InfoItem
-
-try:
-    import pandaplan.core.pplog as logging
-except ImportError:
-    import logging
-
-logger = logging.getLogger(__name__)
+from pandaict.pilogger import pilogger
 
 
 def create_std_type(ict_net, data, name, element="link", overwrite=True, check_required=True):
@@ -81,6 +75,7 @@ def __controller_area_linktypes():
             { "bandwidth_Mbps": (0.001),
               "latency_ms": 1,
               "wired": True,
+              "protocols": ['Binary'],
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
@@ -89,7 +84,8 @@ def __controller_area_linktypes():
         "RS485":
             { "bandwidth_Mbps": (0.1),
               "latency_ms": 100,
-              "wired": True,        
+              "wired": True,    
+              "protocols": ['MODBUS-SMA'],    
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
@@ -153,6 +149,17 @@ def __basic_link_std_types():
     linktypes.update(__wide_area_linktypes())    
     return linktypes
 
+def __simple_protocoltypes():
+    return {"Binary": {        
+                "base_package_size_byte": 1,
+                "info_items":
+                    [ 
+                        InfoItem.VALUE,                     
+                    ],    
+                "uuid": uuid.UUID("7d188465-eeae-4d42-b048-383f0a1bc6e9"),
+                }
+            }
+
 def __transmission_protocoltypes():
     pt = {"TCP": {        
             "base_package_size_byte": 20,
@@ -208,10 +215,33 @@ def __application_protocoltypes():
         }
     return pt  
 
+def __MODBUS_protocoltypes():
+    return {"MODBUS-TCP": {        
+                "base_package_size_byte": 1024,
+                "info_items":
+                    [ InfoItem.REQUEST,
+                      InfoItem.RESPONSE,                   
+                      InfoItem.STATUS        
+                    ],  
+                "uuid": uuid.UUID("8adcb11a-e88f-4a36-bf25-a12f720ac728"),  
+                },
+            "MODBUS-SMA": {        
+                "base_package_size_byte": 16,
+                "info_items":
+                    [ InfoItem.REQUEST,
+                      InfoItem.RESPONSE,                   
+                      InfoItem.STATUS  
+                    ],  
+                "uuid": uuid.UUID("41e604ff-a139-452f-a424-6300584ecec3"),  
+                }
+            }
+
 def __basic_protocol_std_types():
 
-    protocoltypes = __transmission_protocoltypes()
-    protocoltypes.update(__application_protocoltypes())                
+    protocoltypes = __simple_protocoltypes()
+    protocoltypes.update(__transmission_protocoltypes())
+    protocoltypes.update(__application_protocoltypes())   
+    protocoltypes.update(__MODBUS_protocoltypes())                      
     return protocoltypes
 
 

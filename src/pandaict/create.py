@@ -12,10 +12,10 @@ from pandaict.auxiliary import ADict, __get_free_id, __preserve_dtypes
 from pandaict.create_empty_net import create_empty_network
 from pandaict.utils.utils import __uuid2elt, __elt2uuid
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.pilogger import pilogger
 import uuid
 
-import logging
-logger = logging.getLogger("pandaICT_Core")
+
 
 def __create_uuid2elt(ict_net, elt_uuid, expected): 
        
@@ -76,14 +76,16 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
     if node_type is not None and not isinstance(node_type, NodeType):
         raise UserWarning("node_type must be NodeType")
     if geodata is not None:
-        if not isinstance(geodata, tuple) or len(geodata) != 2:
-            raise UserWarning("geodata must be given as (x, y) tuple")
+        if isinstance(geodata, dict):
+            if not "type" in geodata.keys() or not "coordinates" in geodata.keys():
+                raise UserWarning("geodata must contain 'type' and 'coordinates' keys") 
+        elif not isinstance(geodata, tuple) or not len(geodata)==2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
+            raise UserWarning("geodata must be (float, float) tuple or geojson")             
     if link_types is not None:
         if isinstance(link_types, list):
             for lt in link_types:
                 if not lt in ict_net.std_types['link'].keys():
-                    raise UserWarning("link_type " + str(lt) + " not found in std_types")
-        
+                    raise UserWarning("link_type " + str(lt) + " not found in std_types")        
         elif not link_types in ict_net.std_types['link'].keys():
             raise UserWarning("link_type " + str(link_types) + " not found in std_types")
     if uid is not None:

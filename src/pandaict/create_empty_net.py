@@ -11,9 +11,7 @@ from pandaict.auxiliary import pandaICTNet
 from pandaict.std_types import add_basic_std_types
 from numpy import dtype, zeros
 import pandas as pd
-
-import logging
-logger = logging.getLogger("pandaICT_Core")
+from pandaict.pilogger import pilogger
 
 def __get_node_structure():
     return [

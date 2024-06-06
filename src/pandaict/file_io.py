@@ -23,13 +23,7 @@ import numpy
 from io import StringIO
 from win32comext.internet import inetcon
 from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem
-
-try:
-    import pplog as logging
-except ImportError:
-    import logging
-
-logger = logging.getLogger(__name__)
+from pandaict.pilogger import pilogger
 
 def __df_to_json(df):
     dfc = copy.deepcopy(df)
@@ -68,12 +62,14 @@ def __json_node_to_df(df):
     
     for i, s in enumerate(df["type"]):            
         df.at[i,"type"] = NodeType(s["value"])  
-    for i, s in enumerate(df["map_to"]):
-        if s is not None:
-            df.at[i,"map_to"] = tuple(s)
-    for i, s in enumerate(df["geodata"]):
-        if s is not None and not (isinstance(s, dict)):
-            df.at[i,"geodata"] = tuple(s)        
+    if 'map_to' in df.keys():
+        for i, s in enumerate(df["map_to"]):
+            if s is not None:
+                df.at[i,"map_to"] = tuple(s)
+    if 'geodata' in df.keys():
+        for i, s in enumerate(df["geodata"]):
+            if s is not None and not (isinstance(s, dict)):
+                df.at[i,"geodata"] = tuple(s)        
 
     return df
 
@@ -99,10 +95,11 @@ def __json_link_to_df(df):
     for i, s in enumerate(df["to"]):
         if s is not None:                
             df.at[i,"to"] = [tuple(e) for e in s]
-    for i, s in enumerate(df["map_to"]):
-        if s is not None:
-            df.at[i,"map_to"] = tuple(s)            
-                
+    if 'map_to' in df.keys():
+        for i, s in enumerate(df["map_to"]):
+            if s is not None:
+                df.at[i,"map_to"] = tuple(s)            
+                    
     return df
 
 def __json_app_to_df(df):
@@ -114,10 +111,11 @@ def __json_app_to_df(df):
     for i, s in enumerate(df["conversions"]):
         if s is not None:                
             df.at[i,"conversions"] = [tuple(e) for e in s]
-    for i, s in enumerate(df["map_to"]):
-        if s is not None:
-            df.at[i,"map_to"] = tuple(s)            
-                
+    if 'map_to' in df.keys():
+        for i, s in enumerate(df["map_to"]):
+            if s is not None:
+                df.at[i,"map_to"] = tuple(s)            
+                    
     return df
 
 def __json_conn_to_df(df):
@@ -128,7 +126,8 @@ def __json_conn_to_df(df):
         if s is not None:
             df.at[i,"peers"] = tuple(s)
     for i, s in enumerate(df["info_items"]):        
-        df.at[i,"info_items"] = [InfoItem(v['value']) for v in s]             
+        if s is not None:
+            df.at[i,"info_items"] = [InfoItem(v['value']) for v in s]             
                 
     return df
 
@@ -216,10 +215,11 @@ def from_json(filename):
     ict_net.name       = jall["name"]        
     ict_net.connectors = pd.DataFrame(jall['connectors'])
     from pandaict import connectors_installed # NOTE: leave this here. It won't work if moved to the top.
-    for s in ict_net.connectors[0]:
-        if s not in connectors_installed:
-            logger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
-            print("Warning: Network file "+filename+" uses connector "+s+" which is currently not installed")
+    if not ict_net.connectors.empty:
+        for s in ict_net.connectors[0]:
+            if s not in connectors_installed:
+                logger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
+                print("Warning: Network file "+filename+" uses connector "+s+" which is currently not installed")
     ict_net.node       = __json_node_to_df(pd.DataFrame(jall["node"]))
     ict_net.link       = __json_link_to_df(pd.DataFrame(jall["link"]))
     ict_net.device     = __json_device_to_df(pd.DataFrame(jall["device"]))
