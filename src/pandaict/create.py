@@ -356,8 +356,11 @@ def __create_connection_info_items_check(info_items, producer, prod_freq_ms):
             raise UserWarning("prod_freq_ms length must be the same as info_items, and all entries must be float.")
 
 def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_uuid=False, uid=None,
-                          from_app=None, to_app=None, protocol=None, info_items=None, peers=None, producer=None, prod_freq_ms=None):       
+                          from_app=None, to_app=None, protocol=None, info_items=None, **kwargs):       
      
+    peers = kwargs.get('peers', None)
+    producer = kwargs.get('producer', None)
+    prod_freq_ms = kwargs.get('prod_freq_ms', None)
     __create_net_index_check(ict_net, index, "conn")
     __create_connection_check(ict_net, use_uuid, uid, from_app, to_app, peers)                   
     __create_protocols_check(ict_net, protocol)    
