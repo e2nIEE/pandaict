@@ -35,6 +35,7 @@ unit-test:
     stage: test
     script:
      - pip install -r requirements.txt
+     - pip install pandaict==0.0.1rc0 --index-url https://$pandaict_user:$pandaict_pw@gitlab.cc-asp.fraunhofer.de/api/v4/projects/47969/packages/pypi/simple
      - python3 test/pandaict_test.py
     tags:
      - leitwarte_iee

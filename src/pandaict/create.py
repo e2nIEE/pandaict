@@ -70,6 +70,17 @@ def __create_protocols_check(ict_net, protocols):
             raise UserWarning("protocol "+str(protocols)+" not found in std_types")
     return
 
+def __check_uuid(ict_net, uid):
+    if uid is not None:
+        if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
+            raise UserWarning("uid must be None, uuid4 or string")
+        try:
+            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
+        except:
+            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
+        if uelt is not None:
+            raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
+
 def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_types):
     
     __create_net_index_check(ict_net, index, "node")
@@ -88,15 +99,7 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
                     raise UserWarning("link_type " + str(lt) + " not found in std_types")        
         elif not link_types in ict_net.std_types['link'].keys():
             raise UserWarning("link_type " + str(link_types) + " not found in std_types")
-    if uid is not None:
-        if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
-            raise UserWarning("uid must be None, uuid4 or string")
-        try:
-            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
-        except:
-            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
-        if uelt is not None:
-            raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
+    __check_uuid(ict_net, uid)
     return 
 
 def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=True, use_uuid=False, uid=None, 
@@ -129,20 +132,13 @@ def __create_ict_link_check(ict_net, from_elt, to_elt, uid, use_uuid):
                 if not isinstance(to_elt[i], uuid.UUID):
                     raise UserWarning("to_elt[" + str(i) + "] must be uuid4")        
         if from_elt == to_elt:
-            raise UserWarning("from_elt and to_elt must not be equal")
+            raise UserWarning("from_elt and to_elt must not be equal")        
+        __check_uuid(ict_net, uid)
         if uid is not None:
-            if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
-                raise UserWarning("uid must be None, uuid4 or string")
             if str(from_elt) == str(uid): 
                 raise UserWarning("from_elt and uid must not be equal")
             if str(to_elt) == str(uid):         
-                raise UserWarning("to_elt and uid must not be equal")
-            try:
-                uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
-            except:
-                raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
-            if uelt is not None:
-                raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))        
+                raise UserWarning("to_elt and uid must not be equal")        
     else:
         if not isinstance(from_elt, tuple):
             raise UserWarning("from_elt must be (str, int) tuple")     
@@ -196,15 +192,7 @@ def __create_device_check(ict_net, device_type, uid):
     
     if device_type is not None and not isinstance(device_type, DeviceType):
         raise UserWarning("device_type must be DeviceType")
-    if uid is not None:
-        if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
-            raise UserWarning("uid must be None, uuid4 or string")
-        try:
-            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
-        except:
-            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
-        if uelt is not None:
-            raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
+    __check_uuid(ict_net, uid)
     return
 
 def create_ict_device(ict_net, name=None, device_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
@@ -228,15 +216,7 @@ def __create_app_check(ict_net, name, app_type, uid, conversions, device):
     
     if app_type is not None and not isinstance(app_type, AppType):
         raise UserWarning("app_type must be AppType")
-    if uid is not None:
-        if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
-            raise UserWarning("uid must be None, uuid4 or string")
-        try:
-            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
-        except:
-            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
-        if uelt is not None:
-            raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
+    __check_uuid(ict_net, uid)
     if device is None:
         raise UserWarning("device must not be None")
     if conversions is not None:
@@ -307,19 +287,12 @@ def __create_connection_check(ict_net, use_uuid, uid, from_app, to_app, peers):
             raise UserWarning("from_app and to_app must not be equal")
         if peers is not None and (not isinstance(peers[0], uuid.UUID) or not isinstance(peers[1], uuid.UUID)):
             raise UserWarning("peers must be uuid4")
+        __check_uuid(ict_net, uid)
         if uid is not None:
-            if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
-                raise UserWarning("uid must be None, uuid4 or string")
             if str(from_app) == str(uid):
                 raise UserWarning("from_app and uid must not be equal")
             if str(to_app) == str(uid):
-                raise UserWarning("to_app and uid must not be equal")
-            try:
-                uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
-            except:
-                raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
-            if uelt is not None:
-                raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
+                raise UserWarning("to_app and uid must not be equal")    
     else:
         if not isinstance(from_app, tuple):
             raise UserWarning("from_app must be (str, int) tuple")
