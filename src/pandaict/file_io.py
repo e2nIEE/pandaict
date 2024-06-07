@@ -55,17 +55,21 @@ def __check_index_and_uuid(df):
             df.at[i,"uuid"] = uuid.UUID(s)
     
     return df
-            
+           
+def __convert_map_to(df):  
+    if 'map_to' in df.keys():
+            for i, s in enumerate(df["map_to"]):
+                if s is not None:
+                    df.at[i,"map_to"] = tuple(s)
+    return df
+                 
 def __json_node_to_df(df):
         
     df = __check_index_and_uuid(df)
     
     for i, s in enumerate(df["type"]):            
         df.at[i,"type"] = NodeType(s["value"])  
-    if 'map_to' in df.keys():
-        for i, s in enumerate(df["map_to"]):
-            if s is not None:
-                df.at[i,"map_to"] = tuple(s)
+    df = __convert_map_to(df)
     if 'geodata' in df.keys():
         for i, s in enumerate(df["geodata"]):
             if s is not None and not (isinstance(s, dict)):
@@ -85,6 +89,7 @@ def __json_device_to_df(df):
 def __json_link_to_df(df):
     
     df = __check_index_and_uuid(df)       
+    df = __convert_map_to(df)            
                 
     for i, s in enumerate(df["protocols"]):
         if s is not None:
@@ -95,26 +100,19 @@ def __json_link_to_df(df):
     for i, s in enumerate(df["to"]):
         if s is not None:                
             df.at[i,"to"] = [tuple(e) for e in s]
-    if 'map_to' in df.keys():
-        for i, s in enumerate(df["map_to"]):
-            if s is not None:
-                df.at[i,"map_to"] = tuple(s)            
                     
     return df
 
 def __json_app_to_df(df):
     
-    df = __check_index_and_uuid(df)       
+    df = __check_index_and_uuid(df)  
+    df = __convert_map_to(df)         
                 
     for i, s in enumerate(df["type"]):            
         df.at[i,"type"] = AppType(s["value"]) 
     for i, s in enumerate(df["conversions"]):
         if s is not None:                
-            df.at[i,"conversions"] = [tuple(e) for e in s]
-    if 'map_to' in df.keys():
-        for i, s in enumerate(df["map_to"]):
-            if s is not None:
-                df.at[i,"map_to"] = tuple(s)            
+            df.at[i,"conversions"] = [tuple(e) for e in s]        
                     
     return df
 

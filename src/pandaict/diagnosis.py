@@ -11,18 +11,20 @@ from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
 from pandaict.utils.utils import __get_links_at, __get_apps_on_device, __get_links_between
 from pandaict.pilogger import pilogger
 
-
+def __check_isNone(i, n, elt_type, sparam, passed, checkempty=False):
+    if n[sparam] is None or (checkempty and n[sparam]==""):
+        pilogger.info(elt_type+" '" + str(n['name']) + "' (index " + str(i) + ") has no "+sparam)
+        passed = False 
+    return passed
+    
 def __inspect_node(ict_net, passed):
     for i, n in ict_net.node.iterrows():
-        if n['name'] is None or n['name'] == "":
-            pilogger.info(" node with index " + str(i) + " has no name")
-            passed = False
-        if n['type'] is None:
-            pilogger.info(" node '" + str(n['name']) + "' (index " + str(i) + ") has no type")
-            passed = False
-        if n['link_types'] is None:
-            pilogger.info(" node '" + str(n['name']) + "' (index " + str(i) + ") has no link_types")
-            passed = False
+        # if n['name'] is None or n['name'] == "":
+        #     pilogger.info(" node with index " + str(i) + " has no name")
+        #     passed = False
+        passed = __check_isNone(i, n, "node", "name", passed)
+        passed = __check_isNone(i, n, "node", "type", passed)
+        passed = __check_isNone(i, n, "node", "link_types", passed)
         # check if all nodes have two or more links connected
         l = __get_links_at(ict_net, ('node', i))
         if len(l) < 2:
@@ -33,12 +35,8 @@ def __inspect_node(ict_net, passed):
 
 def __inspect_link(ict_net, passed):
     for i, l in ict_net.link.iterrows():
-        if l['name'] is None or l['name'] == "":
-            pilogger.info(" Link with index " + str(i) + " has no name")
-            passed = False
-        if l['type'] is None:
-            pilogger.info(" Link '" + str(l['name']) + "' (index " + str(i) + ") has no type")
-            passed = False
+        passed = __check_isNone(i, l, "link", "name", passed)
+        passed = __check_isNone(i, l, "link", "type", passed)
         # from_elt and to_elt existence and non-equality are tested during creation
     
         # check for double linkage (excluding multicasts)
@@ -63,12 +61,8 @@ def __inspect_link(ict_net, passed):
 
 def __inspect_device(ict_net, passed):
     for i, d in ict_net.device.iterrows():
-        if d['name'] is None or d['name'] == "":
-            pilogger.info(" device with index " + str(i) + " has no name")
-            passed = False
-        if d['type'] is None:
-            pilogger.info(" device '" + str(d['name']) + "' (index " + str(i) + ") has no type")
-            passed = False
+        passed = __check_isNone(i, d, "device", "name", passed)
+        passed = __check_isNone(i, d, "device", "type", passed)        
         # check if all devices with converter apps have two or more links connected
         apps = __get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps == []:
@@ -85,12 +79,8 @@ def __inspect_device(ict_net, passed):
 
 def __inspect_app(ict_net, passed):
     for i, a in ict_net.app.iterrows():
-        if a['name'] is None or a['name'] == "":
-            pilogger.info(" app with index " + str(i) + " has no name")
-            passed = False
-        if a['type'] is None:
-            pilogger.info(" app '" + str(a['name']) + "' (index " + str(i) + ") has no type")
-            passed = False
+        passed = __check_isNone(i, a, "app", "name", passed, checkempty=True)
+        passed = __check_isNone(i, a, "app", "type", passed)        
         if a['device'] not in ict_net.device.index:
             pilogger.info(" app '" + str(a['name']) + "' (index " + str(i) + ") links to non-existing device (index " + str(a['device']) + ")")
             passed = False
@@ -107,9 +97,7 @@ def __inspect_app(ict_net, passed):
 
 def __inspect_conn(ict_net, passed):
     for i, c in ict_net.conn.iterrows():
-        if c['name'] is None or c['name'] == "":
-            pilogger.info(" connection with index " + str(i) + " has no name")
-            passed = False
+        passed = __check_isNone(i, c, "connection", "name", passed, checkempty=True)        
         if c['from'] not in ict_net.app.index:
             pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing from_app (index " + str(c['from']) + ")")
             passed = False

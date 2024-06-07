@@ -13,36 +13,13 @@ import numpy as np
 # Returns None if uuid not found anywhere in ict_net
 def __uuid2elt(ict_net, uid):    
     idx = None
-    try:
-        idx = np.where(ict_net.node['uuid']==uid)[0][0]
-        return ('node', idx)
-    except:
-        pass
-    
-    try:
-        idx = np.where(ict_net.link['uuid']==uid)[0][0]
-        return ('link', idx)
-    except:
-        pass
-    
-    try:
-        idx = np.where(ict_net.device['uuid']==uid)[0][0]
-        return ('device', idx)
-    except:
-        pass
-    
-    try:
-        idx = np.where(ict_net.app['uuid']==uid)[0][0]
-        return ('app', idx)
-    except:
-        pass
-    
-    try:
-        idx = np.where(ict_net.conn['uuid']==uid)[0][0]
-        return ('conn', idx)
-    except:
-        pass
-    
+    elt_types = ["node","link","device","app","conn"]    
+    for et in elt_types:
+        try:
+            idx = np.where(ict_net[et]['uuid']==uid)[0][0]
+            return (et, idx)
+        except:
+            pass            
     return None
     
 # Convert (elt_type, index) of element in ict_net to uuid
