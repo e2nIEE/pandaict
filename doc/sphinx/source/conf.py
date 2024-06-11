@@ -20,6 +20,8 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = []
 
+# The master toctree document.
+master_doc = 'index'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -29,5 +31,9 @@ html_static_path = ['_static']
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath('../../../src/pandaict'))
-sys.path.insert(0, os.path.abspath('../../../'))
+sys.path.insert(0, os.path.abspath('..\\..\\..\\src\\pandaict\\'))
+sys.path.insert(0, os.path.abspath('..\\..\\..\\src\\'))
+sys.path.insert(0, os.path.abspath('..\\..\\..\\'))
+sys.path.insert(0, os.path.abspath('..\\..\\..\\..\\pp_pict_connector\\src\\'))
+print("***** CWD: "+str(os.getcwd()))
+print("***** sys.path: "+str(sys.path))
