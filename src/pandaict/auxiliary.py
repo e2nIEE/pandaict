@@ -14,7 +14,7 @@ import pandas as pd
 import copy
 import numpy as np
 from pandapower import from_json_string # ToDo: dependency?
-from pandaict.utils.utils import __uuid2elt
+from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
 
 def __preserve_dtypes(df, dtypes):

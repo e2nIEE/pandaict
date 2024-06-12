@@ -8,7 +8,7 @@ Created on 23.04.2024
 '''
 
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
-from pandaict.utils.utils import __get_links_at, __get_apps_on_device, __get_links_between
+from pandaict.utils.utils import get_links_at, get_apps_on_device, get_links_between
 from pandaict.pilogger import pilogger
 
 def __check_isNone(i, n, elt_type, sparam, passed, checkempty=False):
@@ -26,7 +26,7 @@ def __inspect_node(ict_net, passed):
         passed = __check_isNone(i, n, "node", "type", passed)
         passed = __check_isNone(i, n, "node", "link_types", passed)
         # check if all nodes have two or more links connected
-        l = __get_links_at(ict_net, ('node', i))
+        l = get_links_at(ict_net, ('node', i))
         if len(l) < 2:
             pilogger.info(" node '" + str(n['name']) + "' (index " + str(i) + ") has less than two links")
             passed = False
@@ -42,7 +42,7 @@ def __inspect_link(ict_net, passed):
         # check for double linkage (excluding multicasts)
         from_elt = l["from"]
         to_elt   = l["to"]
-        linklist = __get_links_between(ict_net, from_elt, to_elt)
+        linklist = get_links_between(ict_net, from_elt, to_elt)
         if len(linklist) > 1: 
             linklist.remove(i)
             pilogger.info(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")")
@@ -64,12 +64,12 @@ def __inspect_device(ict_net, passed):
         passed = __check_isNone(i, d, "device", "name", passed)
         passed = __check_isNone(i, d, "device", "type", passed)        
         # check if all devices with converter apps have two or more links connected
-        apps = __get_apps_on_device(ict_net, ('device', i))
+        apps = get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps == []:
             pilogger.info(" device '" + str(d['name']) + "' (index " + str(i) + ") does not run any apps")
             passed = False
         if (any([ict_net.app.iloc[a]['type'] == AppType.CONVERTER for a in apps])):
-            l = __get_links_at(ict_net, ('device', i))
+            l = get_links_at(ict_net, ('device', i))
             if len(l) < 2:
                 pilogger.info(" device '" + str(d['name']) + "' (index " + str(i) + ") is running converter type app(s) but has less than two links")
                 passed = False

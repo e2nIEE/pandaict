@@ -10,18 +10,11 @@ Created on 8.03.2024
 '''
 
 import pandas as pd
-import os
 import json
-from numpy import int64
-import csv
 import copy
-import pandapower as pp 
 import uuid
 from pandaict import create_empty_network
 from pandaict import __version__
-import numpy
-from io import StringIO
-from win32comext.internet import inetcon
 from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem
 from pandaict.pilogger import pilogger
 
@@ -90,10 +83,7 @@ def __json_link_to_df(df):
     
     df = __check_index_and_uuid(df)       
     df = __convert_map_to(df)            
-                
-    for i, s in enumerate(df["protocols"]):
-        if s is not None:
-            df.at[i,"protocols"] = list(s) 
+                    
     for i, s in enumerate(df["from"]):
         if s is not None:
             df.at[i,"from"] = tuple(s)

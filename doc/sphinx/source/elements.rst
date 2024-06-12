@@ -14,4 +14,6 @@ You can find detailed information about the definition and interpretation of the
 .. toctree::
     :maxdepth: 0
 
+    elements/identifier
     elements/node
+    elements/link

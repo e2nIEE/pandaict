@@ -12,7 +12,7 @@ import pandapower.control as control
 import pandapower.timeseries as timeseries
 from   pandapower.timeseries.data_sources.frame_data import DFData
 import pandaict as pi
-from   pandaict.utils.utils import __uuid2elt, __elt2uuid
+from   pandaict.utils.utils import uuid2elt, elt2uuid
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType
 from   pandaict.topology.routing import *
 import pandas as pd

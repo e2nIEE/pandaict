@@ -10,7 +10,7 @@ Created on 30.01.2024
 from pandaict.auxiliary import pandaICTNet
 from pandaict.auxiliary import ADict, __get_free_id, __preserve_dtypes
 from pandaict.create_empty_net import create_empty_network
-from pandaict.utils.utils import __uuid2elt, __elt2uuid
+from pandaict.utils.utils import uuid2elt, elt2uuid
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
 from pandaict.pilogger import pilogger
 import uuid
@@ -20,13 +20,13 @@ import uuid
 def __create_uuid2elt(ict_net, elt_uuid, expected): 
        
     if isinstance(elt_uuid, list):
-        elt = [__uuid2elt(ict_net, uid) for uid in elt_uuid]
+        elt = [uuid2elt(ict_net, uid) for uid in elt_uuid]
         if elt is None or None in elt:                
             raise UserWarning("at least one uuid elt not found by uuid")
         if not all((e[0] in expected) for e in elt):
             raise UserWarning("all uuid elt types must be one of "+str(expected))        
     else:
-        elt = __uuid2elt(ict_net, elt_uuid)
+        elt = uuid2elt(ict_net, elt_uuid)
         if elt is None:                
             raise UserWarning("uuid elt not found by uuid")
         if not (elt[0] in expected):
@@ -75,11 +75,11 @@ def __check_uuid(ict_net, uid):
         if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
             raise UserWarning("uid must be None, uuid4 or string")
         try:
-            uelt = __uuid2elt(ict_net, uuid.UUID(str(uid)))
+            uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
         except:
             raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
         if uelt is not None:
-            raise UserWarning("uid already in use for " + str(__uuid2elt(ict_net, uuid.UUID(str(uid)))))
+            raise UserWarning("uid already in use for " + str(uuid2elt(ict_net, uuid.UUID(str(uid)))))
 
 def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_types):
     
@@ -322,7 +322,7 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
     ruuid = __create_ruuid(uid, use_uuid)
     
     if (use_uuid):
-        rdevice = __uuid2elt(ict_net, device) 
+        rdevice = uuid2elt(ict_net, device) 
         if rdevice is None:
             raise UserWarning("device not found by uuid") 
         if not rdevice[0]=='device': 
