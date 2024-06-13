@@ -110,14 +110,14 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
     Nodes are network elements that can support connection of different physical links, and route data on ISO/OSI layers 1-3.
 
     INPUT:
-        **ict_net** (pandaictNet) - The pandaict network in which the element is created    
+        **ict_net** (pandaictNet) - The pandaict network in which the node is created    
 
     OPTIONAL:
         **name** (string, default None) - the name for this node
 
         **node_type** (aenum, default None) - the node type. Use an NODE_TYPE aenum. 
         
-        **index** (int, default None) - Force a specified ID if it is available. If None, the \
+        **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
         **in_service** (boolean, default True) - True for in_service or False for out of service
@@ -202,36 +202,36 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     """
     Adds one link in table ict_net["link"].
 
-    Links represent physical point-to-point ICT connections from device to node or in between nodes 
+    Links represent physical point-to-point ICT connections from device to node or in-between nodes. 
 
     INPUT:
-        **ict_net** (pandaictNet) - The pandaict network in which the element is created    
+        **ict_net** (pandaictNet) - The pandaict network in which the link is created    
 
-        **from_elt** ((str,int) or UUID4) - Link start element, in pandaict element notation if use_uuid == False, \
+        **from_elt** ((string,int) or UUID4) - Link start element, in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node.     
         
-        **to_elt** ((str,int) or UUID4) - Link end element, either in pandaict element notation if use_uuid == False, \
+        **to_elt** ((string,int) or UUID4) - Link end element, in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node. 
         
     OPTIONAL:
-        **name** (string, default None) - the name for this link
+        **name** (string, default None) - the name for this link.
 
-        **link_type** (aenum, default None) - the link type. Standard link type can be used.  
+        **link_type** (string, default None) - the link type. Standard link type can be used.  
         
-        **index** (int, default None) - Force a specified ID if it is available. If None, the \
+        **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
-        **in_service** (boolean, default True) - True for in_service or False for out of service
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
 
-        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used 
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used. 
         
-        **uid** (UUID4 or string, default None) - user-selected uuid for this link (must not be used in this network yet)
+        **uid** (UUID4 or string, default None) - user-selected uuid for this link (must not be used in this network yet).
         
-        **length_km** (float, default 0) - Link line length for wired link type, or air distance for wireless link types
+        **length_km** (float, default 0) - Link line length for wired link type, or air distance for wireless link types.
             
     OUTPUT:
-        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, the pandaict element notation \ 
-            is used (tuple of (str, int)), otherwise a uuid is returned (either the user selected uid or a newly generated one)
+        **elt** ((string,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
+            otherwise a uuid is returned (either the user selected uid or a newly generated one).
 
     EXAMPLE:
         create_ict_link(net, from_elt = ("node", 1), to_elt = ("device", 3), link_type="Binary")
@@ -272,6 +272,47 @@ def __create_device_check(ict_net, device_type, uid):
 
 def create_ict_device(ict_net, name=None, device_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
                       mtbf=0, mttr=0 ):
+    
+    """
+    Adds one device in table ict_net["device"].
+
+    Devices are physical communication endpoints. A device is connected to one or more node(s) by links, and is running one or more Apps.  
+    Converters are a special type of device, running apps which convert between different protocols (ISO/OSI level >=4) 
+    
+    INPUT:
+        **ict_net** (pandaictNet) - The pandaict network in which the node is created    
+
+    OPTIONAL:
+        **name** (string, default None) - the name for this node
+
+        **node_type** (aenum, default None) - the node type. Use an NODE_TYPE aenum. 
+        
+        **index** (int, default None) - Force a specified list index if it is available. If None, the \
+            index one higher than the highest already existing index is selected.
+
+        **in_service** (boolean, default True) - True for in_service or False for out of service
+
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used 
+        
+        **uid** (UUID4 or string, default None) - user-selected uuid for this node (must not be used in this network yet)
+        
+        **geodata** ((x,y)-tuple or GeoJSON Point, default None) - coordinates used for plotting
+        
+        **link_types** (aenum, default None) - link types supported by the node. Standard link types can be used. 
+       
+        **ber** (float, 0) - Bit error rate for this node, in p.u.
+
+        **mtbf_h** (float, 0) - Mean time before failure for this node, in hours. Zero means not defined.
+        
+        **mttr_h** (float, 0) - Mean time to repair for this node, in hours. Zero means not defined.
+
+    OUTPUT:
+        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, the pandaict element notation is used (tuple of (str, int)), \
+            otherwise a uuid is returned (either the user selected uid or a newly generated one)
+
+    EXAMPLE:
+        create_ict_node(net, name = "Node1")
+    """
     
     __create_net_index_check(ict_net, index, "device")    
     __create_device_check(ict_net, device_type, uid)  

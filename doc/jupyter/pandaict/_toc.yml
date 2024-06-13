@@ -4,7 +4,9 @@
 format: jb-book
 root: pandaICT_tools
 chapters:
-- file: pandaICT_links_and_connections
 - file: pandaICT_reqirements_design_devgoals
-- file: pandaICT_scenario_useCases
+- file: pandaICT_tools
 - file: pandaICT_datamodel
+- file: pandaICT_pp_pict_connector_example
+- file: pandaICT_scenario_useCases
+

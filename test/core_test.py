@@ -58,6 +58,8 @@ class Core_Test():
         conn7      = pi.create_ict_connection(ict_net, name="CC_Conv3", from_app=acc, to_app=aconv3)            
         conn8      = pi.create_ict_connection(ict_net, name="Conv3_SC", from_app=aconv3, to_app=asc)
         
+        pi.utils.get_links_between(ict_net, node2, dconv2)
+        
         return ict_net        
         
     def create_testnet2(self):

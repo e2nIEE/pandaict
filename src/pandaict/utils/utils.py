@@ -49,7 +49,7 @@ def elt2uuid(ict_net, elt):
         **elt** (str, int) -pandaict identifier of an element that exists in ict_net     
                             
     OUTPUT:
-        **uid** (UUID4) - UUID of the element. Returns None if element not found in ict_net. 
+        **uid** (UUID4) - UUID of the element. Returns None if element not found in ict_net or element has no UUID. 
 
     EXAMPLE:
         elt2uuid(ict_net, ('device',2))
