@@ -2,9 +2,8 @@
 # Learn more at https://jupyterbook.org/customize/toc.html
 
 format: jb-book
-root: pandaICT_tools
+root: pandaICT_reqirements_design_devgoals
 chapters:
-- file: pandaICT_reqirements_design_devgoals
 - file: pandaICT_tools
 - file: pandaICT_datamodel
 - file: pandaICT_pp_pict_connector_example
