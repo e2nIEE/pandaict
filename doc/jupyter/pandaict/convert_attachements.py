@@ -33,16 +33,11 @@ def convert_attachments_to_files(notebook_path, output_dir):
 
 
 # Pfad zum Notebook und Ausgabeverzeichnis
-notebook_path = 'pandaICT_links_and_connections.ipynb'
 output_dir = 'doc/jupyter/pandaict/images'
+input_dir = 'doc/jupyter/pandaict/'
 
-notebook_path = 'doc/jupyter/pandaict/pandaICT_links_and_connections.ipynb'
-convert_attachments_to_files(notebook_path, output_dir)
-notebook_path = 'doc/jupyter/pandaict/pandaICT_reqirements_design_devgoals.ipynb'
-convert_attachments_to_files(notebook_path, output_dir)
-notebook_path = 'doc/jupyter/pandaict/pandaICT_scenario_useCases.ipynb'
-convert_attachments_to_files(notebook_path, output_dir)
-notebook_path = 'doc/jupyter/pandaict/pandaICT_tools.ipynb'
-convert_attachments_to_files(notebook_path, output_dir)
-notebook_path = 'doc/jupyter/pandaict/pandaICT_datamodel.ipynb'
-convert_attachments_to_files(notebook_path, output_dir)
+for direntry in os.scandir(input_dir):
+    fname = direntry.name 
+    if fname.endswith('ipynb'):        
+        convert_attachments_to_files(input_dir+fname, output_dir)
+        
