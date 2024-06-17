@@ -6,6 +6,6 @@ root: pandaICT_reqirements_design_devgoals
 chapters:
 - file: pandaICT_tools
 - file: pandaICT_datamodel
-- file: pandaICT_pp_pict_connector_example
+- file: pp_pict_connector_example
 - file: pandaICT_scenario_useCases
 
