@@ -10,7 +10,7 @@ logo: logo.png
 execute:
   execute_notebooks: off
   allow_errors     : false
-  stderr_output    : severe
+  stderr_output    : remove-warn
 
 # Define the name of the latex output file for PDF builds
 latex:
