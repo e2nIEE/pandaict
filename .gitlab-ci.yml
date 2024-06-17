@@ -7,9 +7,9 @@ variables:
   MONGO_INITDB_DATABASE: admin
   SAST_EXCLUDED_PATHS: doc, pandaict_orig, test_orig, venv
 
-#include:
-#- template: Code-Quality.gitlab-ci.yml
-#- template: Security/SAST.gitlab-ci.yml
+include:
+- template: Code-Quality.gitlab-ci.yml
+- template: Security/SAST.gitlab-ci.yml
 
 cache:
   paths:
@@ -18,36 +18,36 @@ cache:
 
 before_script:
 
-#semgrep-sast:
-#   variables:
-#        SAST_EXCLUDED_PATHS: venv
-#   artifacts:
-#      paths: [gl-sast-report.json]
-#   tags:
-#    - leitwarte_iee
+semgrep-sast:
+   variables:
+        SAST_EXCLUDED_PATHS: venv
+   artifacts:
+      paths: [gl-sast-report.json]
+   tags:
+    - leitwarte_iee
 
 stages:
-#  - test
+  - test
   - pages
-#  - deploy
+  - deploy
 
-#unit-test:
-#    stage: test
-#    script:
-#     - pip install -r requirements.txt
-#     - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
-#     - python3 test/pandaict_test.py
-#    tags:
-#     - leitwarte_iee
+unit-test:
+    stage: test
+    script:
+     - pip install -r requirements.txt
+     - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
+     - python3 test/pandaict_test.py
+    tags:
+     - leitwarte_iee
 
-#code_quality:
-#  stage: test
-#  variables:
-#    REPORT_FORMAT: html
-#  tags:
-#   - leitwarte_iee
-#  artifacts:
-#    paths: [gl-code-quality-report.html]
+code_quality:
+  stage: test
+  variables:
+    REPORT_FORMAT: html
+  tags:
+   - leitwarte_iee
+  artifacts:
+    paths: [gl-code-quality-report.html]
 
 
 pages:
@@ -67,23 +67,23 @@ pages:
     - public
 
 
-#create_artifact_gitlab:
-#  tags: 
-#   - leitwarte_iee
-#  stage: deploy
-#  script:
-#    - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
-#    - pip install virtualenv
-#    - virtualenv venv
-#    - source venv/bin/activate
-#    - pip install twine
-#    - pip install build
-#    - python -m build --wheel
-#    - export CURL_CA_BUNDLE=""
-#    - twine upload --config-file ~/.pypirc -r gitlab dist/*
-#  only: 
-#    - develop
-#    - main
-#  artifacts:
-#    paths:
-#      - dist/*.whl
+create_artifact_gitlab:
+  tags: 
+   - leitwarte_iee
+  stage: deploy
+  script:
+    - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install twine
+    - pip install build
+    - python -m build --wheel
+    - export CURL_CA_BUNDLE=""
+    - twine upload --config-file ~/.pypirc -r gitlab dist/*
+  only: 
+    - develop
+    - main
+  artifacts:
+    paths:
+      - dist/*.whl
