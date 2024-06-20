@@ -109,10 +109,10 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
 
     Nodes are network elements that can support connection of different physical links, and route data on ISO/OSI layers 1-3.
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - The pandaict network in which the node is created    
 
-    OPTIONAL:
+    :OPTIONAL:
         **name** (string, default None) - the name for this node
 
         **node_type** (aenum, default None) - the node type. Use an NODE_TYPE aenum. 
@@ -136,11 +136,11 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
         
         **mttr_h** (float, 0) - Mean time to repair for this node, in hours. Zero means not defined.
 
-    OUTPUT:
-        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, the pandaict element notation is used (tuple of (str, int)), \
+    :OUTPUT:
+        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
             otherwise a uuid is returned (either the user selected uid or a newly generated one)
 
-    EXAMPLE:
+    :EXAMPLE:
         create_ict_node(net, name = "Node1")
     """
     
@@ -204,7 +204,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
 
     Links represent physical point-to-point ICT connections from device to node or in-between nodes. 
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - The pandaict network in which the link is created    
 
         **from_elt** ((string,int) or UUID4) - Link start element, in pandaict element notation if use_uuid == False, \
@@ -213,7 +213,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
         **to_elt** ((string,int) or UUID4) - Link end element, in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node. 
         
-    OPTIONAL:
+    :OPTIONAL:
         **name** (string, default None) - the name for this link.
 
         **link_type** (string, default None) - the link type. Standard link type can be used.  
@@ -229,12 +229,12 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
         
         **length_km** (float, default 0) - Link line length for wired link type, or air distance for wireless link types.
             
-    OUTPUT:
+    :OUTPUT:
         **elt** ((string,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
             otherwise a uuid is returned (either the user selected uid or a newly generated one).
 
-    EXAMPLE:
-        create_ict_link(net, from_elt = ("node", 1), to_elt = ("device", 3), link_type="Binary")
+    :EXAMPLE:
+        create_ict_link(net, from_elt = ("node", 1), to_elt = ("device", 3), link_type="Binary")    
     """
     
     __create_net_index_check(ict_net, index, "link")    
@@ -277,15 +277,15 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
     Adds one device in table ict_net["device"].
 
     Devices are physical communication endpoints. A device is connected to one or more node(s) by links, and is running one or more Apps.  
-    Converters are a special type of device, running apps which convert between different protocols (ISO/OSI level >=4) 
+    A Converter is a special type of device, running apps which convert between different protocols (ISO/OSI level >=4). 
     
-    INPUT:
-        **ict_net** (pandaictNet) - The pandaict network in which the node is created    
+    :INPUT:
+        **ict_net** (pandaictNet) - The pandaict network in which the device is created.    
 
-    OPTIONAL:
-        **name** (string, default None) - the name for this node
+    :OPTIONAL:
+        **name** (string, default None) - the name for this device.
 
-        **node_type** (aenum, default None) - the node type. Use an NODE_TYPE aenum. 
+        **device_type** (aenum, default None) - the device type. Use a DEVICE_TYPE aenum. 
         
         **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
@@ -294,24 +294,18 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
 
         **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used 
         
-        **uid** (UUID4 or string, default None) - user-selected uuid for this node (must not be used in this network yet)
+        **uid** (UUID4 or string, default None) - user-selected uuid for this device (must not be used in this network yet)            
         
-        **geodata** ((x,y)-tuple or GeoJSON Point, default None) - coordinates used for plotting
+        **mtbf_h** (float, 0) - Mean time before failure for this device, in hours. Zero means not defined.
         
-        **link_types** (aenum, default None) - link types supported by the node. Standard link types can be used. 
-       
-        **ber** (float, 0) - Bit error rate for this node, in p.u.
+        **mttr_h** (float, 0) - Mean time to repair for this device, in hours. Zero means not defined.
 
-        **mtbf_h** (float, 0) - Mean time before failure for this node, in hours. Zero means not defined.
-        
-        **mttr_h** (float, 0) - Mean time to repair for this node, in hours. Zero means not defined.
-
-    OUTPUT:
-        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, the pandaict element notation is used (tuple of (str, int)), \
+    :OUTPUT:
+        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
             otherwise a uuid is returned (either the user selected uid or a newly generated one)
 
-    EXAMPLE:
-        create_ict_node(net, name = "Node1")
+    :EXAMPLE:
+        create_ict_device(net, name = "PowerMeter1")
     """
     
     __create_net_index_check(ict_net, index, "device")    
@@ -354,6 +348,43 @@ def __create_app_check(ict_net, name, app_type, uid, conversions, device):
 def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
                       conversions=None, device=None ):
     
+    """
+    Adds one app in table ict_net["app"].
+
+    Apps are end-to-end communication endpoints on application-level. Each app runs on exactly one device. Apps are connected by connections
+    for transmission of information items. A special type of app is the Converter app, which translates between different protocols
+    and must run on a Converter-type device.  
+    
+    :INPUT:
+        **ict_net** (pandaictNet) - The pandaict network in which the app is created.    
+
+    :OPTIONAL:
+        **name** (string, default None) - the name for this app.
+
+        **app_type** (aenum, default None) - the app type. Use an APP_TYPE aenum. 
+        
+        **index** (int, default None) - Force a specified list index if it is available. If None, the \
+            index one higher than the highest already existing index is selected.
+
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
+
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used. 
+        
+        **uid** (UUID4 or string, default None) - user-selected uuid for this app (must not be used in this network yet).            
+        
+        **conversions** (list of (string,string) tuple, default None) - List of protocol pairs the app is converting between \
+            (Only for Converter type app).
+        
+        **device** (int, default None) - Index in device table, referencing the device this app runs on.
+
+    :OUTPUT:
+        **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
+            otherwise a uuid is returned (either the user selected uid or a newly generated one).
+
+    :EXAMPLE:
+        create_ict_app(net, name = "PowerMeterApp1", device=0)
+    """
+        
     __create_net_index_check(ict_net, index, "app")    
     __create_app_check(ict_net, name, app_type, uid, conversions, device)
                 
@@ -383,6 +414,41 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
 
 def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_service=True, use_uuid=False,            
                       conversions=None, mtbf=0, mttr=0 ):
+    
+    """
+    Adds one device in table ict_net["device"] and one app in table ict_net["app"]. The app is set to run on the device.
+
+    This function is particularly useful to model a device (physical communication endpoint) that runs exactly one app (application level communication endpoint). 
+    This includes e.g. substation control elements or stand-alone protocol converters.
+    
+    :INPUT:
+        **ict_net** (pandaictNet) - The pandaict network in which device and app are created.    
+
+    :OPTIONAL:
+        **name** (string, default None) - name used for both device and app.
+
+        **device_type** (aenum, default None) - the device type. Use a DEVICE_TYPE aenum.
+
+        **app_type** (aenum, default None) - the app type. Use an APP_TYPE aenum. 
+                
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
+
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used.            
+        
+        **conversions** (list of (string,string) tuple, default None) - List of protocol pairs the app is converting between \
+            (Only for Converter type app).
+        
+        **mtbf_h** (float, 0) - Mean time before failure for device, in hours. Zero means not defined.
+        
+        **mttr_h** (float, 0) - Mean time to repair for device, in hours. Zero means not defined.
+
+    :OUTPUT:
+        **elt** (List of (str,int) or UUID4) - List of device and app identifiers of the created elements. If use_uuid==False, pandaict element \
+            notation is used, otherwise uuids are returned.
+
+    :EXAMPLE:
+        create_ict_app(net, name = "PowerMeterApp1", device=0)
+    """
     
     dev = create_ict_device(ict_net, name=name, device_type=device_type, in_service=in_service, use_uuid=use_uuid, mtbf=mtbf, mttr=mttr)    
     app = create_ict_app(ict_net, name=name, app_type=app_type, in_service=in_service, use_uuid=use_uuid, conversions=conversions, device=dev)
@@ -447,6 +513,59 @@ def __create_connection_info_items_check(info_items, producer, prod_freq_ms):
 def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_uuid=False, uid=None,
                           from_app=None, to_app=None, protocol=None, info_items=None, **kwargs):       
      
+    """
+    Adds one connection in table ict_net["conn"].
+
+    Connections represent end-to-end ICT connections between apps. Information Items are transmitted over connections using 
+    protocols, and may be physically routed through multiple links and nodes.  
+
+    :INPUT:
+        **ict_net** (pandaictNet) - The pandaict network in which the connection is created        
+        
+    :OPTIONAL:
+        **name** (string, default None) - The name for this connection.
+        
+        **index** (int, default None) - Force a specified list index if it is available. If None, the \
+            index one higher than the highest already existing index is selected.
+
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
+
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used. 
+        
+        **uid** (UUID4 or string, default None) - user-selected uuid for this connection (must not be used in this network yet).
+        
+        **from_app** ((string,int) or UUID4, default None) - connection start element, in pandaict element notation if use_uuid == False, \
+            else as UUID. Element type must be app.     
+        
+        **to_app** ((string,int) or UUID4, default None) - connection end element, in pandaict element notation if use_uuid == False, \
+            else as UUID. Element type must be app.
+            
+        **protocol** (string, default None) - Protocol to be used for this connection. A standard protocol type may be used. \
+            Note: a connection uses exactly one protocol. End-to-end communication using multiple protocols need multiple connections \
+            as well as introduction of converter type apps. 
+            
+        **info_items** (list of aenum, default None) - Information items transmitted by the connection. Use INFO_ITEM type aenum. 
+        
+        **peers** (2-tuple of (string,int) or UUID4, default None) - element identifiers of non-converter type apps that are communication endpoints. \
+            The pair refers to the app that originally produces Information Items, and the one which finally receives them. \
+            If these communicate using different protocols, there are multiple connections and at least one converter-type app in between, \
+            but the **peers** field is the same for all involved connections.    
+        
+        **producer** (list of <0 or 1>) - Indicates producers of info_items. If **producer[n]** is 0, this means the info_items[n] is \
+            produced by peers[0]. If **producer[n]** is 1, this means the info_items[n] is \
+            produced by peers[1]. 
+        
+        **prod_freq_ms** (list of float) - Average frequency of information item generation. Each list item refers to the same index in **info_items**. \
+            The value -1 means that the info item generation is event-based and not recurrent, such that no meaningful frequency can be given.  
+            
+    :OUTPUT:
+        **elt** ((string,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
+            otherwise a uuid is returned (either the user selected uid or a newly generated one).
+
+    :EXAMPLE:
+        create_ict_connection(net, from_elt = ("app", 1), to_elt = ("app", 3), protocol="HTTP")
+    """
+    
     peers = kwargs.get('peers', None)
     producer = kwargs.get('producer', None)
     prod_freq_ms = kwargs.get('prod_freq_ms', None)

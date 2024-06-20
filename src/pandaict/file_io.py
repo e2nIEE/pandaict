@@ -137,14 +137,13 @@ def to_json(ict_net, filename, save_std_types=False):
     """
         Saves a pandaict Network in JSON format.
 
-        INPUT:
+        :INPUT:
             **ict_net** (dict) - The pandaict format network
 
             **filename** (string or file) - The absolute or relative path to the output file or file-like object
 
-        EXAMPLE:
-
-             >>> pi.to_json(ict_net, "example.json")
+        :EXAMPLE:
+            pi.to_json(ict_net, "example.json")
 
     """            
     with open(filename, 'w') as pifile: 
@@ -176,18 +175,16 @@ def from_json(filename):
     """
     Load a pandaict network from a JSON file.    
 
-    INPUT:
+    :INPUT:
         **filename** (string or file) - The absolute or relative path to the input file or file-like object
 
-    OUTPUT:
+    :OUTPUT:
         **ict_net** (dict) - The pandaict format network
-
-    EXAMPLE:
-
-        >>> ict_net = pi.from_json("example.json")
-
-    """
         
+    :EXAMPLE:
+        ict_net = pi.from_json("example.json")
+        
+    """    
     ict_net = create_empty_network(False)
     with open(filename, 'r') as pifile: 
         try:

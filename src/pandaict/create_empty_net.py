@@ -71,15 +71,18 @@ def __get_conn_structure():
 
 def create_empty_network(name="", add_stdtypes=True):
     """
-    Creates an empty pandaict core network datastructure.
+    This function initializes the pandaict network datastructure.
 
-    OPTIONAL:        
-        **name** (string, None) - name for the network
+    :OPTIONAL:        
+        **name** (string, default "") - name for the network    
 
-        **add_stdtypes** (boolean, True) - Includes standard types to net
+        **add_stdtypes** (boolean, default True) - Includes standard types to net
 
-    OUTPUT:
-        **ict_net** (attrdict) - pandaict attrdict with empty tables:
+    :OUTPUT:
+        **net** (pandaICTNet) - pandaict network with empty tables
+
+    :EXAMPLE:
+        ict_net = create_empty_network()
 
     """    
     ict_net = pandaICTNet({

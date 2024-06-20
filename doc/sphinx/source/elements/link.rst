@@ -1,3 +1,5 @@
+.. _link:
+
 =============
 Link
 =============
@@ -18,5 +20,4 @@ pandapower connector
 
 .. _extend_ict_link:
 .. autofunction:: pp_pict_connector.extend_ict_link
-
 

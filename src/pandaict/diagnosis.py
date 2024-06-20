@@ -108,6 +108,17 @@ def __inspect_conn(ict_net, passed):
     return passed
 
 def inspect(ict_net):
+    """
+    Performs a consistency check on an ict network. This checks if all required parameters are present and all elements
+    are well defined, including cross-element relations, e.g. existence of from_elt and to_elt for links etc. 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - The pandaict network to check.            
+        
+    :OUTPUT:
+        **passed** (boolean) - True if consistency check passed, False otherwise.  
+    
+    """
     
     passed = True    
     pilogger.info("----------- pandaICT inspection protocol for ict_net '"+str(ict_net['name'])+"' -----------")

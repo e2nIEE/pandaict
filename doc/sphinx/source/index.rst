@@ -1,3 +1,5 @@
+.. _index:
+
 ############################
 pandaict
 ############################
@@ -46,9 +48,10 @@ Operation at the Fraunhofer Institute for Energy Economics and Energy System Tec
 
     about
     elements
-    std_types    
-    networks
+    utils_auxiliary
     diagnosis
-    plotting
+    file_io
+    std_types    
+    topology/routing    
     
     

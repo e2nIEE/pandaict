@@ -26,7 +26,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
 
     The standard type is saved into the pandaict dict of the given network by default.
 
-    INPUT:
+    :INPUT:
         **ict_net** - The pandaict network
         **data** - dictionary of standard type parameters
         **name** - name of the standard type as string
@@ -59,7 +59,7 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
     """
     Creates multiple standard types in the type dict.
 
-    INPUT:
+    :INPUT:
         **ict_net** - The pandaict network
         **data**    - dictionary of standard type parameter sets
         **element** - "link"
@@ -99,7 +99,7 @@ def __local_area_linktypes():
             { "bandwidth_Mbps": (1000, 1000),
               "latency_ms": 100,
               "wired": True,
-              "protocols": ['FTP','HTTP'],
+              "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
@@ -113,7 +113,7 @@ def __wide_area_linktypes():
             { "bandwidth_Mbps": (50,10),
               "latency_ms": 300,
               "wired": False,
-              "protocols": ['FTP','HTTP'],
+              "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
@@ -123,7 +123,7 @@ def __wide_area_linktypes():
             { "bandwidth_Mbps": (8, 1),
               "latency_ms": 100,
               "wired": True,
-              "protocols": ['FTP','HTTP'],
+              "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
@@ -133,7 +133,7 @@ def __wide_area_linktypes():
             { "bandwidth_Mbps": (1000, 1000),
               "latency_ms": 100,
               "wired": True,
-              "protocols": ['FTP','HTTP'],
+              "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
@@ -256,15 +256,12 @@ def add_basic_std_types(ict_net): # ToDo: make private?
     are the same types that are available with output of `pandapower.create_empty_network()` and
     `pandapower.create_empty_network(add_stdtypes=True)` respectively.
 
-    Parameters
-    ----------
-    ict_net : pandaICT
-        pandaICT net which should receive the basic standard types
+    :INPUT:
+        **ict_net** - pandaICT net which should receive the basic standard types
 
-    Returns
-    -------
-    tuple of dictionaries
-        standard types as dictionaries which have been added to the ict_net.
+    :OUTPUT:
+    
+        **std_types** (tuple of dict) - standard types as dictionaries which have been added to the ict_net.
     """
 
     if "std_types" not in ict_net:

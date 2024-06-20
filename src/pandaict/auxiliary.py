@@ -31,9 +31,6 @@ def __preserve_dtypes(df, dtypes):
 
 
 def __get_free_id(df):
-    """
-    Returns next free ID in a dataframe
-    """
     return np.int64(0) if len(df) == 0 else df.index.values.max() + 1
 
 
@@ -46,9 +43,6 @@ class ADict(dict, MutableMapping):
         self.__setattr('_allow_invalid_attributes', False)
 
     def __build(self, obj, **kwargs):
-        """
-        We only want dict like elements to be treated as recursive AttrDicts.
-        """
         return obj
 
     # --- taken from AttrDict
@@ -71,19 +65,9 @@ class ADict(dict, MutableMapping):
     # --- taken from MutableAttr
 
     def __setattr(self, key, value):
-        """
-        Add an attribute to the object, without attempting to add it as
-        a key to the mapping (i.e. internals)
-        """
         super(MutableMapping, self).__setattr__(key, value)
 
     def __setattr__(self, key, value):
-        """
-        Add an attribute.
-
-        key: The name of the attribute
-        value: The attributes contents
-        """
         if self.__valid_name(key):
             self[key] = value
         elif getattr(self, '_allow_invalid_attributes', True):
@@ -96,18 +80,9 @@ class ADict(dict, MutableMapping):
             )
 
     def __delattr(self, key):
-        """
-        Delete an attribute from the object, without attempting to
-        remove it from the mapping (i.e. internals)
-        """
         super(MutableMapping, self).__delattr__(key)
 
     def __delattr__(self, key, force=False):
-        """
-        Delete an attribute.
-
-        key: The name of the attribute
-        """
         if self.__valid_name(key):
             del self[key]
         elif getattr(self, '_allow_invalid_attributes', True):
@@ -120,14 +95,6 @@ class ADict(dict, MutableMapping):
             )
 
     def __call__(self, key):
-        """
-        Dynamically access a key-value pair.
-
-        key: A key associated with a value in the mapping.
-
-        This differs from __getitem__, because it returns a new instance
-        of an Attr (if the value is a Mapping object).
-        """
         if key not in self:
             raise AttributeError(
                 "'{cls} instance has no attribute '{name}'".format(
@@ -138,9 +105,6 @@ class ADict(dict, MutableMapping):
         return self.__build(self[key])
 
     def __getattr__(self, key):
-        """
-        Access an item as an attribute.
-        """
         if key not in self or not self.__valid_name(key):
             raise AttributeError(
                 "'{cls}' instance has no attribute '{name}'".format(
@@ -151,19 +115,6 @@ class ADict(dict, MutableMapping):
         return self.__build(self[key])
 
     def __deepcopy__(self, memo):
-        """
-        overloads the deepcopy function of pandapower if at least one DataFrame with column
-        "object" is in net
-
-        in addition, line geodata can contain mutable objects like lists, and it is also treated
-        specially
-
-        reason: some of these objects contain a reference to net which breaks the default deepcopy
-        function. Also, the DataFrame doesn't deepcopy its elements if geodata changes in the
-        lists, it affects both net instances
-        This fix was introduced in pandapower 2.2.1
-
-        """
         deep_columns = {'object', 'coords', 'geometry'}
         cls = self.__class__
         result = cls.__new__(cls)
@@ -186,36 +137,17 @@ class ADict(dict, MutableMapping):
 
     @classmethod
     def __valid_name(cls, key):
-        """
-        Check whether a key is a valid attribute name.
-
-        A key may be used as an attribute if:
-         * It is a string
-         * The key doesn't overlap with any class attributes (for Attr,
-            those would be 'get', 'items', 'keys', 'values', 'mro', and
-            'register').
-        """
         return (
                 isinstance(key, str) and
                 not hasattr(cls, key)
         )
 
 
-class pandaICTNet(ADict):
-    """
-    Example documentation for classes in pandaICTNet
-    """    
+class pandaICTNet(ADict):    
       
     version = "0.0.1"
     
     def __init__(self, *args, **kwargs):        
-        """
-        Initializes a new instance of pandaICTNet
-
-        Parameters
-        ----------
-        :param args: Example argument
-        """
         super().__init__(*args, **kwargs)
         for key in self:
             if isinstance(self[key], list):
@@ -237,11 +169,6 @@ class pandaICTNet(ADict):
             return net
         
     def __repr__(self):  # pragma: no cover
-        """
-        See Also
-        --------
-        count_elements
-        """
         par = []
         res = []
         for et in list(self.keys()):
@@ -266,6 +193,16 @@ class pandaICTNet(ADict):
         return "\n".join(lines)
     
     def equals_excluding_uuids_and_std_types(self, other):
+        """
+        Compares this network to another one
+        
+        :INPUT:
+            **other** (pandaICTNet) - pandaict network to compare to.           
+            
+        :OUTPUT:
+            **equals** (boolean) - True if networks are equal excluding uuids and standard types, False else.  
+        
+        """
         keys = list(self.keys())
         if 'name' in keys:
             keys.remove('name')
@@ -280,6 +217,18 @@ class pandaICTNet(ADict):
         return True
     
     def get_elts_by_name_dict(self, typefilter=None):
+        """
+        Returns dict with network element names as keys and pandaict notation element identifiers as values 
+        
+        :OPTIONAL:
+            **typefilter** (list of string, default None) - list of element types that are to be included in the output dict. \
+                Allowed values for list items: "node","link","device","app","conn". If typefilter is not given, \
+                all named element types are included. 
+            
+        :OUTPUT:
+            **elt_dict** (dict) - Dict of network element names and their identifiers.  
+        
+        """
         if typefilter is None:
             typefilter = ["node","link","device","app","conn"]            
         elif isinstance(typefilter, str):
@@ -304,6 +253,18 @@ class pandaICTNet(ADict):
         return alldict
         
     def get_elts_by_uuid_dict(self, typefilter=None):
+        """
+        Returns dict with network element names as keys and pandaict element uuids as values 
+        
+        :OPTIONAL:
+            **typefilter** (list of string, default None) - list of element types that are to be included in the output dict. \
+                Allowed values for list items: "node","link","device","app","conn". If typefilter is not given, \
+                all named element types are included. 
+            
+        :OUTPUT:
+            **elt_dict** (dict) - Dict of network element names and their uuids.  
+        
+        """
         if typefilter is None:
             typefilter = ["node","link","device","app","conn"]            
         elif isinstance(typefilter, str):

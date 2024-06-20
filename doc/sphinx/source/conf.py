@@ -15,7 +15,7 @@ release = '0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [   
-    'sphinx_rtd_theme','sphinx.ext.autodoc'
+    'sphinx_rtd_theme','sphinx.ext.autodoc', 'sphinx.ext.napoleon'
 ]
 templates_path = ['_templates']
 exclude_patterns = []
@@ -27,7 +27,14 @@ master_doc = 'index'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ['_static']
+html_theme_options = {
+    'navigation_depth': 2,
+    'includehidden': True,
+    'titles_only': False,
+    'collapse_navigation': True,
+    'sticky_navigation': True,
+}
+html_logo = "../pics/pict_small.jpg"
 
 import sys
 import os

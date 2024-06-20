@@ -15,15 +15,15 @@ def uuid2elt(ict_net, uid):
     """
     Converts from UUID to pandaict element identifier.
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
         **uid** (UUID4) - UUID of an element that exists in ict_net     
                             
-    OUTPUT:
+    :OUTPUT:
         **elt** (str,int) - ID of the element in pandaict element notation. Returns None if element not found in ict_net. 
 
-    EXAMPLE:
+    :EXAMPLE:
         uuid2elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """
     
@@ -43,15 +43,15 @@ def elt2uuid(ict_net, elt):
     """
     Converts from pandaict element identifier to UUID.
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
         **elt** (str, int) -pandaict identifier of an element that exists in ict_net     
                             
-    OUTPUT:
+    :OUTPUT:
         **uid** (UUID4) - UUID of the element. Returns None if element not found in ict_net or element has no UUID. 
 
-    EXAMPLE:
+    :EXAMPLE:
         elt2uuid(ict_net, ('device',2))
     """    
     uid = None
@@ -65,15 +65,15 @@ def get_elt(ict_net, elt):
     """
     Fetch element by pandaict element identifier.
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
         **elt** (str, int) -pandaict identifier of an element that exists in ict_net     
                             
-    OUTPUT:
+    :OUTPUT:
         **elt** (dict) - The pandaict element. 
 
-    EXAMPLE:
+    :EXAMPLE:
         get_elt(ict_net, ('device',2))
     """ 
     try:
@@ -86,15 +86,15 @@ def get_elt_by_uuid(ict_net, uid):
     """
     Fetch element by UUID.
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
         **elt** (dict) -pandaict identifier of an element that exists in ict_net     
                             
-    OUTPUT:
+    :OUTPUT:
         **elt** (dict) - The pandaict element. 
 
-    EXAMPLE:
+    :EXAMPLE:
         get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """
     return get_elt(uuid2elt(uid))
@@ -103,16 +103,16 @@ def get_apps_on_device(ict_net, device):
     """
     Fetch list of apps running on a pandaict device.
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
         **device** (str, int) - pandaict notation element identifier of a device that exists in ict_net     
                             
-    OUTPUT:
-        **applist** (list) - List of indexes of the ict_net.app table that reference apps running on the device. \ 
-            Returns empty list if no apps found.   
-
-    EXAMPLE:
+    :OUTPUT:    
+        **applist** (list) - List of indexes of the ict_net.app table that reference apps running on the \
+            device. Returns empty list if no apps found.              
+              
+    :EXAMPLE:
         get_apps_on_device(ict_net, ('device',2))
     """
     applist = []
@@ -125,17 +125,17 @@ def get_links_at(ict_net, elt):
     """
     Fetch list of links that are connected to a pandaict element
 
-    INPUT:
+    :INPUT:    
         **ict_net** (pandaictNet) - A pandaict network     
 
         **elt** (str, int) - pandaict notation element identifier of a node or device that exists in ict_net     
                             
-    OUTPUT:
+    :OUTPUT:    
         **linklist** (list) - List of indexes of the ict_net.link table that that reference links which \
             have the element as one of their endpoints. Returns empty list if element is not node or device \
             or no links connected to element.
 
-    EXAMPLE:
+    :EXAMPLE:
         get_links_at(ict_net, ('device',2))
     """
     linklist = []
@@ -155,18 +155,18 @@ def get_links_between(ict_net, elt1, elt2):
     """
     Fetch list of links that are connecting two pandaict elements
 
-    INPUT:
+    :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
         **elt1** (str, int) - pandaict notation element identifier of first element. Must be node or device.
         
         **elt2** (str, int) - pandaict notation element identifier of second element. Must be node or device.
                             
-    OUTPUT:
+    :OUTPUT:
         **linklist** (list) - List of indexes of the ict_net.link table that reference links which \
             connect the two elements (either way). 
 
-    EXAMPLE:
+    :EXAMPLE:
         get_links_between(ict_net, ('device',2), ('node',1))
     """
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):

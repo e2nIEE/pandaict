@@ -104,10 +104,6 @@ def __create_multidigraph(ict_net, protocol, in_service_only = True, validate = 
     
     return mdg
 
-def calc_routes_for_connection(ict_net, conn):
-    pass
-    
-
 def __print_paths(ict_net, conn, paths):
     lhops = []
     for p in paths:
@@ -123,8 +119,28 @@ def __print_paths(ict_net, conn, paths):
     
     print("Paths for connection " + str(conn['name']) + " over " + str(conn['protocol']) + ": " + str(lhops))
 
-def calc_routes_between_devices(ict_net, conn, verbose=False):
-    
+def calc_routes_for_connection(ict_net, conn, verbose=False):
+    """
+        Calculates possible routes through the physical network for a given connection. 
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn** (dataframe) - The connection element for which routes shall be calculated
+
+        :OPTIONAL:
+            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
+        
+        :OUTPUT: 
+            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
+                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
+                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
+                "hops" that information items using the connection can take.  
+        
+        :EXAMPLE:
+            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
+
+    """ 
     # Create the nxgraph
     mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)
     
