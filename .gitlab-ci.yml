@@ -56,6 +56,7 @@ pages:
   image: python:3.10.0
   stage: pages
   script:
+  - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
   - pip install -U sphinx
   - pip install -r requirements.txt
   - sphinx-build -b html doc/sphinx/source public/pandaict
