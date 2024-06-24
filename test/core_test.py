@@ -7,10 +7,6 @@ Created on 8.03.2024
 @authors: jringelstein
 '''
 import unittest
-import pandapower as pp
-import pandapower.control as control
-import pandapower.timeseries as timeseries
-from   pandapower.timeseries.data_sources.frame_data import DFData
 import pandaict as pi
 from   pandaict.utils.utils import uuid2elt, elt2uuid
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType
