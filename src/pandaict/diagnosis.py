@@ -7,101 +7,136 @@ Created on 23.04.2024
 @author: jringelstein
 '''
 
-import utils
-from pandaict.enums import InfoItem, NodeType, DeviceType, AppType
-import logging
-logger = logging.getLogger("pandaICT_Core")
+from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.utils.utils import get_links_at, get_apps_on_device, get_links_between
+from pandaict.pilogger import pilogger
 
-
-def inspect(ict_net):
+def __check_isNone(i, n, elt_type, sparam, passed, checkempty=False):
+    if n[sparam] is None or (checkempty and n[sparam]==""):
+        pilogger.info(elt_type+" '" + str(n['name']) + "' (index " + str(i) + ") has no "+sparam)
+        passed = False 
+    return passed
     
-    passed = True
-    origlevel = logger.level
-    logger.setLevel(logging.INFO)
-    logger.info("----------- pandaICT inspection protocol for ict_net '"+str(ict_net['name'])+"' -----------")
-    # check if mandatory parameters are present
-    # check if all cross-references exist
-    # check if cross references point to the right element types    
-    for i, n in ict_net.node.iterrows():    
-        if n['name'] is None or n['name']=="":
-            logger.info(" node with index "+str(i)+" has no name")
-            passed = False
-        if n['type'] is None:
-            logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has no type")
-            passed = False
-        if n['link_types'] is None:
-            logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has no link_types")
-            passed = False   
+def __inspect_node(ict_net, passed):
+    for i, n in ict_net.node.iterrows():
+        # if n['name'] is None or n['name'] == "":
+        #     pilogger.info(" node with index " + str(i) + " has no name")
+        #     passed = False
+        passed = __check_isNone(i, n, "node", "name", passed)
+        passed = __check_isNone(i, n, "node", "type", passed)
+        passed = __check_isNone(i, n, "node", "link_types", passed)
         # check if all nodes have two or more links connected
-        l = utils.getLinksAt(ict_net, ('node', i))
-        if len(l)<2:
-            logger.info(" node '"+str(n['name'])+"' (index "+str(i)+") has less than two links")
-            passed = False  
+        l = get_links_at(ict_net, ('node', i))
+        if len(l) < 2:
+            pilogger.info(" node '" + str(n['name']) + "' (index " + str(i) + ") has less than two links")
+            passed = False
+    
+    return passed
+
+def __inspect_link(ict_net, passed):
     for i, l in ict_net.link.iterrows():
-        if l['name'] is None or l['name']=="":
-            logger.info(" Link with index "+str(i)+" has no name")
-            passed = False
-        if l['type'] is None:
-            logger.info(" Link '"+str(l['name'])+"' (index "+str(i)+") has no type")
-            passed = False
+        passed = __check_isNone(i, l, "link", "name", passed)
+        passed = __check_isNone(i, l, "link", "type", passed)
         # from_elt and to_elt existence and non-equality are tested during creation
-    for i, d in ict_net.device.iterrows():
-        if d['name'] is None or d['name']=="":
-            logger.info(" device with index "+str(i)+" has no name")
-            passed = False
-        if d['type'] is None:
-            logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") has no type")
-            passed = False
-        # check if all devices with converter apps have two or more links connected
-        apps = utils.getAppsOnDevice(ict_net, ('device', i))
-        if apps is None or apps==[]:
-            logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") does not run any apps")
-            passed = False
-        if (any([ict_net.app.iloc[a]['type']==AppType.CONVERTER for a in apps])):
-            l = utils.getLinksAt(ict_net, ('device', i))
-            if len(l)<2:
-                logger.info(" device '"+str(d['name'])+"' (index "+str(i)+") is running converter type app(s) but has less than two links")
-                passed = False
     
-    for i, a in ict_net.app.iterrows():
-        if a['name'] is None or a['name']=="":
-            logger.info(" app with index "+str(i)+" has no name")
-            passed = False
-        if a['type'] is None:
-            logger.info(" app '"+str(a['name'])+"' (index "+str(i)+") has no type")
-            passed = False
-        if a['device'] not in ict_net.device.index:
-            logger.info(" app '"+str(a['name'])+"' (index "+str(i)+") links to non-existing device (index "+str(a['device'])+")")
-            passed = False
-    
-    for i, c in ict_net.conn.iterrows():
-        if c['name'] is None or c['name']=="":
-            logger.info(" connection with index "+str(i)+" has no name")
-            passed = False       
-        if c['from'] not in ict_net.app.index:
-            logger.info(" connection '"+str(c['name'])+"' (index "+str(i)+") links to non existing from_app (index "+str(c['from'])+")")
-            passed = False
-        if c['to'] not in ict_net.app.index:
-            logger.info(" connection '"+str(c['name'])+"' (index "+str(i)+") links to non existing to_app (index "+str(c['to'])+")")
-            passed = False
-        
-    # check for double linkage (excluding multicasts)
-    for i, l in ict_net.link.iterrows():
+        # check for double linkage (excluding multicasts)
         from_elt = l["from"]
         to_elt   = l["to"]
-        linklist = utils.getLinksBetween(ict_net, from_elt, to_elt)
+        linklist = get_links_between(ict_net, from_elt, to_elt)
         if len(linklist) > 1: 
             linklist.remove(i)
-            logger.info(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")")
+            pilogger.info(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")")
+            passed = False    
+        
+    # check std linktypes
+    for linktype in ict_net.std_types['link'].keys():
+        protocols = ict_net.std_types['link'][linktype]['protocols']
+        for p in protocols:
+            if p not in ict_net.std_types['protocol'].keys():
+                pilogger.info(" std link type '"+str(linktype)+"' has unknown protocol '"+str(p)+"'")
+                passed = False
+    
+    return passed
+
+
+def __inspect_device(ict_net, passed):
+    for i, d in ict_net.device.iterrows():
+        passed = __check_isNone(i, d, "device", "name", passed)
+        passed = __check_isNone(i, d, "device", "type", passed)        
+        # check if all devices with converter apps have two or more links connected
+        apps = get_apps_on_device(ict_net, ('device', i))
+        if apps is None or apps == []:
+            pilogger.info(" device '" + str(d['name']) + "' (index " + str(i) + ") does not run any apps")
             passed = False
-            
+        if (any([ict_net.app.iloc[a]['type'] == AppType.CONVERTER for a in apps])):
+            l = get_links_at(ict_net, ('device', i))
+            if len(l) < 2:
+                pilogger.info(" device '" + str(d['name']) + "' (index " + str(i) + ") is running converter type app(s) but has less than two links")
+                passed = False
+    
+    return passed
+
+
+def __inspect_app(ict_net, passed):
+    for i, a in ict_net.app.iterrows():
+        passed = __check_isNone(i, a, "app", "name", passed, checkempty=True)
+        passed = __check_isNone(i, a, "app", "type", passed)        
+        if a['device'] not in ict_net.device.index:
+            pilogger.info(" app '" + str(a['name']) + "' (index " + str(i) + ") links to non-existing device (index " + str(a['device']) + ")")
+            passed = False
+    
+        # check if Apps with conversions run on converter type devices
+        if a['type'] == AppType.CONVERTER:
+            d = a.device 
+            if not ict_net.device.iloc[d]['type'] == DeviceType.CONVERTER:
+                pilogger.info(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.iloc[d]['name'])+"'")
+                passed = False                        
+    
+    return passed
+
+
+def __inspect_conn(ict_net, passed):
+    for i, c in ict_net.conn.iterrows():
+        passed = __check_isNone(i, c, "connection", "name", passed, checkempty=True)        
+        if c['from'] not in ict_net.app.index:
+            pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing from_app (index " + str(c['from']) + ")")
+            passed = False
+        if c['to'] not in ict_net.app.index:
+            pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing to_app (index " + str(c['to']) + ")")
+            passed = False
+    
+    return passed
+
+def inspect(ict_net):
+    """
+    Performs a consistency check on an ict network. This checks if all required parameters are present and all elements
+    are well defined, including cross-element relations, e.g. existence of from_elt and to_elt for links etc. 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - The pandaict network to check.            
+        
+    :OUTPUT:
+        **passed** (boolean) - True if consistency check passed, False otherwise.  
+    
+    """
+    
+    passed = True    
+    pilogger.info("----------- pandaICT inspection protocol for ict_net '"+str(ict_net['name'])+"' -----------")
+      
+    passed = __inspect_node(ict_net, passed)      
+    passed = __inspect_link(ict_net, passed)    
+    passed = __inspect_device(ict_net, passed)    
+    passed = __inspect_app(ict_net, passed)
+    passed = __inspect_conn(ict_net, passed)                    
+           
     # check for isolated network areas    
     # check if all connections have at least one possible route (including protocols) 
         
     if passed:
-        logger.info("----------- INSPECTION PASSED -----------")
+        print("----------- INSPECTION PASSED -----------")
+        pilogger.info("----------- INSPECTION PASSED -----------")
     else:        
-        logger.info("----------- INSPECTION FAILED -----------")        
+        print("----------- INSPECTION FAILED -----------")
+        pilogger.info("----------- INSPECTION FAILED -----------")        
         
-    logger.setLevel(origlevel)    
     return passed

@@ -28,12 +28,14 @@ semgrep-sast:
 
 stages:
   - test
-  - build
+  - pages
+  - deploy
 
 unit-test:
     stage: test
     script:
      - pip install -r requirements.txt
+     - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
      - python3 test/pandaict_test.py
     tags:
      - leitwarte_iee
@@ -52,20 +54,24 @@ pages:
   tags:
    - leitwarte_iee
   image: python:3.10.0
-  stage: build
+  stage: pages
   script:
+  - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
   - pip install -U sphinx
   - pip install -r requirements.txt
   - sphinx-build -b html doc/sphinx/source public/pandaict
+  - pip install jupyter-book
+  - python doc/jupyter/pandaict/convert_attachements.py
+  - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/
   artifacts:
     paths:
     - public
 
 
 create_artifact_gitlab:
-  stage: build
   tags: 
    - leitwarte_iee
+  stage: deploy
   script:
     - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
     - pip install virtualenv
@@ -75,10 +81,9 @@ create_artifact_gitlab:
     - pip install build
     - python -m build --wheel
     - export CURL_CA_BUNDLE=""
-    - twine upload --config-file ~/.pypirc -r gitlab dist/*
+    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose
   only: 
-    - develop
-    - main
+    - basics
   artifacts:
     paths:
       - dist/*.whl
