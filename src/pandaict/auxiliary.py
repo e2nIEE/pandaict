@@ -13,7 +13,6 @@ from collections.abc import MutableMapping
 import pandas as pd
 import copy
 import numpy as np
-from pandapower import from_json_string # ToDo: dependency?
 from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
 
@@ -160,13 +159,10 @@ class pandaICTNet(ADict):
         return copy.deepcopy(self)
     
     # @FromSerializableRegistry.from_serializable.register(class_name='pandaICTNet', module_name='pandaICTNet.pandaICTNet')    
-    def pandaICTNet(self):
-        if isinstance(self.obj, str):  # backwards compatibility            
-            return from_json_string(self.obj) # TODO: dependency on pandapower ??
-        else:            
-            net = create_empty_network()            
-            net.update(self.obj)
-            return net
+    def pandaICTNet(self):                
+        net = create_empty_network()            
+        net.update(self.obj)
+        return net
         
     def __repr__(self):  # pragma: no cover
         par = []

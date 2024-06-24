@@ -1,5 +1,4 @@
 numpy<2.0.0
-pandapower>=2.13.1
 setuptools>=60.9.3
 bump2version>=1.0.1
 sphinx_rtd_theme
