@@ -15,3 +15,6 @@ src/pandaict/topology/__pycache__/
 src/pandaict/datamodel/__pycache__/
 
 .idea/
+public/jupyter/_build/
+doc/jupyter/pandaict/images/
+public/

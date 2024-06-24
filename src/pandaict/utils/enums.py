@@ -12,17 +12,18 @@ from aenum import Enum
 # Definitions for info items
 class InfoItem(Enum):
     ACK         = 1
-    REQUEST     = 2
-    RESPONSE    = 3
-    STATUS      = 4
-    URL         = 5
-    FILE        = 6
-    TEXT        = 7
-    WEBPAGE     = 8
-    TIME        = 9
-    CERTIFICATE = 10
-    AUDIOSTREAM = 11
-    VIDEOSTREAM = 12
+    VALUE       = 2
+    REQUEST     = 3
+    RESPONSE    = 4
+    STATUS      = 5
+    URL         = 6
+    FILE        = 7
+    TEXT        = 8
+    WEBPAGE     = 9
+    TIME        = 10
+    CERTIFICATE = 11
+    AUDIOSTREAM = 12
+    VIDEOSTREAM = 13
     
 class NodeType(Enum):        
     SWITCH    = 1
