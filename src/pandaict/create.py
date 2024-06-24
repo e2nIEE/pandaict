@@ -16,7 +16,7 @@ import pandas as pd
 import uuid
 from pandaict.std_types import add_basic_std_types
 from pandaict.utils import list2str, tuple2str, uuid2elt, elt2uuid
-from enums import InfoItem, NodeType, DeviceType, AppType
+from pandaict.enums import InfoItem, NodeType, DeviceType, AppType
 
 import logging
 logger = logging.getLogger("pandaICT_Core")
@@ -290,7 +290,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
     
     if ict_net is None:
         raise UserWarning("ict_net must not be None")
-    if device_type is not None and not isinstance(device_type, DeviceType):
+    if device_type is not None and not isinstance(device_type,DeviceType):
         raise UserWarning("device_type must be DeviceType")    
     if index is not None and index in ict_net["device"].index:
         raise UserWarning("A device with index %s already exists" % index)        
