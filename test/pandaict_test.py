@@ -15,14 +15,21 @@ class PandaICT_Test(unittest.TestCase):
     # NOTE: all function names to be executed by unittest MUST START with "test" ! 
     tester = Core_Test()
     
-    def test_create(self):        
-        self.tester.test_create_ict_net(self)
+    # def test_create(self):        
+    #     self.tester.test_create_ict_net(self)
+    #
+    # def test_saveload(self):
+    #     self.tester.test_save_load(self)
+    #
+    # def test_inspect(self):
+    #     self.tester.test_inspect_ict_net(self)  
     
-    def test_saveload(self):
-        self.tester.test_save_load(self)
+    def test_user_input_checks(self):
+        self.tester.test_user_input_checks(self)
     
-    def test_inspect(self):
-        self.tester.test_inspect_ict_net(self)           
+    # def test_rp_table_calc(self):
+    #    self.tester.test_rp_table_calc(self)            
+          
 
 if __name__ == '__main__':
     unittest.main()

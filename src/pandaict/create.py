@@ -62,10 +62,8 @@ def __create_link_type_check(ict_net, link_type):
 def __create_protocols_check(ict_net, protocols):
     
     if protocols is not None: 
-        if isinstance(protocols, list):
-            for pr in protocols: 
-                if not pr in ict_net.std_types['protocol'].keys():
-                    raise UserWarning("protocol "+str(pr)+" not found in std_types")
+        if isinstance(protocols, list) or isinstance(protocols, tuple):
+            raise UserWarning("connection may not have multiple protocols")
         elif not protocols in ict_net.std_types['protocol'].keys():
             raise UserWarning("protocol "+str(protocols)+" not found in std_types")
     return
@@ -177,12 +175,14 @@ def __create_ict_link_check(ict_net, from_elt, to_elt, uid, use_uuid):
             if str(from_elt) == str(uid): 
                 raise UserWarning("from_elt and uid must not be equal")
             if str(to_elt) == str(uid):         
-                raise UserWarning("to_elt and uid must not be equal")        
+                raise UserWarning("to_elt must not equal uid")
+            if any(str(to_elt) == str(uid)):         
+                raise UserWarning("to_elt must not contain uid")        
     else:
         if not isinstance(from_elt, tuple):
             raise UserWarning("from_elt must be (str, int) tuple")     
         if not (from_elt[0]=='device' or from_elt[0]=='node'):
-            raise UserWarning("from_elt is "+str(from_elt[0])+", must be dev or node") 
+            raise UserWarning("from_elt is "+str(from_elt[0])+", must be device or node") 
         if (not isinstance(to_elt, tuple) and not isinstance(to_elt, list)):
             raise UserWarning("to_elt must be (str, int) tuple or list of such tuples")  
         if isinstance(to_elt, tuple):
@@ -489,6 +489,8 @@ def __create_connection_check(ict_net, use_uuid, uid, from_app, to_app, peers):
                 raise UserWarning("peers elements must be tuples (str, int)")
             if not (peers[0][0] == 'app' and peers[1][0] == 'app'):
                 raise UserWarning("peers elements must be app-type")
+            if (peers[0] == peers[1]):
+                raise UserWarning("peers elements must not be the same")
 
 def __create_connection_info_items_check(info_items, producer, prod_freq_ms):
     
