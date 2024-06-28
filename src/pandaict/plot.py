@@ -118,10 +118,9 @@ def __draw_edges__(G, draw_type, edge_colors, edge_labels, net):
     # Iterate over each edge in the current edge type
     for one_edge in net[one_edge_type].itertuples():
         # Extract source and destination information from the edge
-        from_source = one_edge.from_fix.split('#')[0] if not draw_type == 'app' else 'app'
-        from_index = int(one_edge.from_fix.split('#')[1]) if not draw_type == 'app' else one_edge.from_fix
-        to_source = one_edge.to.split('#')[0] if not draw_type == 'app' else 'app'
-        to_index = int(one_edge.to.split('#')[1]) if not draw_type == 'app' else one_edge.to
+        from_source, from_index = one_edge.from_fix if not draw_type == 'app' else ('app', one_edge.from_fix)
+        to_source, to_index = one_edge.to[0] if not draw_type == 'app' else ('app', one_edge.to)
+        
 
         # Add an edge to the graph, with color based on the edge type
         G.add_edge(net[from_source].loc[from_index, 'name'], net[to_source].loc[to_index, 'name'],
