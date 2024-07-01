@@ -8,6 +8,7 @@ Created on 30.01.2024
 '''
 
 import networkx as nx
+from pandaict.utils.enums import RoutingType
 
 import logging
 logger = logging.getLogger("pandaICT_Core")
@@ -119,31 +120,8 @@ def __print_paths(ict_net, conn, paths):
     
     print("Paths for connection " + str(conn['name']) + " over " + str(conn['protocol']) + ": " + str(lhops))
 
-def calc_routes_for_connection(ict_net, conn, verbose=False):
-    """
-        Calculates possible routes through the physical network for a given connection. 
 
-        :INPUT:
-            **ict_net** (dict) - The pandaict network
-            
-            **conn** (dataframe) - The connection element for which routes shall be calculated
-
-        :OPTIONAL:
-            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
-        
-        :OUTPUT: 
-            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
-                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
-                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
-                "hops" that information items using the connection can take.  
-        
-        :EXAMPLE:
-            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
-
-    """ 
-    # Create the nxgraph
-    mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)
-    
+def __get_possible_routes(ict_net, mdg, conn):
     # Fetch devices used by the connection
     try:
         dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
@@ -174,8 +152,91 @@ def calc_routes_for_connection(ict_net, conn, verbose=False):
         for nxnode in nxp:            
             p += [mdg.nodes[nxnode]['pielt']]
         paths += [p] 
-    
-    if verbose:            
-        __print_paths(ict_net, conn, paths, p)
         
     return paths
+
+
+def calc_routes_for_connection(ict_net, conn, verbose=False):
+    """
+        Calculates possible routes through the physical network for a given connection. 
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn** (dataframe) - The connection element for which routes shall be calculated
+
+        :OPTIONAL:
+            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
+        
+        :OUTPUT: 
+            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
+                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
+                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
+                "hops" that information items using the connection can take.  
+        
+        :EXAMPLE:
+            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
+
+    """ 
+    # Create the nxgraph
+    mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)
+    
+    paths = __get_possible_routes(ict_net, mdg, conn)
+    
+    if verbose:            
+        __print_paths(ict_net, conn, paths)
+        
+    return paths
+
+def calc_rp_table(ict_net, routing_type, conn, sender=0):
+    """
+        Calculates unidirectional routing probability table (RP table) for a connection.  
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **routing_type** (aenum) - The routing algorithm type to use. Use aenum ROUTING_TYPE. 
+            
+            **conn** (dataframe) - The connection element for which the RP table shall be calculated
+
+        :OPTIONAL:
+            **sender** (0 or 1, default 0) - If 0, the "from_app" of the connection is used as sender. If 1, the "to_app" is used as sender.  
+        
+        :OUTPUT: 
+            **rp_table** Routing probability table for the connection    
+        
+        :EXAMPLE:
+            calc_rp_table(ict_net, ict_net.conn.iloc[0], sender=1)
+
+    """ 
+    
+    # get nxgraph for connection    
+    mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)    
+    rp_table = []
+    
+    if  (routing_type == RoutingType.RANDOM) or (routing_type == RoutingType.ROUND_ROBIN) or (routing_type == RoutingType.FLOODING):
+        # get all possible routes
+        paths = __get_possible_routes(ict_net, mdg, conn)
+        # if RANDOM_ROUNDROBIN: assign same probability to routes, adding up to 100%
+        if  (routing_type == RoutingType.RANDOM_ROUNDROBIN):        
+            pprob = 1/len(paths)
+        # if FLOODING: assign 100% probability to each route
+            pprob = 1
+        # set probabilities    
+        for p in paths: 
+            rp_table += [{"route": p, "prob": pprob}]        
+    elif (routing_type == RoutingType.LOWEST_TOTAL_LATENCY):
+        # assign latencies as weights to nxgraph
+        # perform Djikstra on nxgraph
+        # put best route into rp table and assign 100% probability to it        
+        pass
+    elif (routing_type == RoutingType.BALANCED_BANDWITH_USAGE):
+        logger.warn("The routing type BALANCED_BANDWITH_USAGE can not be used with an individual connection. Please use calc_all_rp_tables().")
+        pass    
+        
+        
+    return rp_table
+
+
+def calc_all_rp_tables(ict_net, routing_type):
+    pass

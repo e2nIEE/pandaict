@@ -187,34 +187,33 @@ class Core_Test():
     def __test_user_input_checks_nouuid(self, utest):
         
         ict_net    = pi.create_empty_network("Test network 1",True)    
-        self.__assert_node_raises(utest, ict_net)   
-        node1      = pi.create_ict_node(ict_net, name="Node1", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000"])       
-        node2      = pi.create_ict_node(ict_net, name="Node2", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000","ADSL8","LTE50"])       
-        
-        (dconv1, aconv1)      = pi.create_ict_devapp(ict_net, name="Conv1", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER)
-        self.__assert_devapp_raises(utest, ict_net, dconv1, aconv1)                                    
-        (dcc, acc)         = pi.create_ict_devapp(ict_net, name="CC", device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
-        (dsc, asc)         = pi.create_ict_devapp(ict_net, name="SC", device_type=DeviceType.RTU, app_type=AppType.CLIENT)              
-        
-        link1      = pi.create_ict_link(ict_net, name="CC_Node1", link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)        
-        self.__assert_link_raises(utest, ict_net, dcc, node1, link1)                          
-                            
-        conn1      = pi.create_ict_connection(ict_net, name="CC_Conv1", from_app=acc, to_app=asc)
-        self.__assert_conn_raises(utest, ict_net, acc, asc, link1, conn1)        
+           
+        node1            = pi.create_ict_node(ict_net, name="Node1", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000"])       
+        node2            = pi.create_ict_node(ict_net, name="Node2", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000","ADSL8","LTE50"])               
+        (dconv1, aconv1) = pi.create_ict_devapp(ict_net, name="Conv1", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER)                                        
+        (dcc, acc)       = pi.create_ict_devapp(ict_net, name="CC", device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
+        (dsc, asc)       = pi.create_ict_devapp(ict_net, name="SC", device_type=DeviceType.RTU, app_type=AppType.CLIENT)                      
+        link1            = pi.create_ict_link(ict_net, name="CC_Node1", link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)                                                                
+        conn1            = pi.create_ict_connection(ict_net, name="CC_Conv1", from_app=acc, to_app=asc)
+                        
+        self.__assert_node_raises(utest, ict_net)
+        self.__assert_devapp_raises(utest, ict_net, dconv1, aconv1)
+        self.__assert_link_raises(utest, ict_net, dcc, node1, link1)
+        self.__assert_conn_raises(utest, ict_net, acc, asc, link1, conn1)
                     
     def __test_user_input_checks_uuid(self, utest):
-        ict_net    = pi.create_empty_network("Test network 1",True)   
+        ict_net          = pi.create_empty_network("Test network 1",True)   
+        node1            = pi.create_ict_node(ict_net, name="Node1", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000"], use_uuid=True)       
+        node2            = pi.create_ict_node(ict_net, name="Node2", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000","ADSL8","LTE50"])
+        (dconv1, aconv1) = pi.create_ict_devapp(ict_net, name="Conv1", use_uuid=True, device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER)            
+        (dcc, acc)       = pi.create_ict_devapp(ict_net, name="CC", use_uuid=True, device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
+        (dsc, asc)       = pi.create_ict_devapp(ict_net, name="SC", use_uuid=True, device_type=DeviceType.RTU, app_type=AppType.CLIENT)              
+        link1            = pi.create_ict_link(ict_net, name="CC_Node1", use_uuid=True, link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)
+        conn1            = pi.create_ict_connection(ict_net, name="CC_Conv1", use_uuid=True, from_app=acc, to_app=asc)
+        
         utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, use_uuid=True, uid=10)
-        utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, use_uuid=True, uid="Bleeeh")
-        node1      = pi.create_ict_node(ict_net, name="Node1", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000"], use_uuid=True)       
-        utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, use_uuid=True, uid=node1)
-        node2      = pi.create_ict_node(ict_net, name="Node2", node_type=NodeType.ROUTER, link_types=["Fiber","LAN1000","ADSL8","LTE50"])       
-        
-        (dconv1, aconv1)   = pi.create_ict_devapp(ict_net, name="Conv1", use_uuid=True, device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER)            
-        (dcc, acc)         = pi.create_ict_devapp(ict_net, name="CC", use_uuid=True, device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
-        (dsc, asc)         = pi.create_ict_devapp(ict_net, name="SC", use_uuid=True, device_type=DeviceType.RTU, app_type=AppType.CLIENT)              
-        
-        link1      = pi.create_ict_link(ict_net, name="CC_Node1", use_uuid=True, link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)
+        utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, use_uuid=True, uid="Bleeeh")        
+        utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, use_uuid=True, uid=node1)                            
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, from_elt=('device',0), to_elt=[node1])
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, uid=dcc, from_elt=10, to_elt=[node1])
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, uid=dcc, from_elt=dcc, to_elt=[node1])
@@ -222,9 +221,7 @@ class Core_Test():
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, uid=node1, from_elt=dcc, to_elt=node1)
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, uid=node1, from_elt=dcc, to_elt=[node1])
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, from_elt=acc, to_elt=node1)
-        utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, from_elt=dcc, to_elt=acc)
-        
-        conn1      = pi.create_ict_connection(ict_net, name="CC_Conv1", use_uuid=True, from_app=acc, to_app=asc)
+        utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", use_uuid=True, from_elt=dcc, to_elt=acc)                
         utest.assertRaises(UserWarning, pi.create_ict_connection, ict_net, name="CC_Conv1", use_uuid=True, from_app=10, to_app=asc)
         utest.assertRaises(UserWarning, pi.create_ict_connection, ict_net, name="CC_Conv1", use_uuid=True, from_app=acc, to_app=10)
         utest.assertRaises(UserWarning, pi.create_ict_connection, ict_net, name="CC_Conv1", use_uuid=True, from_app=acc, to_app=acc)
@@ -238,7 +235,7 @@ class Core_Test():
         
     def test_create_ict_net(self, utest):        
     
-        ict_net = self.create_testnet1()
+        ict_net  = self.create_testnet1()
         ict_net2 = self.create_testnet2()
     
         utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net2))   

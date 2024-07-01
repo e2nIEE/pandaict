@@ -111,7 +111,7 @@ def __local_area_linktypes():
 def __wide_area_linktypes():
     lt = {"LTE50": # LTE with downstream bandwidth of 50 Mbps
             { "bandwidth_Mbps": (50,10),
-              "latency_ms": 300,
+              "latency_ms": (100,200),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
@@ -121,7 +121,7 @@ def __wide_area_linktypes():
             },        
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
             { "bandwidth_Mbps": (8, 1),
-              "latency_ms": 100,
+              "latency_ms": (200,300),
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
