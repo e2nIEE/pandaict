@@ -40,7 +40,7 @@ def create_plot(net, draw_type='dev', custom_icons=None):
         **Returns** -  matplotlib.pyplot: The Matplotlib plot object.
         
      
-        
+    :OPTIONAL: custom_icons to be used as optional
               
     :EXAMPLE:
     ::
