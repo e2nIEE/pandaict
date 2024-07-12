@@ -11,7 +11,6 @@ import pandas as pd
 from pandaict.utils.utils import uuid2elt, get_elts_any
 
 import uuid
-from debugpy._vendored.pydevd.stubs._django_manager_body import none
 
 
 class LUP_table: 
