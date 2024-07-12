@@ -10,29 +10,11 @@ Created on 30.01.2024
 from pandaict.auxiliary import pandaICTNet
 from pandaict.auxiliary import ADict, __get_free_id, __preserve_dtypes
 from pandaict.create_empty_net import create_empty_network
-from pandaict.utils.utils import uuid2elt, elt2uuid
+from pandaict.utils.utils import uuid2elt, elt2uuid, get_elts_any
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
 from pandaict.pilogger import pilogger
 import uuid
 
-
-
-def __create_uuid2elt(ict_net, elt_uuid, expected): 
-       
-    if isinstance(elt_uuid, list):
-        elt = [uuid2elt(ict_net, uid) for uid in elt_uuid]
-        if elt is None or None in elt:                
-            raise UserWarning("at least one uuid elt not found by uuid")
-        if not all((e[0] in expected) for e in elt):
-            raise UserWarning("all uuid elt types must be one of "+str(expected))        
-    else:
-        elt = uuid2elt(ict_net, elt_uuid)
-        if elt is None:                
-            raise UserWarning("uuid elt not found by uuid")
-        if not (elt[0] in expected):
-            raise UserWarning("uuid elt type is "+str(elt[0])+" but must be one of "+str(expected))
-             
-    return elt    
 
 def __create_ruuid(uid, use_uuid):
     
@@ -247,13 +229,13 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     ruuid = __create_ruuid(uid, use_uuid)
     
     if (use_uuid):                 
-        from_elt = __create_uuid2elt(ict_net, from_elt, expected=['device','node'])        
-        to_elt = __create_uuid2elt(ict_net, to_elt, expected=['device','node'])                          
+        from_elt = get_elts_any(ict_net, from_elt, expected=['device','node'])        
+        to_elt = get_elts_any(ict_net, to_elt, expected=['device','node'])                          
         
     if from_elt==to_elt: 
         raise UserWarning("from_elt and to_elt must not be equal") 
     if from_elt in to_elt:
-        raise UserWarning("to_elt must not contain from_elt") 
+        raise UserWarning("to_elt must not contain from_elt")
             
     ict_net.link.loc[index, ["name", "type", "in_service", "length_km", "uuid"]] = [name, link_type, in_service, length_km, ruuid]
     ict_net.link.at[index,'from'] = from_elt
@@ -504,13 +486,13 @@ def __create_connection_info_items_check(info_items, producer, prod_freq_ms):
     if producer is not None:
         if not isinstance(producer, list):
             raise UserWarning("producer must be None or list")
-        if len(producer) != len(info_items) or not all((p == "0" or p == "1") for p in producer):
+        if len(producer) != len(info_items) or not all((p == 0 or p == 1) for p in producer):
             raise UserWarning("producer length must be the same as info_items, and all entries must be 0 or 1")
     if prod_freq_ms is not None:
         if not isinstance(prod_freq_ms, list):
             raise UserWarning("prod_freq_ms must be None or list")
-        if len(prod_freq_ms) != len(info_items) or not all((isinstance(p, float) for p in prod_freq_ms)):
-            raise UserWarning("prod_freq_ms length must be the same as info_items, and all entries must be float.")
+        if len(prod_freq_ms) != len(info_items) or not all((isinstance(p, float) or isinstance(p, int) for p in prod_freq_ms)):
+            raise UserWarning("prod_freq_ms length must be the same as info_items, and all entries must be int or float.")
 
 def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_uuid=False, uid=None,
                           from_app=None, to_app=None, protocol=None, info_items=None, **kwargs):       
@@ -583,14 +565,14 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     
     if (use_uuid):
         if peers is not None:
-            pdev1 = __create_uuid2elt(ict_net, peers[0], ["app"])                      
-            pdev2 = __create_uuid2elt(ict_net, peers[1], ["app"])
+            pdev1 = get_elts_any(ict_net, peers[0], ["app"])                      
+            pdev2 = get_elts_any(ict_net, peers[1], ["app"])
             peers = (pdev1[1], pdev2[1])
         else:
             peers = None        
-        from_app = __create_uuid2elt(ict_net, from_app, ["app"])         
+        from_app = get_elts_any(ict_net, from_app, ["app"])         
         from_app = from_app[1]
-        to_app   = __create_uuid2elt(ict_net, to_app, ["app"])                
+        to_app   = get_elts_any(ict_net, to_app, ["app"])                
         to_app   = to_app[1]
     else:
         from_app = from_app[1] 
@@ -603,8 +585,8 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     ict_net.conn.at[index,'info_items'] = info_items
     ict_net.conn.at[index,'peers'] = peers
     ict_net.conn.at[index,'producer'] = producer
-    ict_net.conn.at[index,'prod_freq_ms'] = prod_freq_ms
-
+    ict_net.conn.at[index,'prod_freq_ms'] = [float(p) for p in prod_freq_ms] if prod_freq_ms is not None else None
+    
     __preserve_dtypes(ict_net.conn, dtypes)
 
     return ruuid if use_uuid else ('conn', index)

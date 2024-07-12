@@ -16,6 +16,11 @@ Get elements by identifier
 
 .. autofunction:: pandaict.utils.utils.get_elt_by_uuid
 
+.. _get_elts_any:
+
+.. autofunction:: pandaict.utils.utils.get_elts_any
+
+
 
 Get related elements 
 ====================

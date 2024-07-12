@@ -7,236 +7,247 @@ Created on 30.01.2024
 @author: jringelstein
 '''
 
+import pandas as pd
 import networkx as nx
+import uuid
+from pandaict.utils.utils import uuid2elt, get_elts_any
+from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt
+from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType
 
-import logging
-logger = logging.getLogger("pandaICT_Core")
 
-def __get_nx_node_for_elt(mdg, elt):
-    node = [n for n in range(0,mdg.number_of_nodes()) if mdg.nodes[n]['pielt']==elt]
-    if len(node)>1:
-        logger.debug("__get_nx_node_for_elt found nodes "+str(node)+" sharing same pielt "+str(elt)+" - this shouldn't happen")
-    if node is None or node==[]:
-        return None
-    else:
-        return node[0]
-    pass
-
-
-def __validate_multidigraph(ict_net, mdg, protocol=None):
-    
-    passed = True
-    # check edges
-    for nxedge in enumerate(list(mdg.edges(data=True))):
-        nxnode1  = nxedge[1][0]
-        nxnode2  = nxedge[1][1]
-        pinode1  = mdg.nodes[nxnode1]['pielt']
-        pinode2  = mdg.nodes[nxnode2]['pielt']
-        pilink   = nxedge[1][2]['pielt']
-        if not pilink[0]=='link':
-            logger.debug("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
-            passed = False
+def __get_pilinks(ict_net, mdg, routes):
+    pilinks = []
+    for i in range(0,len(routes)-1):
+        edges = mdg.get_edge_data(routes[i], routes[i+1])        
+        edge_lowest = None 
+        from_pinode = mdg.nodes.get(routes[i])['pielt']
+        to_pinode   = mdg.nodes.get(routes[i+1])['pielt']
+        weight_lowest = None
+        for key, e in edges.items():
+            if weight_lowest is None or e['weight'] < weight_lowest:
+                edge_lowest = e['pielt']
+                weight_lowest = e['weight']        
+        
+        if edge_lowest[0] != "link": 
+            raise UserWarning("Internal error: calculated link is invalid - pielt type does not fit")
+        
+        if from_pinode == ict_net.link.iloc[edge_lowest[1]]['from'] and to_pinode in ict_net.link.iloc[edge_lowest[1]]['to']:
+            pilinks += [{'link': edge_lowest[1], 'downstream': True}]
+        elif from_pinode in ict_net.link.iloc[edge_lowest[1]]['to'] and to_pinode == ict_net.link.iloc[edge_lowest[1]]['from']:
+            pilinks += [{'link': edge_lowest[1], 'downstream': False}]
         else:
-            pifrom = ict_net.link.iloc[pilink[1]]['from']
-            pito = ict_net.link.iloc[pilink[1]]['to']            
-            bw = ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['bandwidth_Mbps']
-            if (isinstance(bw, float) or len(bw)<2 or bw[1]==0):
-                bidir = False 
+            raise UserWarning("Internal error: calculated link is invalid")
+    return pilinks
+
+def _calc_lup_table_lowest_latency(ict_net, conn_elt):
+                    
+    lup_table = LUP_table(ict_net, conn_elt)
+    conn = lup_table.conn
+    # create nxgraph for connection and get routes        
+    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)
+    from_dev = ('device', ict_net.app.iloc[conn['from']]['device'])
+    to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
+    from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
+    to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
+    droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
+    uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')        
+    
+    pidlinks = __get_pilinks(ict_net, mdg, droutes)
+    piulinks = __get_pilinks(ict_net, mdg, uroutes)    
+    lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks)
+    lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks)
+        
+    return lup_table
+
+def calc_lup_table(ict_net, conn_elt, routing_type):
+    """
+    Calculate link usage probability table.
+    NOTE: currently only RoutingType.LOWEST_TOTAL_LATENCY supported 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **conn_elt** (tuple or uuid) - id of connection element to calculate the lup table for
+        
+        **routing_type** - The routing type to use for the calculation. Use a RoutingType enum.
+                            
+    :OUTPUT:
+        **lup_table** (LUP_table) - Link usage probability table 
+
+    :EXAMPLE:
+        calc_lup_table(ict_net, ('conn',2), RoutingType.LOWEST_TOTAL_LATENCY)
+    """
+    if routing_type == RoutingType.LOWEST_TOTAL_LATENCY:
+        return _calc_lup_table_lowest_latency(ict_net, conn_elt)
+    
+
+def _get_info_item_package_size_byte(ict_net, info_item_type, protocol):
+    
+    pt = ict_net['std_types']['protocol'][protocol]
+    pack_size = pt['base_package_size_byte']
+    if info_item_type in pt['info_items'] and 'payload_size_byte' in pt.keys():
+        idx = pt['info_items'].index(info_item_type)
+        pack_size += pt['payload_size_byte'][idx]
+    
+    return pack_size
+    
+def _get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
+    
+    totbw = 0
+    if not conn.in_service:
+        return 0
+    for i in range(0,len(conn.info_items)): 
+        if downstream and conn.producer[i]==1 or not downstream and conn.producer[i]==0: 
+            continue
+        if conn.prod_freq_ms[i] is None or conn.prod_freq_ms[i]<0:
+            continue
+        ii = conn.info_items[i]
+        iibw = (_get_info_item_package_size_byte(ict_net, ii, conn.protocol)*8/1E6) / (conn.prod_freq_ms[i]/1000)
+        totbw += iibw
+    
+    return totbw
+        
+def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
+    """
+    Calculate total bandwidth used by a connection, in Mbps.     
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **conn_elt** (tuple or uuid) - id of connection element to calculate the bandwidth for
+                                
+    :OUTPUT:
+        **(tot_bw_down, tot_bw_up)** (tuple) - Bandwith used by the connection in its downstream and upstream direction  
+
+    :EXAMPLE:
+        calc_conn_bandwidth_Mbps(ict_net, ('conn',2))
+    """        
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
+    tot_bw_down = _get_total_bandwidth_conn_Mbps(ict_net, conn, True)
+    tot_bw_up   = _get_total_bandwidth_conn_Mbps(ict_net, conn, False)
+    return (tot_bw_down, tot_bw_up)
+
+def calc_link_bandwidth_Mbps(ict_net, lup_table):
+    """
+    Calculate link bandwidths resulting from a specific link usage probability.  
+    The latter needs to be given as lup table which was calculated for a specific connection. 
+    To be used in conjunction with calc_lup_table to calculate link bandwidths for a given connection and routing method. 
+    
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network         
+            
+        **lup_table** (LUP_table) - lup table for a connection in ict_net
+                                
+    :OUTPUT:
+        **link_bw** (dict) - dict with link ids as keys and tuples as items. The tuples give the calculated used link bandwidth \
+            in (downstream,upstream) directions  
+
+    :EXAMPLE:
+        .. highlight:: python
+        .. code-block:: python
+        
+            ict_net = self.create_testnet3()
+            lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
+            link_bw   = calc_link_bandwidth_Mbps(ict_net, lup_table)
+    """                      
+    return add_link_bandwidth_Mbps(ict_net, {}, lup_table)    
+
+def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
+    """
+    Calculate link bandwidths resulting from a specific link usage probability, and add them up to already existing link bandwidths. 
+    The latter needs to be given as lup table which was calculated for a specific connection. 
+    To be used in conjunction with calc_lup_table to calculate link bandwidths for a given connection and routing method. 
+    The add feature can be used to calculate the total link bandwidth usage for multiple connections by daisy-chaining       
+    calc_lup_table and add_link_bandwidth_Mbps (see example below).
+    
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_bw** (dict) - dict with link ids as keys and tuples as items. The tuples give the already used link bandwidth \
+            in (downstream,upstream) directions 
+            
+        **lup_table** (LUP_table) - lup table for a connection in ict_net
+                                
+    :OUTPUT:
+        **link_bw** (dict) - dict with link ids as keys and tuples as items. The tuples give the used link bandwidth after the calculation \
+            in (downstream,upstream) directions  
+
+    :EXAMPLE:
+        .. highlight:: python
+        .. code-block:: python
+        
+            ict_net = self.create_testnet3()
+            link_bw = {}
+            for i,_ in ict_net['conn'].iterrows():
+                lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)
+                link_bw   = add_link_bandwidth_Mbps(ict_net, link_bw, lup_table)
+    """     
+    # Calculate total data volume over timespan
+    tot_bw_down, tot_bw_up = calc_conn_bandwidth_Mbps(ict_net, lup_table.conn_elt)    
+    
+    for r in lup_table:         
+        p = r['probability']
+        if r['downstream']: 
+            plbw = p*tot_bw_down            
+        else:            
+            plbw = p*tot_bw_up
+            
+        for l in r['links']:
+            lbw = link_bw.get(l['link'], [0,0]) # get existing link loading
+            if l['downstream']: # link loaded in downstream direction
+                lbw[0] += plbw               
+            else: # link loaded in upstream direction                                    
+                lbw[1] += plbw
+            link_bw.update({l['link']: lbw})           
+            
+    return link_bw
+
+# UNFINISHED / UNTESTED (RJ)
+def _get_total_volume_conn(conn, downstream, timespan_hours):
+    
+    totvolume = 0
+    for i in range(0,len(conn.info_items)): 
+        if downstream and conn.producer[i]==1 or not downstream and conn.producer[i]==0: 
+            continue
+        if conn.prod_freq_ms[i] is None or conn.prod_freq_ms[i]<0:
+            continue
+        ii = conn.info_items[i]
+        ii_number = (timespan_hours*60*60*1000) / conn.prod_freq_ms[i] # Number of info items produced for timespan
+        ii_size = _get_info_item_package_size_byte(conn.info_items[i], conn.protocol)
+        totvolume += ii_number*ii_size
+    
+    return totvolume
+    
+# UNFINISHED / UNTESTED (RJ)
+def calc_link_volume_bytes(ict_net, lup_table, timespan_hours):
+    
+    conn = ("conn", lup_table.conn_idx)
+    link_shares = {}  # shares of info items that use links, down/upstream
+    link_volumes = {} # data volumes adding up on links, down/upstream
+    
+    # Calculate total data volume over timespan
+    tot_volume_down = _get_total_volume_conn(conn, True, timespan_hours)
+    tot_volume_up   = _get_total_volume_conn(conn, False, timespan_hours)
+        
+    # DOWNSTREAM
+    for route in lup_table:
+        if not route.downstream or not route.delivering:
+            continue
+        for l in route.links: # for ex. [(4,True),(8,False),(2,True)]
+            share = link_shares.get(l[0], (0,0))
+            if l[1]: 
+                share[0] += route.probability
             else:
-                bidir = True
-            
-            if not((pinode1==pifrom and pinode2 in pito) or (bidir and pinode2==pifrom and pinode1 in pito)):
-                logger.debug("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
-                passed = False
+                share[1] += route.probability
+            link_shares.update({l[0]: share})
                 
-            if protocol is not None:
-                if protocol not in ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['protocols']:
-                    logger.debug("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
-                                str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
-                    passed = False  
-        
-    if not passed:        
-        if not(logger.level==logging.DEBUG):
-            print("__validate_multidigraph FAILED, set loglevel to debug and check the log")
-        else:
-            print("__validate_multidigraph FAILED, check the log")
-    
-    return passed
+    for l, ls in link_shares.items():
+        down_volume = ls[0]*tot_volume_down + (link_volumes.get(l, None)[0] or 0)
+        up_volume = ls[1]*tot_volume_down + (link_volumes.get(l, None)[1] or 0)                
+        link_volumes.update({l: (down_volume, up_volume)}) 
 
-def __create_multidigraph(ict_net, protocol, in_service_only = True, validate = False):
-    
-    mdg = nx.MultiDiGraph()
-    
-    # Add devices and nodes as nodes
-    idx = 0
-    for i, n in ict_net.node.iterrows():        
-        if (in_service_only and n['in_service']) or not in_service_only:
-            mdg.add_node(idx, pielt=("node", i))
-            idx+=1
-    for i, d in ict_net.device.iterrows():
-        if (in_service_only and d['in_service']) or not in_service_only:
-            mdg.add_node(idx, pielt=("device", i))
-            idx+=1        
-    # Add edges
-    idx = 0
-    for i, l in ict_net.link.iterrows():
-        # check protocol and in_service
-        if protocol not in ict_net.std_types['link'][l['type']]['protocols'] or (in_service_only and not l['in_service']):
-            continue         
-        # check directionality
-        bw = ict_net.std_types['link'][l['type']]['bandwidth_Mbps']
-        if (isinstance(bw, float) or len(bw)<2 or bw[1]==0):
-            bidir = False 
-        else:
-            bidir = True        
-        # find nx nodes connected by the link
-        from_elt = l['from']        
-        to_elt = l['to']        
-        nxn1 = __get_nx_node_for_elt(mdg, from_elt)
-        nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
-        for n2 in nxn2: 
-            mdg.add_edge(nxn1, n2, pielt = ("link", i))            
-            if bidir:
-                mdg.add_edge(n2, nxn1, pielt = ("link", i))    
-                
-    if validate:
-        passed = __validate_multidigraph(ict_net, mdg, protocol)        
-    
-    return mdg
+    # UPSTREAM
+    # TODO: Add
 
-def __print_paths(ict_net, conn, paths):
-    lhops = []
-    for p in paths:
-        hops = ""
-        for elt in p:
-            if elt[0] == 'device':
-                hops += ict_net.device.iloc[elt[1]]['name'] + "-"
-            elif elt[0] == 'node':
-                hops += ict_net.node.iloc[elt[1]]['name'] + "-"
-        
-        hops = hops[:-1]
-        lhops += [hops]
-    
-    print("Paths for connection " + str(conn['name']) + " over " + str(conn['protocol']) + ": " + str(lhops))
-
-
-def __get_possible_routes(ict_net, mdg, conn):
-    # Fetch devices used by the connection
-    try:
-        dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
-    except:
-        logger.debug("Failed to obtain from device for conn "+str(conn['name']))        
-    try:
-        dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
-    except:
-        logger.debug("Failed to obtain to device for conn "+str(conn['name']))
-               
-    # Fetch nynodes representing the devices
-    n1 = __get_nx_node_for_elt(mdg, dev1)
-    n2 = __get_nx_node_for_elt(mdg, dev2)
-    if (n1 is None):
-        logger.debug("__get_nx_node_for_elt failed for "+str(n1))
-        return None 
-    if (n2 is None):
-        logger.debug("__get_nx_node_for_elt failed for "+str(n2))
-        return None
-    
-    # Calculate paths between nxnodes and translate back to pandaICT elt representation
-    nxpaths = list(nx.all_simple_paths(mdg, source=n1, target=n2))
-    if len(nxpaths)==0:
-        return None
-    paths = []
-    for nxp in nxpaths:
-        p = []
-        for nxnode in nxp:            
-            p += [mdg.nodes[nxnode]['pielt']]
-        paths += [p] 
-        
-    return paths
-
-
-def calc_routes_for_connection(ict_net, conn, verbose=False):
-    """
-        Calculates possible routes through the physical network for a given connection. 
-
-        :INPUT:
-            **ict_net** (dict) - The pandaict network
-            
-            **conn** (dataframe) - The connection element for which routes shall be calculated
-
-        :OPTIONAL:
-            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
-        
-        :OUTPUT: 
-            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
-                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
-                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
-                "hops" that information items using the connection can take.  
-        
-        :EXAMPLE:
-            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
-
-    """ 
-    # Create the nxgraph
-    mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)
-    
-    paths = __get_possible_routes(ict_net, mdg, conn)
-    
-    if verbose:            
-        __print_paths(ict_net, conn, paths)
-        
-    return paths
-
-def calc_rp_table(ict_net, routing_type, conn, sender=0):
-    """
-        Calculates unidirectional routing probability table (RP table) for a connection.  
-
-        :INPUT:
-            **ict_net** (dict) - The pandaict network
-            
-            **routing_type** (aenum) - The routing algorithm type to use. Use aenum ROUTING_TYPE. 
-            
-            **conn** (dataframe) - The connection element for which the RP table shall be calculated
-
-        :OPTIONAL:
-            **sender** (0 or 1, default 0) - If 0, the "from_app" of the connection is used as sender. If 1, the "to_app" is used as sender.  
-        
-        :OUTPUT: 
-            **rp_table** Routing probability table for the connection    
-        
-        :EXAMPLE:
-            calc_rp_table(ict_net, ict_net.conn.iloc[0], sender=1)
-
-    """ 
-    
-    # get nxgraph for connection    
-    mdg = __create_multidigraph(ict_net, conn['protocol'], validate=True)    
-    rp_table = []
-    
-    if  (routing_type == RoutingType.RANDOM) or (routing_type == RoutingType.ROUND_ROBIN) or (routing_type == RoutingType.FLOODING):
-        # get all possible routes
-        paths = __get_possible_routes(ict_net, mdg, conn)
-        # if RANDOM_ROUNDROBIN: assign same probability to routes, adding up to 100%
-        if  (routing_type == RoutingType.RANDOM_ROUNDROBIN):        
-            pprob = 1/len(paths)
-        # if FLOODING: assign 100% probability to each route
-            pprob = 1
-        # set probabilities    
-        for p in paths: 
-            rp_table += [{"route": p, "prob": pprob}]        
-    elif (routing_type == RoutingType.LOWEST_TOTAL_LATENCY):
-        # assign latencies as weights to nxgraph
-        # perform Djikstra on nxgraph
-        # put best route into rp table and assign 100% probability to it        
-        pass
-    elif (routing_type == RoutingType.BALANCED_BANDWITH_USAGE):
-        logger.warn("The routing type BALANCED_BANDWITH_USAGE can not be used with an individual connection. Please use calc_all_rp_tables().")
-        pass    
-        
-        
-    return rp_table
-
-
-def calc_all_rp_tables(ict_net, routing_type):
-    pass
+    return link_volumes

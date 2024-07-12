@@ -8,6 +8,7 @@ Created on 8.02.2024
 '''
 
 import numpy as np 
+import uuid
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
@@ -98,6 +99,47 @@ def get_elt_by_uuid(ict_net, uid):
         get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """
     return get_elt(uuid2elt(uid))
+
+def get_elts_any(ict_net, elt_ids, expected=None):           
+    """
+    Fetch single or multiple elements by any identifier.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **elt_ids** (tuple, uuid or list) - pandaict identifier(s) of an element that exists in ict_net
+        
+    :OPTIONAL:
+        **expected** (list of string, default None) - list of element types expected in the output. None means any types allowed. \
+            UserWarning raised if a non-expected element type is found.
+                            
+    :OUTPUT:
+        **elt** (dict or list of dict) - The pandaict element(s). 
+
+    :EXAMPLES:
+        get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
+        get_elt(ict_net, ['device', 0], ['node, 3], expected=['device', 'node'])
+    """
+    if isinstance(elt_ids, list):
+        _elt_ids = elt_ids
+    else:
+        _elt_ids = [elt_ids]
+    
+    elts = []
+    for eid in _elt_ids:
+        if isinstance(eid, uuid.UUID):
+            elt = uuid2elt(ict_net, eid)
+            if elt is None or None in elt:                
+                raise UserWarning("at least one uuid elt not found by uuid")    
+            if expected is not None and not elt[0] in expected:
+                raise UserWarning("uuid elt type is "+str(elt)+" but must be one of "+str(expected))
+        else:
+            if expected is not None and not eid[0] in expected:
+                raise UserWarning("elt type is "+str(eid)+" but must be one of "+str(expected))
+            elt = get_elt(ict_net, eid)
+        elts += [elt]         
+                 
+    return elts if isinstance(elt_ids, list) else elts[0]    
 
 def get_apps_on_device(ict_net, device):
     """

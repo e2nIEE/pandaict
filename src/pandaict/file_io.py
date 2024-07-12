@@ -167,7 +167,7 @@ def to_json(ict_net, filename, save_std_types=False):
                                 "std_type":   json.loads(jstdt),
                                 }, pifile, indent=2)                            
         except:
-            logger.error("Error while writing net to "+filename)
+            pilogger.error("Error while writing net to "+filename)
             
     return  
 
@@ -190,11 +190,11 @@ def from_json(filename):
         try:
             jall = json.load(pifile)
         except:
-            logger.error("Not a valid pandaICT file: "+filename)
+            pilogger.error("Not a valid pandaICT file: "+filename)
             return
     
     if "pandaICT net file" not in jall['info']: 
-        logger.error("Not a valid pandaICT file: "+filename)
+        pilogger.error("Not a valid pandaICT file: "+filename)
         return    
     
     ict_net.name       = jall["name"]        
@@ -203,7 +203,7 @@ def from_json(filename):
     if not ict_net.connectors.empty:
         for s in ict_net.connectors[0]:
             if s not in connectors_installed:
-                logger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
+                pilogger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
                 print("Warning: Network file "+filename+" uses connector "+s+" which is currently not installed")
     ict_net.node       = __json_node_to_df(pd.DataFrame(jall["node"]))
     ict_net.link       = __json_link_to_df(pd.DataFrame(jall["link"]))

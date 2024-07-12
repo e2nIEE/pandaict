@@ -15,6 +15,7 @@ import pandas as pd
 import math
 import csv
 import uuid
+from create import create_ict_app
 
 class Core_Test():
     
@@ -103,28 +104,38 @@ class Core_Test():
         n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"])
         n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"])
         
-        (d1, a1)   = pi.create_ict_devapp(ict_net3, name="D1", device_type=pi.DeviceType.SERVER, app_type=pi.AppType.FILESERVER)
-        (d2, a2)   = pi.create_ict_devapp(ict_net3, name="D2", device_type=pi.DeviceType.SERVER, app_type=pi.AppType.FILESERVER)
+        d1         = pi.create_ict_device(ict_net3, name="D1", device_type=pi.DeviceType.SERVER)
+        a1a        = pi.create_ict_app(ict_net3, name="A1a", device=d1, app_type=pi.AppType.CLIENT)
+        a1b        = pi.create_ict_app(ict_net3, name="A1b", device=d1, app_type=pi.AppType.RESTCLIENT)
+        (d2, a2)   = pi.create_ict_devapp(ict_net3, name="D2", device_type=pi.DeviceType.SERVER, app_type=pi.AppType.WEBSERVER)
         (d3, a3)   = pi.create_ict_devapp(ict_net3, name="D3", device_type=pi.DeviceType.SERVER, app_type=pi.AppType.FILESERVER)
-        (d4, a4)   = pi.create_ict_devapp(ict_net3, name="D4", device_type=pi.DeviceType.SERVER, app_type=pi.AppType.FILESERVER)
+        (d4, a4)   = pi.create_ict_devapp(ict_net3, name="D4", device_type=pi.DeviceType.SERVER, app_type=pi.AppType.RESTSERVER)
         
-        link1      = pi.create_ict_link(ict_net3, name="D1_N1", link_type="", from_elt=d1, to_elt=[n1], length_km=1)
-        link2      = pi.create_ict_link(ict_net3, name="D2_N2", link_type="", from_elt=d2, to_elt=[n2], length_km=1)
-        link3      = pi.create_ict_link(ict_net3, name="D3_N3", link_type="", from_elt=d3, to_elt=[n3], length_km=1)
-        link4      = pi.create_ict_link(ict_net3, name="D4_N4", link_type="", from_elt=d4, to_elt=[n4], length_km=1)
-        link5      = pi.create_ict_link(ict_net3, name="N5_N1", link_type="", from_elt=n5, to_elt=[n1], length_km=2)
-        link6      = pi.create_ict_link(ict_net3, name="N5_N2", link_type="", from_elt=n5, to_elt=[n2], length_km=2)
-        link7      = pi.create_ict_link(ict_net3, name="N3_N5", link_type="", from_elt=n3, to_elt=[n5], length_km=3)
-        link8      = pi.create_ict_link(ict_net3, name="N5_N4", link_type="", from_elt=n5, to_elt=[n4], length_km=4)
-        link9      = pi.create_ict_link(ict_net3, name="N2_N1", link_type="", from_elt=n2, to_elt=[n1], length_km=3)
-        link10     = pi.create_ict_link(ict_net3, name="N1_N3", link_type="", from_elt=n1, to_elt=[n3], length_km=2)
-        link11     = pi.create_ict_link(ict_net3, name="N2_N4", link_type="", from_elt=n2, to_elt=[n4], length_km=2)
-        link12     = pi.create_ict_link(ict_net3, name="N3_N4", link_type="", from_elt=n3, to_elt=[n4], length_km=0.1)
+        link1      = pi.create_ict_link(ict_net3, name="D1_N1", link_type="Fiber", from_elt=d1, to_elt=[n1], length_km=1)
+        link2      = pi.create_ict_link(ict_net3, name="D2_N2", link_type="LAN1000", from_elt=d2, to_elt=[n2], length_km=1)
+        link3      = pi.create_ict_link(ict_net3, name="D3_N3", link_type="LAN1000", from_elt=d3, to_elt=[n3], length_km=1)
+        link4      = pi.create_ict_link(ict_net3, name="D4_N4", link_type="Fiber", from_elt=d4, to_elt=[n4], length_km=1)
+        link5      = pi.create_ict_link(ict_net3, name="N5_N1", link_type="LTE50", from_elt=n5, to_elt=[n1], length_km=2)
+        link6      = pi.create_ict_link(ict_net3, name="N5_N2", link_type="LTE50", from_elt=n5, to_elt=[n2], length_km=2)
+        link7      = pi.create_ict_link(ict_net3, name="N3_N5", link_type="ADSL8", from_elt=n3, to_elt=[n5], length_km=3)
+        link8      = pi.create_ict_link(ict_net3, name="N5_N4", link_type="ADSL8", from_elt=n5, to_elt=[n4], length_km=4)
+        link9      = pi.create_ict_link(ict_net3, name="N2_N1", link_type="ADSL8", from_elt=n2, to_elt=[n1], length_km=3)
+        link10     = pi.create_ict_link(ict_net3, name="N1_N3", link_type="Fiber", from_elt=n1, to_elt=[n3], length_km=2)
+        link11     = pi.create_ict_link(ict_net3, name="N2_N4", link_type="LTE50", from_elt=n2, to_elt=[n4], length_km=2)
+        link12     = pi.create_ict_link(ict_net3, name="N3_N4", link_type="UMTS", from_elt=n3, to_elt=[n4], length_km=0.1)
         
-        conn1      = pi.create_ict_connection(ict_net3, name="D1_D2", from_app=a1, to_app=a2)
-        conn2      = pi.create_ict_connection(ict_net3, name="D2_D4", from_app=a2, to_app=a4)
-        conn3      = pi.create_ict_connection(ict_net3, name="D1_D4", from_app=a1, to_app=a4)
-        conn4      = pi.create_ict_connection(ict_net3, name="D3_D4", from_app=a3, to_app=a4)
+        conn1      = pi.create_ict_connection(ict_net3, name="D2_D1", from_app=a2, to_app=a1a, protocol="HTTP",
+                        info_items=[InfoItem.URL, InfoItem.WEBPAGE], 
+                        peers=(a2,a1a), producer=[1,0], prod_freq_ms=[60000, 600])
+        conn2      = pi.create_ict_connection(ict_net3, name="D2_D4", from_app=a2, to_app=a4, protocol="HTTP",
+                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
+                        peers=(a2,a4), producer=[0,1], prod_freq_ms=[3000, 10])
+        conn3      = pi.create_ict_connection(ict_net3, name="D1_D4", from_app=a1b, to_app=a4, protocol="HTTP",
+                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
+                        peers=(a1b,a4), producer=[0,1], prod_freq_ms=[3000, 40])
+        conn4      = pi.create_ict_connection(ict_net3, name="D3_D4", from_app=a3, to_app=a4, protocol="FTP",
+                        info_items=[InfoItem.REQUEST, InfoItem.FILE], 
+                        peers=(a3,a4), producer=[1,0], prod_freq_ms=[6000, 20])
         
         return ict_net3
     
@@ -261,11 +272,19 @@ class Core_Test():
         self.__test_user_input_checks_uuid(utest)                     
         return 
     
-    # def test_rp_table_calc(self, utest):
-    #
-    #     ict_net = self.create_testnet3()
-    #     calc_rp_table(ict_net, RoutingType.RANDOM_ROUNDROBIN, ict_net.conn.iloc[0], sender=0)
-    #     return
+    def test_lup_table_calc(self, utest):
+    
+        ict_net = self.create_testnet3()
+        link_bw = {}
+        for i, _ in ict_net['conn'].iterrows():
+            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)
+            link_bw = add_link_bandwidth_Mbps(ict_net, link_bw, lup_table)
+        
+        link_bw_cmp = {1: [0.8854053333333334, 11.4694144], 8: [0.8738, 0.0006144], 0: [0.012219733333333333, 3.741], 10: [0.011605333333333334, 11.4688], 3: [14.341802666666666, 26.258810666666665], 4: [2.8672, 0.011605333333333334], 7: [0.011605333333333334, 2.8672], 2: [26.235599999999998, 0.005802666666666667], 11: [26.235599999999998, 0.005802666666666667]}
+
+        utest.assertEqual(link_bw, link_bw_cmp)
+            
+        return
         
     
 if __name__ == '__main__':

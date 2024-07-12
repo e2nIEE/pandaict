@@ -27,8 +27,8 @@ class PandaICT_Test(unittest.TestCase):
     def test_user_input_checks(self):
         self.tester.test_user_input_checks(self)
     
-    # def test_rp_table_calc(self):
-    #    self.tester.test_rp_table_calc(self)            
+    def test_lup_table_calc(self):
+        self.tester.test_lup_table_calc(self)            
           
 
 if __name__ == '__main__':

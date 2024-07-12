@@ -39,10 +39,12 @@ class AppType(Enum):
     WEBSERVER      = 3
     FILESERVER     = 4 
     CLIENT         = 5
+    RESTSERVER     = 6
+    RESTCLIENT     = 7
     
 class RoutingType(Enum):  
-    RANDOM_ROUNDROBIN       = 1                            
-    FLOODING                = 2
+    # RANDOM_ROUNDROBIN       = 1                            
+    # FLOODING                = 2
     LOWEST_TOTAL_LATENCY    = 3 
-    BALANCED_BANDWITH_USAGE = 4
+    # BALANCED_BANDWITH_USAGE = 4
 

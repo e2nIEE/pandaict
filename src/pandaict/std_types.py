@@ -118,7 +118,17 @@ def __wide_area_linktypes():
               "mtbf_h": 0,
               "mttr_h": 0,
               "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
-            },        
+            },
+        "UMTS": 
+            { "bandwidth_Mbps": (0.04,0.04),
+              "latency_ms": (300,300),
+              "wired": False,
+              "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
+              "ber_per_km": 0,
+              "mtbf_h": 0,
+              "mttr_h": 0,
+              "uuid": uuid.UUID("ed41d4c0-64d2-452d-586a-7c937e259c5b"),
+            },                
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
             { "bandwidth_Mbps": (8, 1),
               "latency_ms": (200,300),
@@ -186,16 +196,25 @@ def __application_protocoltypes():
             "info_items":
                 [ InfoItem.REQUEST,
                   InfoItem.RESPONSE, 
+                  InfoItem.URL,
                   InfoItem.WEBPAGE, 
                   InfoItem.STATUS,                 
-                ],    
+                ],   
+            "payload_size_byte": 
+                [ 256,
+                  10240,
+                  512,
+                  61439,
+                  128
+                ], 
             "uuid": uuid.UUID("9bd957a0-1e02-4925-bef6-8cf04c5e9ead"),
             },
         "HTTPS": {        
             "base_package_size_byte": 4096,
             "info_items":
                 [ InfoItem.REQUEST,
-                  InfoItem.RESPONSE, 
+                  InfoItem.RESPONSE,
+                  InfoItem.URL, 
                   InfoItem.WEBPAGE, 
                   InfoItem.STATUS,                 
                 ],    
@@ -205,10 +224,17 @@ def __application_protocoltypes():
             "base_package_size_byte": 4096,
             "info_items":
                 [ InfoItem.REQUEST,
-                  InfoItem.RESPONSE, 
+                  InfoItem.RESPONSE,                   
                   InfoItem.TEXT,
                   InfoItem.FILE, 
                   InfoItem.STATUS,
+                ], 
+            "payload_size_byte": 
+                [ 256,
+                  256,
+                  4096,
+                  61493,
+                  128
                 ], 
             "uuid": uuid.UUID("30e8be5c-06d8-4914-b99b-31f015473599"),   
             }
