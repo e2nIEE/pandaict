@@ -17,11 +17,10 @@ def __get_nx_node_for_elt(mdg, elt):
     node = [n for n in range(0,mdg.number_of_nodes()) if mdg.nodes[n]['pielt']==elt]
     if len(node)>1:
         logger.debug("__get_nx_node_for_elt found nodes "+str(node)+" sharing same pielt "+str(elt)+" - this shouldn't happen")
-    if node is None or node==[]:
+    if node==[]:
         return None
     else:
         return node[0]
-    pass
 
 
 def __validate_multidigraph(ict_net, mdg, protocol=None):
@@ -34,7 +33,7 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
         pinode1  = mdg.nodes[nxnode1]['pielt']
         pinode2  = mdg.nodes[nxnode2]['pielt']
         pilink   = nxedge[1][2]['pielt']
-        if not pilink[0]=='link':
+        if pilink[0] != 'link':
             logger.debug("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
             passed = False
         else:
@@ -57,7 +56,7 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
                     passed = False  
         
     if not passed:        
-        if not(logger.level==logging.DEBUG):
+        if logger.level != logging.DEBUG:
             print("__validate_multidigraph FAILED, set loglevel to debug and check the log")
         else:
             print("__validate_multidigraph FAILED, check the log")
@@ -84,7 +83,7 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
     mdg = nx.MultiDiGraph()
     
     # Add devices and nodes as nodes
-    idx = 0
+    idx = 0 
     for i, n in ict_net.node.iterrows():        
         if (in_service_only and n['in_service']) or not in_service_only:
             mdg.add_node(idx, pielt=("node", i))
@@ -117,7 +116,7 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
                 mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] or None)    
                 
     if validate:
-        passed = __validate_multidigraph(ict_net, mdg, protocol)        
+        __validate_multidigraph(ict_net, mdg, protocol)        
     
     return mdg
 

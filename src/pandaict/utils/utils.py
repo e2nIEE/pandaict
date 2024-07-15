@@ -98,7 +98,7 @@ def get_elt_by_uuid(ict_net, uid):
     :EXAMPLE:
         get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """
-    return get_elt(uuid2elt(uid))
+    return get_elt(ict_net, uuid2elt(ict_net, uid))
 
 def get_elts_any(ict_net, elt_ids, expected=None):           
     """
@@ -131,10 +131,10 @@ def get_elts_any(ict_net, elt_ids, expected=None):
             elt = uuid2elt(ict_net, eid)
             if elt is None or None in elt:                
                 raise UserWarning("at least one uuid elt not found by uuid")    
-            if expected is not None and not elt[0] in expected:
+            if expected is not None and elt[0] not in expected:
                 raise UserWarning("uuid elt type is "+str(elt)+" but must be one of "+str(expected))
         else:
-            if expected is not None and not eid[0] in expected:
+            if expected is not None and eid[0] not in expected:
                 raise UserWarning("elt type is "+str(eid)+" but must be one of "+str(expected))
             elt = get_elt(ict_net, eid)
         elts += [elt]         

@@ -19,9 +19,6 @@ def __check_isNone(i, n, elt_type, sparam, passed, checkempty=False):
     
 def __inspect_node(ict_net, passed):
     for i, n in ict_net.node.iterrows():
-        # if n['name'] is None or n['name'] == "":
-        #     pilogger.info(" node with index " + str(i) + " has no name")
-        #     passed = False
         passed = __check_isNone(i, n, "node", "name", passed)
         passed = __check_isNone(i, n, "node", "type", passed)
         passed = __check_isNone(i, n, "node", "link_types", passed)
@@ -88,7 +85,7 @@ def __inspect_app(ict_net, passed):
         # check if Apps with conversions run on converter type devices
         if a['type'] == AppType.CONVERTER:
             d = a.device 
-            if not ict_net.device.iloc[d]['type'] == DeviceType.CONVERTER:
+            if ict_net.device.iloc[d]['type'] != DeviceType.CONVERTER:
                 pilogger.info(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.iloc[d]['name'])+"'")
                 passed = False                        
     

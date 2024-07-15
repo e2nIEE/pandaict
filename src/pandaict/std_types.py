@@ -37,7 +37,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
     if data is None: 
         return 
     
-    if type(data) != dict:
+    if not isinstance(data, dict):
         raise UserWarning("type data has to be given as a dictionary of parameters")
 
     if check_required:
@@ -51,7 +51,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
             if par not in data:
                 raise UserWarning("%s is required as %s type parameter" % (par, element))
     stdict = ict_net.std_types[element]
-    if overwrite or not (name in stdict):
+    if overwrite or name not in stdict:
         stdict.update({name: data})
 
 

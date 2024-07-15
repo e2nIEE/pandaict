@@ -9,7 +9,6 @@ Created on 30.01.2024
 
 from collections.abc import MutableMapping
 
-#import pandaict as pi
 import pandas as pd
 import copy
 import numpy as np
@@ -41,7 +40,7 @@ class ADict(dict, MutableMapping):
         # see __valid_name()
         self.__setattr('_allow_invalid_attributes', False)
 
-    def __build(self, obj, **kwargs):
+    def __build(self, obj):
         return obj
 
     # --- taken from AttrDict

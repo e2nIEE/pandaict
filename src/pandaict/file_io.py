@@ -158,18 +158,16 @@ def to_json(ict_net, filename, save_std_types=False):
                 jstdt = __std_type_dict_to_json(ict_net.std_types)
             else:
                 jstdt = "{}"
-            jall  = json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
-                                "node":       json.loads(jnode),
-                                "link":       json.loads(jlink),
-                                "device":     json.loads(jdevc),
-                                "app":        json.loads(jappc),
-                                "conn":       json.loads(jconn),
-                                "std_type":   json.loads(jstdt),
-                                }, pifile, indent=2)                            
+            json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
+                        "node":       json.loads(jnode),
+                        "link":       json.loads(jlink),
+                        "device":     json.loads(jdevc),
+                        "app":        json.loads(jappc),
+                        "conn":       json.loads(jconn),
+                        "std_type":   json.loads(jstdt),
+                        }, pifile, indent=2)                            
         except:
-            pilogger.error("Error while writing net to "+filename)
-            
-    return  
+            pilogger.error("Error while writing net to "+filename)  
 
 def from_json(filename):
     """
