@@ -8,4 +8,5 @@ chapters:
 - file: pandaICT_datamodel
 - file: pp_pict_connector_example
 - file: pandaICT_scenario_useCases
+- file: pandaICT_routing
 
