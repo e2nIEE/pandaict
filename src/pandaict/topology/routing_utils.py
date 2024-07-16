@@ -40,10 +40,7 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
             pifrom = ict_net.link.iloc[pilink[1]]['from']
             pito = ict_net.link.iloc[pilink[1]]['to']            
             bw = ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['bandwidth_Mbps']
-            if (isinstance(bw, float) or len(bw)<2 or bw[1]==0):
-                bidir = False 
-            else:
-                bidir = True
+            bidir = False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True                
             
             if not((pinode1==pifrom and pinode2 in pito) or (bidir and pinode2==pifrom and pinode1 in pito)):
                 logger.debug("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
@@ -100,10 +97,8 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
             continue         
         # check directionality
         bw = ict_net.std_types['link'][l['type']]['bandwidth_Mbps']
-        if (isinstance(bw, float) or len(bw)<2 or bw[1]==0):
-            bidir = False 
-        else:
-            bidir = True        
+        bidir = False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True
+                                
         # find nx nodes connected by the link
         from_elt = l['from']        
         to_elt = l['to']

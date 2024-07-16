@@ -69,18 +69,23 @@ def __inspect_device(ict_net, passed):
             l = get_links_at(ict_net, ('device', i))
             if len(l) < 2:
                 pilogger.info(" device '" + str(d['name']) + "' (index " + str(i) + ") is running converter type app(s) but has less than two links")
-                passed = False
-    
+                passed = False    
     return passed
 
+def __is_known_index(ict_net, elt_name, elt_type, elt_idx, target_type, target_idx, passed):
+    if target_idx not in ict_net[target_type].index:
+        pilogger.info(str(elt_type)+" '" + str(elt_name) + "' (index " + str(elt_idx) + ") links to non-existing "+str(target_type)+" (index " + str(target_idx) + ")")
+        passed = False
+    return passed    
 
 def __inspect_app(ict_net, passed):
     for i, a in ict_net.app.iterrows():
         passed = __check_isNone(i, a, "app", "name", passed, checkempty=True)
         passed = __check_isNone(i, a, "app", "type", passed)        
-        if a['device'] not in ict_net.device.index:
-            pilogger.info(" app '" + str(a['name']) + "' (index " + str(i) + ") links to non-existing device (index " + str(a['device']) + ")")
-            passed = False
+        passed = __is_known_index(ict_net, a['name'], 'app', i, 'device', a['device'], passed)
+        # if a['device'] not in ict_net.device.index:
+        #     pilogger.info(" app '" + str(a['name']) + "' (index " + str(i) + ") links to non-existing device (index " + str(a['device']) + ")")
+        #     passed = False
     
         # check if Apps with conversions run on converter type devices
         if a['type'] == AppType.CONVERTER:
@@ -95,12 +100,14 @@ def __inspect_app(ict_net, passed):
 def __inspect_conn(ict_net, passed):
     for i, c in ict_net.conn.iterrows():
         passed = __check_isNone(i, c, "connection", "name", passed, checkempty=True)        
-        if c['from'] not in ict_net.app.index:
-            pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing from_app (index " + str(c['from']) + ")")
-            passed = False
-        if c['to'] not in ict_net.app.index:
-            pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing to_app (index " + str(c['to']) + ")")
-            passed = False
+        passed = __is_known_index(ict_net, c['name'], 'connection', i, 'app', c['from'], passed)
+        passed = __is_known_index(ict_net, c['name'], 'connection', i, 'app', c['to'], passed)
+        # if c['from'] not in ict_net.app.index:
+        #     pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing from_app (index " + str(c['from']) + ")")
+        #     passed = False
+        # if c['to'] not in ict_net.app.index:
+        #     pilogger.info(" connection '" + str(c['name']) + "' (index " + str(i) + ") links to non existing to_app (index " + str(c['to']) + ")")
+        #     passed = False
     
     return passed
 
