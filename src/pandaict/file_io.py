@@ -48,21 +48,33 @@ def __check_index_and_uuid(df):
             df.at[i,"uuid"] = uuid.UUID(s)
     
     return df
-           
-def __convert_map_to(df):  
-    if 'map_to' in df.keys():
-            for i, s in enumerate(df["map_to"]):
+       
+       
+def __to_type(df, dfkey, totype, dflist=False):
+    if dfkey in df.keys():
+            for i, s in enumerate(df[dfkey]):
                 if s is not None:
-                    df.at[i,"map_to"] = tuple(s)
+                    if isinstance(s, dict):
+                        s = s.get('value', None) # for aenums
+                    if s is not None and dflist:
+                        df.at[i,dfkey] = [totype(e) for e in s]
+                    elif s is not None:
+                        df.at[i,dfkey] = totype(s)
     return df
+   
+        
+# def __convert_map_to(df):  
+#     if 'map_to' in df.keys():
+#             for i, s in enumerate(df["map_to"]):
+#                 if s is not None:
+#                     df.at[i,"map_to"] = tuple(s)
+#     return df
                  
 def __json_node_to_df(df):
         
-    df = __check_index_and_uuid(df)
-    
-    for i, s in enumerate(df["type"]):            
-        df.at[i,"type"] = NodeType(s["value"])  
-    df = __convert_map_to(df)
+    df = __check_index_and_uuid(df)    
+    df = __to_type(df, 'type', NodeType)  
+    df = __to_type(df,'map_to', tuple)   
     if 'geodata' in df.keys():
         for i, s in enumerate(df["geodata"]):
             if s is not None and not (isinstance(s, dict)):
@@ -73,49 +85,33 @@ def __json_node_to_df(df):
 def __json_device_to_df(df):
     
     df = __check_index_and_uuid(df)    
-                
-    for i, s in enumerate(df["type"]):            
-        df.at[i,"type"] = DeviceType(s["value"])  
+    df = __to_type(df, 'type', DeviceType)                 
     
     return df
 
 def __json_link_to_df(df):
     
     df = __check_index_and_uuid(df)       
-    df = __convert_map_to(df)            
-                    
-    for i, s in enumerate(df["from"]):
-        if s is not None:
-            df.at[i,"from"] = tuple(s)
-    for i, s in enumerate(df["to"]):
-        if s is not None:                
-            df.at[i,"to"] = [tuple(e) for e in s]
-                    
+    df = __to_type(df, 'map_to', tuple)                            
+    df = __to_type(df, 'from', tuple)
+    df = __to_type(df, 'to', tuple, dflist=True)    
+                        
     return df
 
 def __json_app_to_df(df):
     
     df = __check_index_and_uuid(df)  
-    df = __convert_map_to(df)         
-                
-    for i, s in enumerate(df["type"]):            
-        df.at[i,"type"] = AppType(s["value"]) 
-    for i, s in enumerate(df["conversions"]):
-        if s is not None:                
-            df.at[i,"conversions"] = [tuple(e) for e in s]        
+    df = __to_type(df, 'map_to', tuple)                    
+    df = __to_type(df, 'type', AppType)        
+    df = __to_type(df, 'conversions', tuple, dflist=True)
                     
     return df
 
 def __json_conn_to_df(df):
     
     df = __check_index_and_uuid(df)       
-                
-    for i, s in enumerate(df["peers"]):
-        if s is not None:
-            df.at[i,"peers"] = tuple(s)
-    for i, s in enumerate(df["info_items"]):        
-        if s is not None:
-            df.at[i,"info_items"] = [InfoItem(v['value']) for v in s]             
+    df = __to_type(df, 'peers', tuple)              
+    df = __to_type(df, 'info_items', InfoItem, dflist=True) 
                 
     return df
 
