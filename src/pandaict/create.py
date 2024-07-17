@@ -31,21 +31,17 @@ def __create_net_index_check(ict_net, index, elttype):
     if index is not None and index in ict_net[elttype].index:
         raise UserWarning("A "+str(elttype)+" with index %s already exists" % index)
 
-def __create_link_type_check(ict_net, link_type):
+def __create_std_type_check(ict_net, std_type_elt, allowed_dtypes, expected_elt_type):
     
-    if link_type is not None:
-        if not isinstance(link_type, str):
-                raise UserWarning("link_type must be str") 
-        elif link_type not in ict_net.std_types['link'].keys():
-            raise UserWarning("link_type "+str(link_type)+" not found in std_types")
-
-def __create_protocols_check(ict_net, protocols):
-    
-    if protocols is not None: 
-        if isinstance(protocols, list) or isinstance(protocols, tuple):
-            raise UserWarning("connection may not have multiple protocols")
-        elif protocols not in ict_net.std_types['protocol'].keys():
-            raise UserWarning("protocol "+str(protocols)+" not found in std_types")    
+    if std_type_elt is not None:
+        if not isinstance(std_type_elt, allowed_dtypes):
+                raise UserWarning("std type element must be one of "+str(allowed_dtypes)) 
+        elif isinstance(std_type_elt, list) or isinstance(std_type_elt, tuple):
+            for ste in std_type_elt:
+                if ste not in ict_net.std_types[expected_elt_type].keys():
+                    raise UserWarning("std type element "+str(ste)+" not found in "+str(expected_elt_type)+" std_types")
+        elif std_type_elt not in ict_net.std_types[expected_elt_type].keys():
+            raise UserWarning("std type element "+str(std_type_elt)+" not found in "+str(expected_elt_type)+" std_types")
 
 def __check_uuid(ict_net, uid):
     if uid is not None:
@@ -68,14 +64,8 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
             if "type" not in geodata.keys() or "coordinates" not in geodata.keys():
                 raise UserWarning("geodata must contain 'type' and 'coordinates' keys") 
         elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
-            raise UserWarning("geodata must be (float, float) tuple or geojson")             
-    if link_types is not None:
-        if isinstance(link_types, list):
-            for lt in link_types:
-                if lt not in ict_net.std_types['link'].keys():
-                    raise UserWarning("link_type " + str(lt) + " not found in std_types")        
-        elif link_types not in ict_net.std_types['link'].keys():
-            raise UserWarning("link_type " + str(link_types) + " not found in std_types")
+            raise UserWarning("geodata must be (float, float) tuple or geojson")                 
+    __create_std_type_check(ict_net, link_types, (str, list), 'link')
     __check_uuid(ict_net, uid) 
 
 def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=True, use_uuid=False, uid=None, 
@@ -220,7 +210,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
         __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid)
     else:                     
         __create_ict_link_check_nouuid(from_elt, to_elt)
-    __create_link_type_check(ict_net, link_type)
+    __create_std_type_check(ict_net, link_type, (str), 'link')
     
     if index is None:
         index = __get_free_id(ict_net["link"])
@@ -559,7 +549,7 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     prod_freq_ms = kwargs.get('prod_freq_ms', None)
     __create_net_index_check(ict_net, index, "conn")
     __create_connection_check(ict_net, use_uuid, uid, from_app, to_app, peers)                   
-    __create_protocols_check(ict_net, protocol)    
+    __create_std_type_check(ict_net, protocol, (str), 'protocol')    
     __create_connection_info_items_check(info_items, producer, prod_freq_ms)
 
     if index is None:
