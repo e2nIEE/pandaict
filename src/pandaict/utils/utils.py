@@ -62,6 +62,29 @@ def elt2uuid(ict_net, elt):
     except:
         return None
     
+    
+def check_all_uuid(ids, allow_list=True):
+    """
+    Check if parameter is uuid4 or - in case it is a list - all elements are uuid4.
+    Raises UserWarning if this is not the case.
+
+    :INPUT:
+        **ids** (any) - Parameter to be checked
+        **allow_list** (boolean) - If True, lists are allowed and checked element-wise. If False, lists are considered non-uuid.              
+                            
+    :OUTPUT:
+        None 
+    
+    """ 
+    if ids is not None:
+        if allow_list and isinstance(ids, list):
+            for i in ids:
+                if not isinstance(i, uuid.UUID):
+                    raise UserWarning("list must only contain uuid4")
+        elif not isinstance(ids, uuid.UUID):
+            raise UserWarning("element must be uuid4")                    
+    else:
+        raise UserWarning("Element is None, must be uuid4")
 def get_elt(ict_net, elt):
     """
     Fetch element by pandaict element identifier.
@@ -227,5 +250,9 @@ def get_links_between(ict_net, elt1, elt2):
                 linklist += [i]
         
     return linklist
+
+def is_bidirectional(ict_net, link_elt):
+    bw = ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
+    return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  
             
     

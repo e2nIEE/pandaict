@@ -10,7 +10,7 @@ Created on 30.01.2024
 from pandaict.auxiliary import pandaICTNet
 from pandaict.auxiliary import ADict, __get_free_id, __preserve_dtypes
 from pandaict.create_empty_net import create_empty_network
-from pandaict.utils.utils import uuid2elt, elt2uuid, get_elts_any
+from pandaict.utils.utils import uuid2elt, elt2uuid, check_all_uuid, get_elts_any
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
 from pandaict.pilogger import pilogger
 import uuid
@@ -127,14 +127,8 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
 
 def __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid):
     
-    if from_elt is None or not isinstance(from_elt, uuid.UUID):
-        raise UserWarning("from_elt must be uuid4")
-    if to_elt is None or not (isinstance(to_elt, uuid.UUID) or isinstance(to_elt, list)):
-        raise UserWarning("to_elt must be uuid4 or list of uuid4")
-    if isinstance(to_elt, list):
-        for i in range(0, len(to_elt)):
-            if not isinstance(to_elt[i], uuid.UUID):
-                raise UserWarning("to_elt[" + str(i) + "] must be uuid4")        
+    check_all_uuid(from_elt)
+    check_all_uuid(to_elt)        
     if from_elt == to_elt:
         raise UserWarning("from_elt and to_elt must not be equal")        
     __check_uuid(ict_net, uid)
@@ -426,10 +420,8 @@ def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_se
     return (dev, app)
 
 def __create_connection_check_uuid(ict_net, uid, from_app, to_app, peers):
-    if from_app is None or not isinstance(from_app, uuid.UUID):
-        raise UserWarning("from_app must be uuid4")
-    if to_app is None or not isinstance(to_app, uuid.UUID):
-        raise UserWarning("to_app must be uuid4")
+    check_all_uuid(from_app)
+    check_all_uuid(to_app, False)    
     if from_app == to_app:
         raise UserWarning("from_app and to_app must not be equal")
     if peers is not None and (not isinstance(peers[0], uuid.UUID) or not isinstance(peers[1], uuid.UUID)):

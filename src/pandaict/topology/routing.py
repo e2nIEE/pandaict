@@ -16,15 +16,18 @@ from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType
 
 
-def __get_pilinks(ict_net, mdg, routes):
+def __get_pilinks_lowest_weight(ict_net, mdg, routes):
     pilinks = []
     for i in range(0,len(routes)-1):
         edges = mdg.get_edge_data(routes[i], routes[i+1])        
-        edge_lowest = None 
         from_pinode = mdg.nodes.get(routes[i])['pielt']
         to_pinode   = mdg.nodes.get(routes[i+1])['pielt']
+        
+        # Make sure to select the edge with lowest weight
+        # NOTE: some routing algorithma might need the highest weight here!
+        edge_lowest = None         
         weight_lowest = None
-        for key, e in edges.items():
+        for _, e in edges.items():
             if weight_lowest is None or e['weight'] < weight_lowest:
                 edge_lowest = e['pielt']
                 weight_lowest = e['weight']        
@@ -32,6 +35,7 @@ def __get_pilinks(ict_net, mdg, routes):
         if edge_lowest[0] != "link": 
             raise UserWarning("Internal error: calculated link is invalid - pielt type does not fit")
         
+        # Check which direction our pi link is loaded
         if from_pinode == ict_net.link.iloc[edge_lowest[1]]['from'] and to_pinode in ict_net.link.iloc[edge_lowest[1]]['to']:
             pilinks += [{'link': edge_lowest[1], 'downstream': True}]
         elif from_pinode in ict_net.link.iloc[edge_lowest[1]]['to'] and to_pinode == ict_net.link.iloc[edge_lowest[1]]['from']:
@@ -40,7 +44,7 @@ def __get_pilinks(ict_net, mdg, routes):
             raise UserWarning("Internal error: calculated link is invalid")
     return pilinks
 
-def _calc_lup_table_lowest_latency(ict_net, conn_elt):
+def _calc_lup_table_lowest_latency(ict_net, conn_elt): 
                     
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
@@ -53,8 +57,8 @@ def _calc_lup_table_lowest_latency(ict_net, conn_elt):
     droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
     uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')        
     
-    pidlinks = __get_pilinks(ict_net, mdg, droutes)
-    piulinks = __get_pilinks(ict_net, mdg, uroutes)    
+    pidlinks = __get_pilinks_lowest_weight(ict_net, mdg, droutes)
+    piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)    
     lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks)
     lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks)
         

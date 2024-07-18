@@ -8,6 +8,7 @@ Created on 30.01.2024
 '''
 
 import networkx as nx
+from pandaict.utils.utils import is_bidirectional
 from pandaict.utils.enums import RoutingType
 
 import logging
@@ -38,11 +39,9 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
             passed = False
         else:
             pifrom = ict_net.link.iloc[pilink[1]]['from']
-            pito = ict_net.link.iloc[pilink[1]]['to']            
-            bw = ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['bandwidth_Mbps']
-            bidir = False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True                
+            pito = ict_net.link.iloc[pilink[1]]['to']                            
             
-            if not((pinode1==pifrom and pinode2 in pito) or (bidir and pinode2==pifrom and pinode1 in pito)):
+            if not((pinode1==pifrom and pinode2 in pito) or (is_bidirectional(ict_net, pilink) and pinode2==pifrom and pinode1 in pito)):
                 logger.debug("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
                 passed = False
                 
@@ -94,10 +93,7 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
     for i, l in ict_net.link.iterrows():
         # check protocol and in_service
         if protocol not in ict_net.std_types['link'][l['type']]['protocols'] or (in_service_only and not l['in_service']):
-            continue         
-        # check directionality
-        bw = ict_net.std_types['link'][l['type']]['bandwidth_Mbps']
-        bidir = False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True
+            continue                 
                                 
         # find nx nodes connected by the link
         from_elt = l['from']        
@@ -107,7 +103,7 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
         nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
         for n2 in nxn2:             
             mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] or None)            
-            if bidir:
+            if is_bidirectional(ict_net, ("link", i)):
                 mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] or None)    
                 
     if validate:
