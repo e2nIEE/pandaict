@@ -166,6 +166,7 @@ class Core_Test():
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", from_elt=elt1, to_elt=[None])
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", from_elt=elt1, to_elt=1)
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", from_elt=elt1, to_elt=["Mlem"])
+        utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", from_elt=elt1, to_elt=[("Mlem",1)])
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", from_elt=lnk, to_elt=elt2)
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", from_elt=elt2, to_elt=lnk)
         utest.assertRaises(UserWarning, pi.create_ict_link, ict_net, name="CC_Node1", link_type="Blep", from_elt=elt1, to_elt=[elt2])    

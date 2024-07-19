@@ -8,7 +8,7 @@ Created on 30.01.2024
 '''
 
 import networkx as nx
-from pandaict.utils.utils import is_bidirectional
+from pandaict.utils.utils import is_bidirectional, get_supported_protocols
 from pandaict.utils.enums import RoutingType
 
 import logging
@@ -46,7 +46,7 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
                 passed = False
                 
             if protocol is not None:
-                if protocol not in ict_net.std_types['link'][ict_net.link.iloc[pilink[1]]['type']]['protocols']:
+                if protocol not in get_supported_protocols(ict_net, pilink):
                     logger.debug("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
                     passed = False  
@@ -116,11 +116,9 @@ def __print_paths(ict_net, conn, paths):
     for p in paths:
         hops = ""
         for elt in p:
-            if elt[0] == 'device':
-                hops += ict_net.device.iloc[elt[1]]['name'] + "-"
-            elif elt[0] == 'node':
-                hops += ict_net.node.iloc[elt[1]]['name'] + "-"
-        
+            if elt[0] in ['device','node']:
+                hops += ict_net[elt[0]].iloc[elt[1]]['name'] + "-"
+                        
         hops = hops[:-1]
         lhops += [hops]
     
@@ -131,13 +129,10 @@ def __get_possible_routes(ict_net, mdg, conn):
     # Fetch devices used by the connection
     try:
         dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
-    except:
-        logger.debug("Failed to obtain from device for conn "+str(conn['name']))        
-    try:
         dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
     except:
-        logger.debug("Failed to obtain to device for conn "+str(conn['name']))
-               
+        logger.debug("Failed to obtain from or to device for conn "+str(conn['name']))        
+            
     # Fetch nynodes representing the devices
     n1 = __get_nx_node_for_elt(mdg, dev1)
     n2 = __get_nx_node_for_elt(mdg, dev2)

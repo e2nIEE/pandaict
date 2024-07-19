@@ -37,3 +37,18 @@ Get related elements
 
 .. autofunction:: pandaict.utils.utils.get_links_between
 
+
+Link utilities 
+==============
+
+.. _is_bidirectional:
+
+.. autofunction:: pandaict.utils.utils.is_bidirectional
+
+.. _get_supported_protocols:
+
+.. autofunction:: pandaict.utils.utils.get_supported_protocols
+
+.. _get_bandwidth_Mbps:
+
+.. autofunction:: pandaict.utils.utils.get_bandwidth_Mbps

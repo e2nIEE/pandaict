@@ -252,7 +252,56 @@ def get_links_between(ict_net, elt1, elt2):
     return linklist
 
 def is_bidirectional(ict_net, link_elt):
-    bw = ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
+    """
+    Check if a link is bidirectional
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **bidirectional** (boolean) - True if link is bidirectional, False if unidirectional. 
+
+    :EXAMPLE:
+        is_bidirectional(ict_net, ('link',2))
+    """
+    if (not isinstance(link_elt, tuple) or link_elt[0] is not "link"):
+        return None
+    bw = get_bandwidth_Mbps(ict_net, link_elt)
     return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  
-            
-    
+   
+def get_supported_protocols(ict_net, link_elt):       
+    """
+    Get protocols supported by a link
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **protocols** (list) - List of supported protocol types 
+
+    :EXAMPLE:
+        get_supported_protocols(ict_net, ('link',2))
+    """
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['protocols']  
+
+def get_bandwidth_Mbps(ict_net, link_elt):     
+    """
+    Get bandwidth of a link
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction 
+
+    :EXAMPLE:
+        get_bandwidth_Mbps(ict_net, ('link',2))
+    """  
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
+

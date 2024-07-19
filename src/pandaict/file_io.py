@@ -57,7 +57,10 @@ def __to_type(df, dfkey, totype, dflist=False):
                     if isinstance(s, dict):
                         s = s.get('value', None) # for aenums
                     if s is not None and dflist:
-                        df.at[i,dfkey] = [totype(e) for e in s]
+                        if isinstance(s[0], dict):                                                    
+                            df.at[i,dfkey] = [totype(e.get('value',None)) for e in s]  # for aenums
+                        else:
+                            df.at[i,dfkey] = [totype(e) for e in s]                        
                     elif s is not None:
                         df.at[i,dfkey] = totype(s)
     return df
