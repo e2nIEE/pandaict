@@ -1,0 +1,7 @@
+;bandwidth_Mbps;latency_ms;wired;protocols;ber_per_km;mtbf_h;mttr_h
+Binary;(0.001, 0.001);1;True;Binary;0;0;0
+RS485;(0.1, 0.1);100;True;MODBUS-SMA;0;0;0
+LAN1000;(1000,1000);100;True;TCP, UDP, FTP, HTTP, HTTPS, MODBUS-TCP;0;0;0
+LTE50;(50,10);300;False;TCP, UDP, FTP, HTTP, HTTPS, MODBUS-TCP;0;0;0
+ADSL8;(8,1);100;True;TCP, UDP, FTP, HTTP, HTTPS, MODBUS-TCP;0;0;0
+Fiber;(1000,1000);100;True;TCP, UDP, FTP, HTTP, HTTPS, MODBUS-TCP;0;0;0

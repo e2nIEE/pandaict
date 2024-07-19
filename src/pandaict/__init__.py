@@ -1,9 +1,12 @@
-__version__ = '0.0.1preview'
+__version__ = '0.0.1rc2'
+from pandaict.create_empty_net import *
 from pandaict.create import *
 from pandaict.auxiliary import *
-from pandaict.enums import *
+from pandaict.utils import *
 from pandaict.std_types import *
-from pandaict.networks import *
-from pandaict.toolbox import *
-from pandaict.plotting import *
+from pandaict.file_io import *
+from pandaict.diagnosis import *
 from pandaict.topology import *
+
+# Track which connectors have been used
+connectors_installed = [] 
