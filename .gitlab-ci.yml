@@ -32,6 +32,7 @@ stages:
   - deploy
 
 unit-test:
+    image: python:3.9
     stage: test
     image: python:3.12.2    
     script:
