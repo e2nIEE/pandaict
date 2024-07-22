@@ -75,6 +75,10 @@ def create_plot(net, draw_type='dev', custom_icons=None):
 
     __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure)
 
+    # TODO: the opened image file seem to create a ResourceWarning... need to re-position file closing??
+    for gnode in G.nodes(data=True):
+        gnode[1]['image'].close()
+    
     # plt.show()
     return plt
 
@@ -85,12 +89,13 @@ def __create_g__(custom_icons, draw_type, net):
     images = {k: PIL.Image.open(fname) for k, fname in icons.items()}
 
     G = __create_graph__(draw_type, images, net)
-
+        
     # Define colors for 'link' and 'conn' edges
     edge_colors = {'link': 'blue', 'conn': 'green'}
     edge_labels = {}
 
-    __draw_edges__(G, draw_type, edge_colors, edge_labels, net)
+    __draw_edges__(G, draw_type, edge_colors, edge_labels, net)    
+        
     return G, edge_labels
 
 
@@ -193,9 +198,9 @@ def __get_icons__(custom_icons):
         dir_name = os.path.dirname(dir_name)
         dir_name = os.path.dirname(dir_name)
         icons = {
-            "node": dir_name + os.sep + "icons/router.png",
-            "app": dir_name + os.sep + "icons/app.png",
-            "device": dir_name + os.sep + "icons/device.png",
-            "converter": dir_name + os.sep + "icons/convert.png",
+            "node": dir_name + os.sep + "icons" + os.sep + "router.png",
+            "app": dir_name + os.sep + "icons" + os.sep + "app.png",
+            "device": dir_name + os.sep + "icons" + os.sep + "device.png",
+            "converter": dir_name + os.sep + "icons" + os.sep + "convert.png",
             }
     return icons

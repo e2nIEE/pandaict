@@ -266,7 +266,7 @@ def is_bidirectional(ict_net, link_elt):
     :EXAMPLE:
         is_bidirectional(ict_net, ('link',2))
     """
-    if (not isinstance(link_elt, tuple) or link_elt[0] is not "link"):
+    if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
         return None
     bw = get_bandwidth_Mbps(ict_net, link_elt)
     return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  

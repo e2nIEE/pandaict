@@ -13,17 +13,17 @@ import tempfile
 import os
 
  #plot net is depending on the index of the net at "create_test_ict_net" return
-C = Core_Test()
-net1 = C.create_testnet1()
-net2 = C.create_testnet2()
+
 # create_plot(net1, draw_type='dev')
 # create_plot(net1, draw_type='app')
 
-class TestPlotScaling(unittest.TestCase):    
+class Plot_Test():    
     
     # NOTE: all function names to be executed by unittest MUST START with "test" !     
         
-    def test_plot_dev(self):
+    def test_plot_dev(self, utest):
+        C = Core_Test()
+        net1 = C.create_testnet1()
         plt = create_plot(net1, draw_type='dev')
 
         
@@ -40,10 +40,12 @@ class TestPlotScaling(unittest.TestCase):
             assert image1.size == image2.size 
             # compare the content
             diff = ImageChops.difference(image1, image2)
-            assert diff.getbbox() is None
+            utest.assertTrue(diff.getbbox() is None)
         
            
-    def test_plot_app(self):
+    def test_plot_app(self, utest):
+        C = Core_Test()
+        net1 = C.create_testnet1()
         plt = create_plot(net1, draw_type='app')
 
         # plt.savefig(r'C:\Users\gbanerjee\GIt_Hub_Lab\pandaict\test\plt_app.png')
@@ -59,10 +61,12 @@ class TestPlotScaling(unittest.TestCase):
             assert image1.size == image2.size 
             # compare the content
             diff = ImageChops.difference(image1, image2)
-            assert diff.getbbox() is None
+            utest.assertTrue(diff.getbbox() is None)
 
     
-    def test_graph_dev(self):
+    def test_graph_dev(self, utest):
+        C = Core_Test()
+        net1 = C.create_testnet1()
         G, edge_labels = __create_g__(None, 'dev', net1)
         
         # Iterate through nodes
@@ -73,11 +77,12 @@ class TestPlotScaling(unittest.TestCase):
         for edge, edge_compare in zip(G.edges(), [('Node1', 'CC'), ('Node1', 'Node2'), ('Node2', 'Conv1'),
                                     ('Node2', 'Conv2'), ('Node2', 'Conv3'), ('Node2', 'PQ1'), 
                                     ('Node2', 'PQ2'), ('Conv1', 'PC1'), ('Conv2', 'PC2'), ('Conv3', 'SC')]):
-           assert edge == edge_compare
+           utest.assertTrue(edge == edge_compare)
            
-    #ToDo: for APP
     
-    def test_graph_app(self):
+    def test_graph_app(self, utest):
+        C = Core_Test()
+        net1 = C.create_testnet1()
         G, edge_labels = __create_g__(None, 'app', net1)
         
         # Iterate through nodes
@@ -87,10 +92,8 @@ class TestPlotScaling(unittest.TestCase):
         # Iterate through edges
         for edge, edge_compare in zip(G.edges(), [('Conv1', 'CC'), ('Conv1', 'PC1'), ('Conv2', 'CC'), ('Conv2', 'PC2'), 
                                                   ('Conv3', 'CC'), ('Conv3', 'SC'), ('CC', 'PQ1'), ('CC', 'PQ2')]):
-           assert edge == edge_compare
+           utest.assertTrue(edge == edge_compare)
            
              
 
-if __name__ == '__main__':
-    unittest.main()
 

@@ -9,26 +9,44 @@ Created on 8.03.2024
 
 import unittest
 from core_test import Core_Test
+from plot_test import Plot_Test
 
 class PandaICT_Test(unittest.TestCase):    
     
     # NOTE: all function names to be executed by unittest MUST START with "test" ! 
-    tester = Core_Test()
+    core_tester = Core_Test()
+    plot_tester = Plot_Test()
+    
+    # ******* Core tests ********
     
     def test_create(self):        
-        self.tester.test_create_ict_net(self)
+        self.core_tester.test_create_ict_net(self)
     
     def test_saveload(self):
-        self.tester.test_save_load(self)
+        self.core_tester.test_save_load(self)
     
     def test_inspect(self):
-        self.tester.test_inspect_ict_net(self)  
+        self.core_tester.test_inspect_ict_net(self)  
     
     def test_user_input_checks(self):
-        self.tester.test_user_input_checks(self)
+        self.core_tester.test_user_input_checks(self)
     
     def test_lup_table_calc(self):
-        self.tester.test_lup_table_calc(self)            
+        self.core_tester.test_lup_table_calc(self)  
+        
+    # ******* Plotting tests ********
+    
+    def test_plot_dev(self):  
+        self.plot_tester.test_plot_dev(self)  
+        
+    def test_plot_app(self):  
+        self.plot_tester.test_plot_dev(self)
+        
+    def test_graph_dev(self):  
+        self.plot_tester.test_plot_dev(self)
+    
+    def test_graph_app(self):  
+        self.plot_tester.test_plot_dev(self)      
           
 
 if __name__ == '__main__':
