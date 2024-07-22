@@ -200,7 +200,6 @@ def __get_icons__(custom_icons):
         icons = {
             "node": dir_name + os.sep + "icons" + os.sep + "router.png",
             "app": dir_name + os.sep + "icons" + os.sep + "app.png",
-            "device": dir_name + os.sep + "icons" + os.sep + "device.png",
-            "converter": dir_name + os.sep + "icons" + os.sep + "convert.png",
+            "device": dir_name + os.sep + "icons" + os.sep + "device.png"            
             }
     return icons
