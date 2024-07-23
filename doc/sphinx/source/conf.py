@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'pandaICT'
-copyright = '2024, J. Ringelstein'
-author = 'J. Ringelstein'
-release = '0.1'
+copyright = '2024 by Fraunhofer IEE'
+author = 'Fraunhofer IEE'
+release = '1.0.0s'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
