@@ -286,6 +286,7 @@ def get_supported_protocols(ict_net, link_elt):
     :EXAMPLE:
         get_supported_protocols(ict_net, ('link',2))
     """
+    
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['protocols']  
 
 def get_bandwidth_Mbps(ict_net, link_elt):     
@@ -303,5 +304,6 @@ def get_bandwidth_Mbps(ict_net, link_elt):
     :EXAMPLE:
         get_bandwidth_Mbps(ict_net, ('link',2))
     """  
+    
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
 

@@ -35,7 +35,7 @@ class Plot_Test():
              
             image1 = Image.open(tmp_file.name)
             # load the saved figure to compare
-            image2 = Image.open(os.path.dirname(os.path.abspath(__file__)) + r'\plt_dev.png') 
+            image2 = Image.open(os.path.dirname(os.path.abspath(__file__)) + os.sep + 'plt_dev.png') 
             # compare the size
             assert image1.size == image2.size 
             # compare the content
@@ -56,7 +56,7 @@ class Plot_Test():
              
             image1 = Image.open(tmp_file.name)
             # load the saved figure to compare
-            image2 = Image.open(os.path.dirname(os.path.abspath(__file__)) + r'\plt_app.png') 
+            image2 = Image.open(os.path.dirname(os.path.abspath(__file__)) + os.sep + 'plt_app.png') 
             # compare the size
             assert image1.size == image2.size 
             # compare the content
