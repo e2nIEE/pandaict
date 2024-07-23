@@ -1,0 +1,90 @@
+image: python:3.9
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  MONGO_INITDB_ROOT_USERNAME: admin
+  MONGO_INITDB_ROOT_PASSWORD: admin
+  MONGO_INITDB_DATABASE: admin
+  SAST_EXCLUDED_PATHS: doc, pandaict_orig, test_orig, venv
+
+include:
+- template: Code-Quality.gitlab-ci.yml
+- template: Security/SAST.gitlab-ci.yml
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+before_script:
+
+semgrep-sast:
+   variables:
+        SAST_EXCLUDED_PATHS: venv
+   artifacts:
+      paths: [gl-sast-report.json]
+   tags:
+    - leitwarte_iee
+
+stages:
+  - test
+  - pages
+  - deploy
+
+unit-test:
+    image: python:3.9
+    stage: test
+    image: python:3.12.2    
+    script:
+     - pip install -r requirements.txt
+     - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
+     - python3 test/pandaict_test.py
+    tags:
+     - leitwarte_iee
+
+code_quality:
+  stage: test
+  variables:
+    REPORT_FORMAT: html
+  tags:
+   - leitwarte_iee
+  artifacts:
+    paths: [gl-code-quality-report.html]
+
+
+pages:
+  tags:
+   - leitwarte_iee
+  image: python:3.10.0
+  stage: pages
+  script:
+  - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
+  - pip install -U sphinx
+  - pip install -r requirements.txt
+  - sphinx-build -b html doc/sphinx/source public/pandaict
+  - pip install jupyter-book
+  - python doc/jupyter/pandaict/convert_attachements.py
+  - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/
+  artifacts:
+    paths:
+    - public
+
+
+create_artifact_gitlab:
+  image: python:3.9
+  tags: 
+   - leitwarte_iee
+  stage: deploy
+  script:
+    - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install twine
+    - pip install build
+    - python -m build --wheel
+    - export CURL_CA_BUNDLE=""
+    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose  
+  artifacts:
+    paths:
+      - dist/*.whl

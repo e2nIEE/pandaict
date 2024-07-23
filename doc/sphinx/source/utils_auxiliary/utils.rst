@@ -1,0 +1,54 @@
+.. _utils:
+
+#################
+Utility functions
+#################
+
+
+Get elements by identifier
+==========================
+
+.. _get_elt:
+
+.. autofunction:: pandaict.utils.utils.get_elt
+
+.. _get_elt_by_uuid:
+
+.. autofunction:: pandaict.utils.utils.get_elt_by_uuid
+
+.. _get_elts_any:
+
+.. autofunction:: pandaict.utils.utils.get_elts_any
+
+
+
+Get related elements 
+====================
+
+.. _get_apps_on_device:
+
+.. autofunction:: pandaict.utils.utils.get_apps_on_device
+
+.. _get_links_at:
+
+.. autofunction:: pandaict.utils.utils.get_links_at
+
+.. _get_links_between:
+
+.. autofunction:: pandaict.utils.utils.get_links_between
+
+
+Link utilities 
+==============
+
+.. _is_bidirectional:
+
+.. autofunction:: pandaict.utils.utils.is_bidirectional
+
+.. _get_supported_protocols:
+
+.. autofunction:: pandaict.utils.utils.get_supported_protocols
+
+.. _get_bandwidth_Mbps:
+
+.. autofunction:: pandaict.utils.utils.get_bandwidth_Mbps
