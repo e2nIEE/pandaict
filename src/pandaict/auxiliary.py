@@ -8,7 +8,7 @@ Created on 30.01.2024
 '''
 
 from collections.abc import MutableMapping
-
+from pandaict import __version__
 import pandas as pd
 import copy
 import numpy as np
@@ -143,7 +143,7 @@ class ADict(dict, MutableMapping):
 
 class pandaICTNet(ADict):    
       
-    version = "0.0.1"
+    version = __version__
     
     def __init__(self, *args, **kwargs):        
         super().__init__(*args, **kwargs)
