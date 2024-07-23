@@ -9,8 +9,6 @@ import networkx as nx
 import PIL
 from PIL import Image
 
-
-
 import matplotlib.pyplot as plt
 import matplotlib.transforms as transforms
 
