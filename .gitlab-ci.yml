@@ -84,9 +84,7 @@ create_artifact_gitlab:
     - pip install build
     - python -m build --wheel
     - export CURL_CA_BUNDLE=""
-    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose
-  only: 
-    - basics
+    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose  
   artifacts:
     paths:
       - dist/*.whl
