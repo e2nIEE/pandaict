@@ -32,7 +32,9 @@ stages:
   - deploy
 
 unit-test:
+    image: python:3.9
     stage: test
+    image: python:3.12.2    
     script:
      - pip install -r requirements.txt
      - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
@@ -69,6 +71,7 @@ pages:
 
 
 create_artifact_gitlab:
+  image: python:3.9
   tags: 
    - leitwarte_iee
   stage: deploy
@@ -81,9 +84,7 @@ create_artifact_gitlab:
     - pip install build
     - python -m build --wheel
     - export CURL_CA_BUNDLE=""
-    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose
-  only: 
-    - basics
+    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose  
   artifacts:
     paths:
       - dist/*.whl

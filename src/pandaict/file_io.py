@@ -48,21 +48,36 @@ def __check_index_and_uuid(df):
             df.at[i,"uuid"] = uuid.UUID(s)
     
     return df
-           
-def __convert_map_to(df):  
-    if 'map_to' in df.keys():
-            for i, s in enumerate(df["map_to"]):
+       
+       
+def __to_type(df, dfkey, totype, dflist=False):
+    if dfkey in df.keys():
+            for i, s in enumerate(df[dfkey]):
                 if s is not None:
-                    df.at[i,"map_to"] = tuple(s)
+                    if isinstance(s, dict):
+                        s = s.get('value', None) # for aenums
+                    if s is not None and dflist:
+                        if isinstance(s[0], dict):                                                    
+                            df.at[i,dfkey] = [totype(e.get('value',None)) for e in s]  # for aenums
+                        else:
+                            df.at[i,dfkey] = [totype(e) for e in s]                        
+                    elif s is not None:
+                        df.at[i,dfkey] = totype(s)
     return df
+   
+        
+# def __convert_map_to(df):  
+#     if 'map_to' in df.keys():
+#             for i, s in enumerate(df["map_to"]):
+#                 if s is not None:
+#                     df.at[i,"map_to"] = tuple(s)
+#     return df
                  
 def __json_node_to_df(df):
         
-    df = __check_index_and_uuid(df)
-    
-    for i, s in enumerate(df["type"]):            
-        df.at[i,"type"] = NodeType(s["value"])  
-    df = __convert_map_to(df)
+    df = __check_index_and_uuid(df)    
+    df = __to_type(df, 'type', NodeType)  
+    df = __to_type(df,'map_to', tuple)   
     if 'geodata' in df.keys():
         for i, s in enumerate(df["geodata"]):
             if s is not None and not (isinstance(s, dict)):
@@ -73,49 +88,33 @@ def __json_node_to_df(df):
 def __json_device_to_df(df):
     
     df = __check_index_and_uuid(df)    
-                
-    for i, s in enumerate(df["type"]):            
-        df.at[i,"type"] = DeviceType(s["value"])  
+    df = __to_type(df, 'type', DeviceType)                 
     
     return df
 
 def __json_link_to_df(df):
     
     df = __check_index_and_uuid(df)       
-    df = __convert_map_to(df)            
-                    
-    for i, s in enumerate(df["from"]):
-        if s is not None:
-            df.at[i,"from"] = tuple(s)
-    for i, s in enumerate(df["to"]):
-        if s is not None:                
-            df.at[i,"to"] = [tuple(e) for e in s]
-                    
+    df = __to_type(df, 'map_to', tuple)                            
+    df = __to_type(df, 'from', tuple)
+    df = __to_type(df, 'to', tuple, dflist=True)    
+                        
     return df
 
 def __json_app_to_df(df):
     
     df = __check_index_and_uuid(df)  
-    df = __convert_map_to(df)         
-                
-    for i, s in enumerate(df["type"]):            
-        df.at[i,"type"] = AppType(s["value"]) 
-    for i, s in enumerate(df["conversions"]):
-        if s is not None:                
-            df.at[i,"conversions"] = [tuple(e) for e in s]        
+    df = __to_type(df, 'map_to', tuple)                    
+    df = __to_type(df, 'type', AppType)        
+    df = __to_type(df, 'conversions', tuple, dflist=True)
                     
     return df
 
 def __json_conn_to_df(df):
     
     df = __check_index_and_uuid(df)       
-                
-    for i, s in enumerate(df["peers"]):
-        if s is not None:
-            df.at[i,"peers"] = tuple(s)
-    for i, s in enumerate(df["info_items"]):        
-        if s is not None:
-            df.at[i,"info_items"] = [InfoItem(v['value']) for v in s]             
+    df = __to_type(df, 'peers', tuple)              
+    df = __to_type(df, 'info_items', InfoItem, dflist=True) 
                 
     return df
 
@@ -158,18 +157,16 @@ def to_json(ict_net, filename, save_std_types=False):
                 jstdt = __std_type_dict_to_json(ict_net.std_types)
             else:
                 jstdt = "{}"
-            jall  = json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
-                                "node":       json.loads(jnode),
-                                "link":       json.loads(jlink),
-                                "device":     json.loads(jdevc),
-                                "app":        json.loads(jappc),
-                                "conn":       json.loads(jconn),
-                                "std_type":   json.loads(jstdt),
-                                }, pifile, indent=2)                            
+            json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
+                        "node":       json.loads(jnode),
+                        "link":       json.loads(jlink),
+                        "device":     json.loads(jdevc),
+                        "app":        json.loads(jappc),
+                        "conn":       json.loads(jconn),
+                        "std_type":   json.loads(jstdt),
+                        }, pifile, indent=2)                            
         except:
-            logger.error("Error while writing net to "+filename)
-            
-    return  
+            pilogger.error("Error while writing net to "+filename)  
 
 def from_json(filename):
     """
@@ -190,11 +187,11 @@ def from_json(filename):
         try:
             jall = json.load(pifile)
         except:
-            logger.error("Not a valid pandaICT file: "+filename)
+            pilogger.error("Not a valid pandaICT file: "+filename)
             return
     
     if "pandaICT net file" not in jall['info']: 
-        logger.error("Not a valid pandaICT file: "+filename)
+        pilogger.error("Not a valid pandaICT file: "+filename)
         return    
     
     ict_net.name       = jall["name"]        
@@ -203,7 +200,7 @@ def from_json(filename):
     if not ict_net.connectors.empty:
         for s in ict_net.connectors[0]:
             if s not in connectors_installed:
-                logger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
+                pilogger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
                 print("Warning: Network file "+filename+" uses connector "+s+" which is currently not installed")
     ict_net.node       = __json_node_to_df(pd.DataFrame(jall["node"]))
     ict_net.link       = __json_link_to_df(pd.DataFrame(jall["link"]))

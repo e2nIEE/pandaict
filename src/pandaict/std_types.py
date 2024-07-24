@@ -37,7 +37,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
     if data is None: 
         return 
     
-    if type(data) != dict:
+    if not isinstance(data, dict):
         raise UserWarning("type data has to be given as a dictionary of parameters")
 
     if check_required:
@@ -51,7 +51,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
             if par not in data:
                 raise UserWarning("%s is required as %s type parameter" % (par, element))
     stdict = ict_net.std_types[element]
-    if overwrite or not (name in stdict):
+    if overwrite or name not in stdict:
         stdict.update({name: data})
 
 
@@ -111,17 +111,27 @@ def __local_area_linktypes():
 def __wide_area_linktypes():
     lt = {"LTE50": # LTE with downstream bandwidth of 50 Mbps
             { "bandwidth_Mbps": (50,10),
-              "latency_ms": 300,
+              "latency_ms": (100,200),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
               "mtbf_h": 0,
               "mttr_h": 0,
               "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
-            },        
+            },
+        "UMTS": 
+            { "bandwidth_Mbps": (0.04,0.04),
+              "latency_ms": (300,300),
+              "wired": False,
+              "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
+              "ber_per_km": 0,
+              "mtbf_h": 0,
+              "mttr_h": 0,
+              "uuid": uuid.UUID("ed41d4c0-64d2-452d-586a-7c937e259c5b"),
+            },                
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
             { "bandwidth_Mbps": (8, 1),
-              "latency_ms": 100,
+              "latency_ms": (200,300),
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
@@ -186,16 +196,25 @@ def __application_protocoltypes():
             "info_items":
                 [ InfoItem.REQUEST,
                   InfoItem.RESPONSE, 
+                  InfoItem.URL,
                   InfoItem.WEBPAGE, 
                   InfoItem.STATUS,                 
-                ],    
+                ],   
+            "payload_size_byte": 
+                [ 256,
+                  10240,
+                  512,
+                  61439,
+                  128
+                ], 
             "uuid": uuid.UUID("9bd957a0-1e02-4925-bef6-8cf04c5e9ead"),
             },
         "HTTPS": {        
             "base_package_size_byte": 4096,
             "info_items":
                 [ InfoItem.REQUEST,
-                  InfoItem.RESPONSE, 
+                  InfoItem.RESPONSE,
+                  InfoItem.URL, 
                   InfoItem.WEBPAGE, 
                   InfoItem.STATUS,                 
                 ],    
@@ -205,10 +224,17 @@ def __application_protocoltypes():
             "base_package_size_byte": 4096,
             "info_items":
                 [ InfoItem.REQUEST,
-                  InfoItem.RESPONSE, 
+                  InfoItem.RESPONSE,                   
                   InfoItem.TEXT,
                   InfoItem.FILE, 
                   InfoItem.STATUS,
+                ], 
+            "payload_size_byte": 
+                [ 256,
+                  256,
+                  4096,
+                  61493,
+                  128
                 ], 
             "uuid": uuid.UUID("30e8be5c-06d8-4914-b99b-31f015473599"),   
             }

@@ -8,8 +8,7 @@ Created on 30.01.2024
 '''
 
 from collections.abc import MutableMapping
-
-#import pandaict as pi
+from pandaict import __version__
 import pandas as pd
 import copy
 import numpy as np
@@ -41,7 +40,7 @@ class ADict(dict, MutableMapping):
         # see __valid_name()
         self.__setattr('_allow_invalid_attributes', False)
 
-    def __build(self, obj, **kwargs):
+    def __build(self, obj):
         return obj
 
     # --- taken from AttrDict
@@ -144,7 +143,7 @@ class ADict(dict, MutableMapping):
 
 class pandaICTNet(ADict):    
       
-    version = "0.0.1"
+    version = __version__
     
     def __init__(self, *args, **kwargs):        
         super().__init__(*args, **kwargs)

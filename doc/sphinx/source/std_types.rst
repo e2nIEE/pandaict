@@ -27,7 +27,7 @@ Protocol types
 --------------
 
   .. tabularcolumns:: |l|l|l|l|
-.. csv-table:: 
+.. csv-table::
    :file: protocoltypes.csv
    :delim: ;
    :widths: 60, 15, 50, 50 
@@ -43,4 +43,5 @@ Adding and creating standard types
 .. _create_std_types:
 
 .. autofunction:: pandaict.std_types.create_std_types
+
 

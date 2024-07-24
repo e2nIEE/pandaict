@@ -10,29 +10,12 @@ Created on 30.01.2024
 from pandaict.auxiliary import pandaICTNet
 from pandaict.auxiliary import ADict, __get_free_id, __preserve_dtypes
 from pandaict.create_empty_net import create_empty_network
-from pandaict.utils.utils import uuid2elt, elt2uuid
+from pandaict.utils.utils import uuid2elt, elt2uuid, check_all_uuid, get_elts_any
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
 from pandaict.pilogger import pilogger
+import numbers
 import uuid
 
-
-
-def __create_uuid2elt(ict_net, elt_uuid, expected): 
-       
-    if isinstance(elt_uuid, list):
-        elt = [uuid2elt(ict_net, uid) for uid in elt_uuid]
-        if elt is None or None in elt:                
-            raise UserWarning("at least one uuid elt not found by uuid")
-        if not all((e[0] in expected) for e in elt):
-            raise UserWarning("all uuid elt types must be one of "+str(expected))        
-    else:
-        elt = uuid2elt(ict_net, elt_uuid)
-        if elt is None:                
-            raise UserWarning("uuid elt not found by uuid")
-        if not (elt[0] in expected):
-            raise UserWarning("uuid elt type is "+str(elt[0])+" but must be one of "+str(expected))
-             
-    return elt    
 
 def __create_ruuid(uid, use_uuid):
     
@@ -48,27 +31,18 @@ def __create_net_index_check(ict_net, index, elttype):
         raise UserWarning("ict_net must not be None")
     if index is not None and index in ict_net[elttype].index:
         raise UserWarning("A "+str(elttype)+" with index %s already exists" % index)
-    return
 
-def __create_link_type_check(ict_net, link_type):
+def __create_std_type_check(ict_net, std_type_elt, allowed_dtypes, expected_elt_type):
     
-    if link_type is not None:
-        if not isinstance(link_type, str):
-                raise UserWarning("link_type must be str") 
-        elif not link_type in ict_net.std_types['link'].keys():
-            raise UserWarning("link_type "+str(link_type)+" not found in std_types")
-    return
-
-def __create_protocols_check(ict_net, protocols):
-    
-    if protocols is not None: 
-        if isinstance(protocols, list):
-            for pr in protocols: 
-                if not pr in ict_net.std_types['protocol'].keys():
-                    raise UserWarning("protocol "+str(pr)+" not found in std_types")
-        elif not protocols in ict_net.std_types['protocol'].keys():
-            raise UserWarning("protocol "+str(protocols)+" not found in std_types")
-    return
+    if std_type_elt is not None:
+        if not isinstance(std_type_elt, allowed_dtypes):
+                raise UserWarning("std type element must be one of "+str(allowed_dtypes)) 
+        elif isinstance(std_type_elt, list) or isinstance(std_type_elt, tuple):
+            for ste in std_type_elt:
+                if ste not in ict_net.std_types[expected_elt_type].keys():
+                    raise UserWarning("std type element "+str(ste)+" not found in "+str(expected_elt_type)+" std_types")
+        elif std_type_elt not in ict_net.std_types[expected_elt_type].keys():
+            raise UserWarning("std type element "+str(std_type_elt)+" not found in "+str(expected_elt_type)+" std_types")
 
 def __check_uuid(ict_net, uid):
     if uid is not None:
@@ -80,7 +54,40 @@ def __check_uuid(ict_net, uid):
             raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
         if uelt is not None:
             raise UserWarning("uid already in use for " + str(uuid2elt(ict_net, uuid.UUID(str(uid)))))
+        
+def __check_list_items(clist, allowed_length=None, allowed_types=None, allowed_values=None):    
+    
+    if clist is not None:
+        if not isinstance(clist, list):
+            raise UserWarning("parameter must be a list")
+        if allowed_length is not None and len(clist)!=allowed_length:
+            raise UserWarning("parameter must be a list with length "+str(allowed_length))
+        for cl in clist:
+            if allowed_types is not None and not isinstance(cl, allowed_types):
+                raise UserWarning("parameter list must only contain elements of types "+str(allowed_types))
+            if allowed_values is not None and not cl in allowed_values:
+                raise UserWarning("parameter list elements must only have values "+str(allowed_values))
 
+def __check_elts_and_get_index(pi_elts, paramname, expected_types=None, allow_list=True):
+    if pi_elts is None:
+        raise UserWarning(str(expected_types)+" not found") 
+    elif isinstance(pi_elts, list) and allow_list:             
+        for pe in pi_elts:
+            if not isinstance(pe, tuple) or not isinstance(pe[0],str) or not isinstance(pe[1], numbers.Integral):
+                raise UserWarning("all items in "+paramname+" must be (str, int) tuples") 
+            if expected_types is not None and not (pe[0] in expected_types):
+                raise UserWarning("an item in "+paramname+" is "+str(pe[0])+", must be one of "+str(expected_types))
+        return pi_elts[0][1]                          
+    elif isinstance(pi_elts, tuple):                
+        if pi_elts[0] not in expected_types: 
+            raise UserWarning(str(paramname)+" parameter is "+str(pi_elts[0])+", must be one of "+str(expected_types))
+        return pi_elts[1]
+    else:
+        if allow_list:
+            raise UserWarning(str(paramname)+" must be (str, int) tuple or list of such tuples")
+        else:
+            raise UserWarning(str(paramname)+" must be (str, int) tuple")
+        
 def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_types):
     
     __create_net_index_check(ict_net, index, "node")
@@ -88,19 +95,12 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
         raise UserWarning("node_type must be NodeType")
     if geodata is not None:
         if isinstance(geodata, dict):
-            if not "type" in geodata.keys() or not "coordinates" in geodata.keys():
+            if "type" not in geodata.keys() or "coordinates" not in geodata.keys():
                 raise UserWarning("geodata must contain 'type' and 'coordinates' keys") 
-        elif not isinstance(geodata, tuple) or not len(geodata)==2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
-            raise UserWarning("geodata must be (float, float) tuple or geojson")             
-    if link_types is not None:
-        if isinstance(link_types, list):
-            for lt in link_types:
-                if not lt in ict_net.std_types['link'].keys():
-                    raise UserWarning("link_type " + str(lt) + " not found in std_types")        
-        elif not link_types in ict_net.std_types['link'].keys():
-            raise UserWarning("link_type " + str(link_types) + " not found in std_types")
-    __check_uuid(ict_net, uid)
-    return 
+        elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
+            raise UserWarning("geodata must be (float, float) tuple or geojson")                 
+    __create_std_type_check(ict_net, link_types, (str, list), 'link')
+    __check_uuid(ict_net, uid) 
 
 def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=True, use_uuid=False, uid=None, 
                      geodata=None, link_types=None, ber=0, mtbf_h=0, mttr_h=0):
@@ -159,42 +159,37 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
     
     return ruuid if use_uuid else ('node', index)
 
-def __create_ict_link_check(ict_net, from_elt, to_elt, uid, use_uuid):
+def __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid):
     
-    if use_uuid: 
-        if from_elt is None or not isinstance(from_elt, uuid.UUID):
-            raise UserWarning("from_elt must be uuid4")
-        if to_elt is None or not (isinstance(to_elt, uuid.UUID) or isinstance(to_elt, list)):
-            raise UserWarning("to_elt must be uuid4 or list of uuid4")
-        if isinstance(to_elt, list):
-            for i in range(0, len(to_elt)):
-                if not isinstance(to_elt[i], uuid.UUID):
-                    raise UserWarning("to_elt[" + str(i) + "] must be uuid4")        
-        if from_elt == to_elt:
-            raise UserWarning("from_elt and to_elt must not be equal")        
-        __check_uuid(ict_net, uid)
-        if uid is not None:
-            if str(from_elt) == str(uid): 
-                raise UserWarning("from_elt and uid must not be equal")
-            if str(to_elt) == str(uid):         
-                raise UserWarning("to_elt and uid must not be equal")        
-    else:
-        if not isinstance(from_elt, tuple):
-            raise UserWarning("from_elt must be (str, int) tuple")     
-        if not (from_elt[0]=='device' or from_elt[0]=='node'):
-            raise UserWarning("from_elt is "+str(from_elt[0])+", must be dev or node") 
-        if (not isinstance(to_elt, tuple) and not isinstance(to_elt, list)):
-            raise UserWarning("to_elt must be (str, int) tuple or list of such tuples")  
-        if isinstance(to_elt, tuple):
-            if not (to_elt[0]=='device' or to_elt[0]=='node'):
-                raise UserWarning("to_elt is "+str(to_elt[0])+", must be dev or node") 
-        else:            
-            for i in range(0, len(to_elt)):
-                if not isinstance(to_elt[i], tuple):
-                    raise UserWarning("to_elt must be (str, int) tuple or list of such tuples") 
-                if not (to_elt[i][0]=='device' or to_elt[i][0]=='node'):
-                    raise UserWarning("to_elt["+str(i)+"] is "+str(to_elt[i][0])+", must be dev or node") 
-    return 
+    check_all_uuid(from_elt)
+    check_all_uuid(to_elt)        
+    if from_elt == to_elt:
+        raise UserWarning("from_elt and to_elt must not be equal")        
+    __check_uuid(ict_net, uid)
+    if uid is not None:
+        if str(from_elt) == str(uid): 
+            raise UserWarning("from_elt and uid must not be equal")
+        if str(to_elt) == str(uid):         
+            raise UserWarning("to_elt must not equal uid")
+        if any(str(to_elt) == str(uid)):         
+            raise UserWarning("to_elt must not contain uid")            
+                
+def __create_ict_link_check_nouuid(from_elt, to_elt):
+        
+    __check_elts_and_get_index(from_elt, 'from_elt', ['device','node'])  
+    __check_elts_and_get_index(to_elt, 'to_elt', ['device','node'])
+    
+    # if (not isinstance(to_elt, tuple) and not isinstance(to_elt, list)):
+    #     raise UserWarning("to_elt must be (str, int) tuple or list of such tuples")  
+    # if isinstance(to_elt, tuple):
+    #     if not (to_elt[0]=='device' or to_elt[0]=='node'):
+    #         raise UserWarning("to_elt is "+str(to_elt[0])+", must be dev or node") 
+    # else:            
+    #     for i in range(0, len(to_elt)):
+    #         if not isinstance(to_elt[i], tuple):
+    #             raise UserWarning("to_elt must be (str, int) tuple or list of such tuples") 
+    #         if not (to_elt[i][0]=='device' or to_elt[i][0]=='node'):
+    #             raise UserWarning("to_elt["+str(i)+"] is "+str(to_elt[i][0])+", must be dev or node")  
 
 def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=None, in_service=True, use_uuid=False, uid=None,
                     length_km=0 ):
@@ -238,8 +233,11 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     """
     
     __create_net_index_check(ict_net, index, "link")    
-    __create_ict_link_check(ict_net, from_elt, to_elt, uid, use_uuid)                     
-    __create_link_type_check(ict_net, link_type)
+    if use_uuid:
+        __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid)
+    else:                     
+        __create_ict_link_check_nouuid(from_elt, to_elt)
+    __create_std_type_check(ict_net, link_type, (str), 'link')
     
     if index is None:
         index = __get_free_id(ict_net["link"])
@@ -247,13 +245,13 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     ruuid = __create_ruuid(uid, use_uuid)
     
     if (use_uuid):                 
-        from_elt = __create_uuid2elt(ict_net, from_elt, expected=['device','node'])        
-        to_elt = __create_uuid2elt(ict_net, to_elt, expected=['device','node'])                          
+        from_elt = get_elts_any(ict_net, from_elt, expected=['device','node'])        
+        to_elt = get_elts_any(ict_net, to_elt, expected=['device','node'])                          
         
     if from_elt==to_elt: 
         raise UserWarning("from_elt and to_elt must not be equal") 
     if from_elt in to_elt:
-        raise UserWarning("to_elt must not contain from_elt") 
+        raise UserWarning("to_elt must not contain from_elt")
             
     ict_net.link.loc[index, ["name", "type", "in_service", "length_km", "uuid"]] = [name, link_type, in_service, length_km, ruuid]
     ict_net.link.at[index,'from'] = from_elt
@@ -268,7 +266,6 @@ def __create_device_check(ict_net, device_type, uid):
     if device_type is not None and not isinstance(device_type, DeviceType):
         raise UserWarning("device_type must be DeviceType")
     __check_uuid(ict_net, uid)
-    return
 
 def create_ict_device(ict_net, name=None, device_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
                       mtbf=0, mttr=0 ):
@@ -343,8 +340,7 @@ def __create_app_check(ict_net, name, app_type, uid, conversions, device):
                 raise UserWarning("conversion protocol '" + str(cn[0]) + "' for app  '" + str(name) + "' not found in std_types")
             if cn[1] not in ict_net.std_types['protocol'].keys():
                 raise UserWarning("conversion protocol '" + str(cn[1]) + "' for app  '" + str(name) + "' not found in std_types")
-    return
-
+        
 def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
                       conversions=None, device=None ):
     
@@ -393,17 +389,10 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
     dtypes = ict_net.app.dtypes
     ruuid = __create_ruuid(uid, use_uuid)
     
-    if (use_uuid):
-        rdevice = uuid2elt(ict_net, device) 
-        if rdevice is None:
-            raise UserWarning("device not found by uuid") 
-        if not rdevice[0]=='device': 
-            raise UserWarning("device parameter is "+str(rdevice[0])+", must be device")
-        rdevice = rdevice[1]
+    if (use_uuid):            
+        rdevice = __check_elts_and_get_index(uuid2elt(ict_net, device), 'device', 'device')
     else:
-        if not device[0]=='device': 
-            raise UserWarning("device parameter is "+str(device[0])+", must be device")  
-        rdevice = device[1]
+        rdevice = __check_elts_and_get_index(device, 'device', 'device')            
         
     ict_net.app.loc[index, ["name", "type", "in_service", "uuid", "device" ]] = [name, app_type, in_service, ruuid, rdevice]
     ict_net.app.at[index, "conversions"] = conversions
@@ -454,62 +443,43 @@ def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_se
     app = create_ict_app(ict_net, name=name, app_type=app_type, in_service=in_service, use_uuid=use_uuid, conversions=conversions, device=dev)
     return (dev, app)
 
+def __create_connection_check_uuid(ict_net, uid, from_app, to_app, peers):
+    check_all_uuid(from_app)
+    check_all_uuid(to_app, False)    
+    if from_app == to_app:
+        raise UserWarning("from_app and to_app must not be equal")
+    if peers is not None and (not isinstance(peers[0], uuid.UUID) or not isinstance(peers[1], uuid.UUID)):
+        raise UserWarning("peers must be uuid4")
+    __check_uuid(ict_net, uid)
+    if uid is not None:
+        if str(from_app) == str(uid):
+            raise UserWarning("from_app and uid must not be equal")
+        if str(to_app) == str(uid):
+            raise UserWarning("to_app and uid must not be equal")  
+        
+def __create_connection_check_nouuid(from_app, to_app, peers):    
+    __check_elts_and_get_index(from_app, 'from_app', 'app')         
+    __check_elts_and_get_index(to_app, 'to_app', 'app', allow_list=False)
+    if peers is not None:
+        if not isinstance(peers[0], tuple) or not isinstance(peers[1], tuple):
+            raise UserWarning("peers elements must be tuples (str, int)")
+        if not (peers[0][0] == 'app' and peers[1][0] == 'app'):
+            raise UserWarning("peers elements must be app-type")
+        if (peers[0] == peers[1]):
+            raise UserWarning("peers elements must not be the same")    
+
 def __create_connection_check(ict_net, use_uuid, uid, from_app, to_app, peers):
     
-    if peers is not None and (not isinstance(peers, tuple) or not len(peers) == 2):
+    if peers is not None and (not isinstance(peers, tuple) or len(peers) != 2):
         raise UserWarning("peers must be a 2-tuple")
     if peers is not None and peers[0] == peers[1]:
         raise UserWarning("peers must not be equal")
     if use_uuid:
-        if from_app is None or not isinstance(from_app, uuid.UUID):
-            raise UserWarning("from_app must be uuid4")
-        if to_app is None or not isinstance(to_app, uuid.UUID):
-            raise UserWarning("to_app must be uuid4")
-        if from_app == to_app:
-            raise UserWarning("from_app and to_app must not be equal")
-        if peers is not None and (not isinstance(peers[0], uuid.UUID) or not isinstance(peers[1], uuid.UUID)):
-            raise UserWarning("peers must be uuid4")
-        __check_uuid(ict_net, uid)
-        if uid is not None:
-            if str(from_app) == str(uid):
-                raise UserWarning("from_app and uid must not be equal")
-            if str(to_app) == str(uid):
-                raise UserWarning("to_app and uid must not be equal")    
+        __create_connection_check_uuid(ict_net, uid, from_app, to_app, peers)        
     else:
-        if not isinstance(from_app, tuple):
-            raise UserWarning("from_app must be (str, int) tuple")
-        if not (from_app[0] == 'app'):
-            raise UserWarning("from_app is " + str(from_app[0]) + ", must be app")
-        if not isinstance(to_app, tuple):
-            raise UserWarning("to_app must be (str, int) tuple")
-        if not (to_app[0] == 'app'):
-            raise UserWarning("to_app is " + str(to_app[0]) + ", must be app")
-        if peers is not None:
-            if not isinstance(peers[0], tuple) or not isinstance(peers[1], tuple):
-                raise UserWarning("peers elements must be tuples (str, int)")
-            if not (peers[0][0] == 'app' and peers[1][0] == 'app'):
-                raise UserWarning("peers elements must be app-type")
-
-def __create_connection_info_items_check(info_items, producer, prod_freq_ms):
-    
-    if info_items is not None:
-        if not isinstance(info_items, list):
-            raise UserWarning("info_items must be a list of InfoItem")
-        for ii in info_items:
-            if not isinstance(ii, InfoItem):
-                raise UserWarning("info_items must be a list of InfoItem")
-    
-    if producer is not None:
-        if not isinstance(producer, list):
-            raise UserWarning("producer must be None or list")
-        if len(producer) != len(info_items) or not all((p == "0" or p == "1") for p in producer):
-            raise UserWarning("producer length must be the same as info_items, and all entries must be 0 or 1")
-    if prod_freq_ms is not None:
-        if not isinstance(prod_freq_ms, list):
-            raise UserWarning("prod_freq_ms must be None or list")
-        if len(prod_freq_ms) != len(info_items) or not all((isinstance(p, float) for p in prod_freq_ms)):
-            raise UserWarning("prod_freq_ms length must be the same as info_items, and all entries must be float.")
-
+        __create_connection_check_nouuid(from_app, to_app, peers)    
+        
+      
 def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_uuid=False, uid=None,
                           from_app=None, to_app=None, protocol=None, info_items=None, **kwargs):       
      
@@ -571,8 +541,11 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     prod_freq_ms = kwargs.get('prod_freq_ms', None)
     __create_net_index_check(ict_net, index, "conn")
     __create_connection_check(ict_net, use_uuid, uid, from_app, to_app, peers)                   
-    __create_protocols_check(ict_net, protocol)    
-    __create_connection_info_items_check(info_items, producer, prod_freq_ms)
+    __create_std_type_check(ict_net, protocol, (str), 'protocol')    
+    __check_list_items(info_items, allowed_types=(InfoItem))
+    il = len(info_items) if info_items is not None else None    
+    __check_list_items(producer, allowed_length=il, allowed_types=(int), allowed_values=(0,1))
+    __check_list_items(prod_freq_ms, allowed_length=il, allowed_types=(int, float))
 
     if index is None:
         index = __get_free_id(ict_net["conn"])        
@@ -581,18 +554,21 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     
     if (use_uuid):
         if peers is not None:
-            pdev1 = __create_uuid2elt(ict_net, peers[0], ["app"])                      
-            pdev2 = __create_uuid2elt(ict_net, peers[1], ["app"])
+            pdev1 = get_elts_any(ict_net, peers[0], ["app"])                      
+            pdev2 = get_elts_any(ict_net, peers[1], ["app"])
             peers = (pdev1[1], pdev2[1])
         else:
             peers = None        
-        from_app = __create_uuid2elt(ict_net, from_app, ["app"])         
+        from_app = get_elts_any(ict_net, from_app, ["app"])         
         from_app = from_app[1]
-        to_app   = __create_uuid2elt(ict_net, to_app, ["app"])                
+        to_app   = get_elts_any(ict_net, to_app, ["app"])                
         to_app   = to_app[1]
     else:
         from_app = from_app[1] 
-        to_app   = to_app[1]   
+        try:
+            to_app   = to_app[1]
+        except:
+            print("A")   
         
     if from_app==to_app: 
         raise UserWarning("from_app and to_app must not be equal") 
@@ -601,8 +577,8 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     ict_net.conn.at[index,'info_items'] = info_items
     ict_net.conn.at[index,'peers'] = peers
     ict_net.conn.at[index,'producer'] = producer
-    ict_net.conn.at[index,'prod_freq_ms'] = prod_freq_ms
-
+    ict_net.conn.at[index,'prod_freq_ms'] = [float(p) for p in prod_freq_ms] if prod_freq_ms is not None else None
+    
     __preserve_dtypes(ict_net.conn, dtypes)
 
     return ruuid if use_uuid else ('conn', index)

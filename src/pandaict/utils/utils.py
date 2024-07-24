@@ -8,6 +8,7 @@ Created on 8.02.2024
 '''
 
 import numpy as np 
+import uuid
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
@@ -61,6 +62,29 @@ def elt2uuid(ict_net, elt):
     except:
         return None
     
+    
+def check_all_uuid(ids, allow_list=True):
+    """
+    Check if parameter is uuid4 or - in case it is a list - all elements are uuid4.
+    Raises UserWarning if this is not the case.
+
+    :INPUT:
+        **ids** (any) - Parameter to be checked
+        **allow_list** (boolean) - If True, lists are allowed and checked element-wise. If False, lists are considered non-uuid.              
+                            
+    :OUTPUT:
+        None 
+    
+    """ 
+    if ids is not None:
+        if allow_list and isinstance(ids, list):
+            for i in ids:
+                if not isinstance(i, uuid.UUID):
+                    raise UserWarning("list must only contain uuid4")
+        elif not isinstance(ids, uuid.UUID):
+            raise UserWarning("element must be uuid4")                    
+    else:
+        raise UserWarning("Element is None, must be uuid4")
 def get_elt(ict_net, elt):
     """
     Fetch element by pandaict element identifier.
@@ -97,7 +121,48 @@ def get_elt_by_uuid(ict_net, uid):
     :EXAMPLE:
         get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """
-    return get_elt(uuid2elt(uid))
+    return get_elt(ict_net, uuid2elt(ict_net, uid))
+
+def get_elts_any(ict_net, elt_ids, expected=None):           
+    """
+    Fetch single or multiple elements by any identifier.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **elt_ids** (tuple, uuid or list) - pandaict identifier(s) of an element that exists in ict_net
+        
+    :OPTIONAL:
+        **expected** (list of string, default None) - list of element types expected in the output. None means any types allowed. \
+            UserWarning raised if a non-expected element type is found.
+                            
+    :OUTPUT:
+        **elt** (dict or list of dict) - The pandaict element(s). 
+
+    :EXAMPLES:
+        get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
+        get_elt(ict_net, ['device', 0], ['node, 3], expected=['device', 'node'])
+    """
+    if isinstance(elt_ids, list):
+        _elt_ids = elt_ids
+    else:
+        _elt_ids = [elt_ids]
+    
+    elts = []
+    for eid in _elt_ids:
+        if isinstance(eid, uuid.UUID):
+            elt = uuid2elt(ict_net, eid)
+            if elt is None or None in elt:                
+                raise UserWarning("at least one uuid elt not found by uuid")    
+            if expected is not None and elt[0] not in expected:
+                raise UserWarning("uuid elt type is "+str(elt)+" but must be one of "+str(expected))
+        else:
+            if expected is not None and eid[0] not in expected:
+                raise UserWarning("elt type is "+str(eid)+" but must be one of "+str(expected))
+            elt = get_elt(ict_net, eid)
+        elts += [elt]         
+                 
+    return elts if isinstance(elt_ids, list) else elts[0]    
 
 def get_apps_on_device(ict_net, device):
     """
@@ -185,5 +250,60 @@ def get_links_between(ict_net, elt1, elt2):
                 linklist += [i]
         
     return linklist
-            
+
+def is_bidirectional(ict_net, link_elt):
+    """
+    Check if a link is bidirectional
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **bidirectional** (boolean) - True if link is bidirectional, False if unidirectional. 
+
+    :EXAMPLE:
+        is_bidirectional(ict_net, ('link',2))
+    """
+    if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
+        return None
+    bw = get_bandwidth_Mbps(ict_net, link_elt)
+    return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  
+   
+def get_supported_protocols(ict_net, link_elt):       
+    """
+    Get protocols supported by a link
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **protocols** (list) - List of supported protocol types 
+
+    :EXAMPLE:
+        get_supported_protocols(ict_net, ('link',2))
+    """
     
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['protocols']  
+
+def get_bandwidth_Mbps(ict_net, link_elt):     
+    """
+    Get bandwidth of a link
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction 
+
+    :EXAMPLE:
+        get_bandwidth_Mbps(ict_net, ('link',2))
+    """  
+    
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
+
