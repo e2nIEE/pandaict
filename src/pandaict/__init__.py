@@ -1,4 +1,4 @@
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 from pandaict.create_empty_net import *
 from pandaict.create import *
 from pandaict.auxiliary import *
