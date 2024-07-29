@@ -57,7 +57,7 @@ def elt2uuid(ict_net, elt):
     """    
     uid = None
     try:
-        uid = ict_net[elt[0]].loc[elt[1]]['uuid']
+        uid = get_elt(ict_net,elt)['uuid']
         return uid
     except:
         return None
@@ -239,15 +239,11 @@ def get_links_between(ict_net, elt1, elt2):
     linklist = []
     for i, l in ict_net.link.iterrows():
         lfrom = l['from']
-        if isinstance(l['to'], list):
-            for lto in l['to']:
-                if (lfrom==elt1 and lto==elt2) or (lfrom==elt2 and lto==elt1):
-                    linklist += [i]
-                    break
-        else:                            
-            lto   = l['to'] 
-            if (lfrom==elt1 and lto==elt2) or (lfrom==elt2 and lto==elt1):
+        lto   = l['to'] if isinstance(l['to'],list) else [l['to']]
+        for eltto in lto:
+            if {lfrom, eltto}=={elt1, elt2}:
                 linklist += [i]
+                break        
         
     return linklist
 

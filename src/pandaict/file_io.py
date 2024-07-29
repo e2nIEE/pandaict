@@ -64,73 +64,97 @@ def __to_type(df, dfkey, totype, dflist=False):
                     elif s is not None:
                         df.at[i,dfkey] = totype(s)
     return df
-   
-        
-# def __convert_map_to(df):  
-#     if 'map_to' in df.keys():
-#             for i, s in enumerate(df["map_to"]):
-#                 if s is not None:
-#                     df.at[i,"map_to"] = tuple(s)
-#     return df
-                 
-def __json_node_to_df(df):
-        
-    df = __check_index_and_uuid(df)    
-    df = __to_type(df, 'type', NodeType)  
-    df = __to_type(df,'map_to', tuple)   
-    if 'geodata' in df.keys():
-        for i, s in enumerate(df["geodata"]):
-            if s is not None and not (isinstance(s, dict)):
-                df.at[i,"geodata"] = tuple(s)        
-
-    return df
-
-def __json_device_to_df(df):
-    
-    df = __check_index_and_uuid(df)    
-    df = __to_type(df, 'type', DeviceType)                 
-    
-    return df
-
-def __json_link_to_df(df):
-    
-    df = __check_index_and_uuid(df)       
-    df = __to_type(df, 'map_to', tuple)                            
-    df = __to_type(df, 'from', tuple)
-    df = __to_type(df, 'to', tuple, dflist=True)    
-                        
-    return df
-
-def __json_app_to_df(df):
-    
-    df = __check_index_and_uuid(df)  
-    df = __to_type(df, 'map_to', tuple)                    
-    df = __to_type(df, 'type', AppType)        
-    df = __to_type(df, 'conversions', tuple, dflist=True)
                     
+def __json_to_df(df, elt_type):
+    df = __check_index_and_uuid(df)
+    if elt_type in ["node","link","app"]:
+        df = __to_type(df,'map_to', tuple)        
+    if elt_type=="node":
+        df = __to_type(df, 'type', NodeType)          
+        if 'geodata' in df.keys():
+            for i, s in enumerate(df["geodata"]):
+                if s is not None and not (isinstance(s, dict)):
+                    df.at[i,"geodata"] = tuple(s)        
+    elif elt_type=="device":
+        df = __to_type(df, 'type', DeviceType)
+    elif elt_type=="link":                                
+        df = __to_type(df, 'from', tuple)
+        df = __to_type(df, 'to', tuple, dflist=True)
+    elif elt_type=="app":                        
+        df = __to_type(df, 'type', AppType)        
+        df = __to_type(df, 'conversions', tuple, dflist=True)
+    elif elt_type=="conn":
+        df = __to_type(df, 'peers', tuple)              
+        df = __to_type(df, 'info_items', InfoItem, dflist=True) 
+    elif elt_type=="std_type":
+        for pr in df['protocol'].keys():
+            if isinstance(df['protocol'][pr], dict):
+                df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
+                df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
+        for li in df['link'].keys():
+            if isinstance(df['link'][li], dict):          
+                df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
+    
     return df
 
-def __json_conn_to_df(df):
-    
-    df = __check_index_and_uuid(df)       
-    df = __to_type(df, 'peers', tuple)              
-    df = __to_type(df, 'info_items', InfoItem, dflist=True) 
-                
-    return df
-
-def __json_std_type_to_df(df):
-    
-    df = __check_index_and_uuid(df)       
-                
-    for pr in df['protocol'].keys():
-        if isinstance(df['protocol'][pr], dict):
-            df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
-            df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
-    for li in df['link'].keys():
-        if isinstance(df['link'][li], dict):          
-            df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})            
-                
-    return df
+# def __json_node_to_df(df):
+#
+#     df = __check_index_and_uuid(df)    
+#     df = __to_type(df, 'type', NodeType)  
+#     df = __to_type(df,'map_to', tuple)   
+#     if 'geodata' in df.keys():
+#         for i, s in enumerate(df["geodata"]):
+#             if s is not None and not (isinstance(s, dict)):
+#                 df.at[i,"geodata"] = tuple(s)        
+#
+#     return df
+#
+# def __json_device_to_df(df):
+#
+#     df = __check_index_and_uuid(df)    
+#     df = __to_type(df, 'type', DeviceType)                 
+#
+#     return df
+#
+# def __json_link_to_df(df):
+#
+#     df = __check_index_and_uuid(df)       
+#     df = __to_type(df, 'map_to', tuple)                            
+#     df = __to_type(df, 'from', tuple)
+#     df = __to_type(df, 'to', tuple, dflist=True)    
+#
+#     return df
+#
+# def __json_app_to_df(df):
+#
+#     df = __check_index_and_uuid(df)  
+#     df = __to_type(df, 'map_to', tuple)                    
+#     df = __to_type(df, 'type', AppType)        
+#     df = __to_type(df, 'conversions', tuple, dflist=True)
+#
+#     return df
+#
+# def __json_conn_to_df(df):
+#
+#     df = __check_index_and_uuid(df)       
+#     df = __to_type(df, 'peers', tuple)              
+#     df = __to_type(df, 'info_items', InfoItem, dflist=True) 
+#
+#     return df
+#
+# def __json_std_type_to_df(df):
+#
+#     df = __check_index_and_uuid(df)       
+#
+#     for pr in df['protocol'].keys():
+#         if isinstance(df['protocol'][pr], dict):
+#             df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
+#             df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
+#     for li in df['link'].keys():
+#         if isinstance(df['link'][li], dict):          
+#             df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})            
+#
+#     return df
 
 def to_json(ict_net, filename, save_std_types=False):
     """
@@ -202,12 +226,12 @@ def from_json(filename):
             if s not in connectors_installed:
                 pilogger.warning("Network file "+filename+" uses connector "+s+" which is currently not installed")
                 print("Warning: Network file "+filename+" uses connector "+s+" which is currently not installed")
-    ict_net.node       = __json_node_to_df(pd.DataFrame(jall["node"]))
-    ict_net.link       = __json_link_to_df(pd.DataFrame(jall["link"]))
-    ict_net.device     = __json_device_to_df(pd.DataFrame(jall["device"]))
-    ict_net.app        = __json_app_to_df(pd.DataFrame(jall["app"]))
-    ict_net.conn       = __json_conn_to_df(pd.DataFrame(jall["conn"]))
-    ict_net.std_types  = __json_std_type_to_df(pd.DataFrame(jall["std_type"])).to_dict()
+    ict_net.node       = __json_to_df(pd.DataFrame(jall["node"]),"node")
+    ict_net.link       = __json_to_df(pd.DataFrame(jall["link"]),"link")
+    ict_net.device     = __json_to_df(pd.DataFrame(jall["device"]),"device")
+    ict_net.app        = __json_to_df(pd.DataFrame(jall["app"]),"app")
+    ict_net.conn       = __json_to_df(pd.DataFrame(jall["conn"]),"conn")
+    ict_net.std_types  = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
 
     return ict_net
 

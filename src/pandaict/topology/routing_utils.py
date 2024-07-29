@@ -8,7 +8,7 @@ Created on 30.01.2024
 '''
 
 import networkx as nx
-from pandaict.utils.utils import is_bidirectional, get_supported_protocols
+from pandaict.utils.utils import is_bidirectional, get_supported_protocols, get_elt
 from pandaict.utils.enums import RoutingType
 
 import logging
@@ -24,6 +24,10 @@ def __get_nx_node_for_elt(mdg, elt):
         return node[0]
 
 
+def __log_debug_and_return_false(debugstr):
+    logger.debug(debugstr)
+    return False
+
 def __validate_multidigraph(ict_net, mdg, protocol=None):
     
     passed = True
@@ -35,21 +39,18 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
         pinode2  = mdg.nodes[nxnode2]['pielt']
         pilink   = nxedge[1][2]['pielt']
         if pilink[0] != 'link':
-            logger.debug("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
-            passed = False
+            passed = __log_debug_and_return_false("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")            
         else:
             pifrom = ict_net.link.iloc[pilink[1]]['from']
             pito = ict_net.link.iloc[pilink[1]]['to']                            
             
             if not((pinode1==pifrom and pinode2 in pito) or (is_bidirectional(ict_net, pilink) and pinode2==pifrom and pinode1 in pito)):
-                logger.debug("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
-                passed = False
+                passed = __log_debug_and_return_false("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")                
                 
             if protocol is not None:
                 if protocol not in get_supported_protocols(ict_net, pilink):
-                    logger.debug("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
-                                str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
-                    passed = False  
+                    passed = __log_debug_and_return_false("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
+                                str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))                    
         
     if not passed:        
         if logger.level != logging.DEBUG:
@@ -117,7 +118,7 @@ def __print_paths(ict_net, conn, paths):
         hops = ""
         for elt in p:
             if elt[0] in ['device','node']:
-                hops += ict_net[elt[0]].iloc[elt[1]]['name'] + "-"
+                hops += get_elt(ict_net,elt)['name'] + "-"
                         
         hops = hops[:-1]
         lhops += [hops]
@@ -136,11 +137,8 @@ def __get_possible_routes(ict_net, mdg, conn):
     # Fetch nynodes representing the devices
     n1 = __get_nx_node_for_elt(mdg, dev1)
     n2 = __get_nx_node_for_elt(mdg, dev2)
-    if (n1 is None):
-        logger.debug("__get_nx_node_for_elt failed for "+str(n1))
-        return None 
-    if (n2 is None):
-        logger.debug("__get_nx_node_for_elt failed for "+str(n2))
+    if (n1 is None or n2 is None):
+        logger.debug("__get_nx_node_for_elt failed for "+str(dev1) if n1 is None else str(dev2))
         return None
     
     # Calculate paths between nxnodes and translate back to pandaICT elt representation
