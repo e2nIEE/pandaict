@@ -18,7 +18,7 @@ if os.path.isfile(requirement_path):
 
 setuptools.setup(
     name="pandaict",
-    version="version="1.0.1"",
+    version="1.0.1preview",
     author="Jan Ringelstein",
     author_email="jan.ringelstein@iee.fraunhofer.de",
     description="Toolbox for ICT networks",
