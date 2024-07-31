@@ -57,29 +57,31 @@ def create_plot(net, draw_type='dev', custom_icons=None):
         
     """
     
-
-    G, edge_labels = __create_g__(custom_icons, draw_type, net)
-
-    ax, fig, pos = __init_networkx__(G, draw_type, edge_labels)
-
-    # Transform from data coordinates (scaled between xlim and ylim) to display coordinates
-    tr_figure = ax.transData.transform
-    # Transform from display to figure coordinates
-    tr_axes = fig.transFigure.inverted().transform
-
-    # Select the size of the image (relative to the X axis)
-    icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.02
-    icon_center = icon_size / 2.0
-
-    __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure)
-
-    # TODO: the opened image file seem to create a ResourceWarning... need to re-position file closing??
-    for gnode in G.nodes(data=True):
-        gnode[1]['image'].close()
+    try:
+        G, edge_labels = __create_g__(custom_icons, draw_type, net)
     
-    # plt.show()
-    return plt
-
+        ax, fig, pos = __init_networkx__(G, draw_type, edge_labels)
+    
+        # Transform from data coordinates (scaled between xlim and ylim) to display coordinates
+        tr_figure = ax.transData.transform
+        # Transform from display to figure coordinates
+        tr_axes = fig.transFigure.inverted().transform
+    
+        # Select the size of the image (relative to the X axis)
+        icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.02
+        icon_center = icon_size / 2.0
+    
+        __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure)
+    
+        # plt.show()
+        return plt
+    finally:
+        # TODO: the opened image file seem to create a ResourceWarning... need to re-position file closing??
+        for gnode in G.nodes(data=True):
+            gnode[1]['image'].close()
+        
+        
+        
 def __create_g__(custom_icons, draw_type, net):
     icons = __get_icons__(custom_icons)
 

@@ -62,6 +62,26 @@ def elt2uuid(ict_net, elt):
     except:
         return None
     
+def to_elt(ict_net, any_id):
+    """
+    Converts any id type into pandaict element identifier.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **any_id** ((str, int) tuple or UUID) - identifier of an element that exists in ict_net     
+                            
+    :OUTPUT:
+        **elt_id** ((str, int) tuple) - The element in pandapower element notation.  
+
+    :EXAMPLES:
+        to_elt(ict_net, ('device',2))
+        to_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
+    """ 
+    if isinstance(any_id, uuid.UUID): 
+        return uuid2elt(any_id)
+    else:
+        return any_id
     
 def check_all_uuid(ids, allow_list=True):
     """
@@ -85,6 +105,7 @@ def check_all_uuid(ids, allow_list=True):
             raise UserWarning("element must be uuid4")                    
     else:
         raise UserWarning("Element is None, must be uuid4")
+    
 def get_elt(ict_net, elt):
     """
     Fetch element by pandaict element identifier.
@@ -123,6 +144,7 @@ def get_elt_by_uuid(ict_net, uid):
     """
     return get_elt(ict_net, uuid2elt(ict_net, uid))
 
+
 def get_elts_any(ict_net, elt_ids, expected=None):           
     """
     Fetch single or multiple elements by any identifier.
@@ -141,7 +163,7 @@ def get_elts_any(ict_net, elt_ids, expected=None):
 
     :EXAMPLES:
         get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
-        get_elt(ict_net, ['device', 0], ['node, 3], expected=['device', 'node'])
+        get_elt(ict_net, [('device', 0), ('node, 3)], expected=['device', 'node'])
     """
     if isinstance(elt_ids, list):
         _elt_ids = elt_ids

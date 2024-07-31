@@ -11,6 +11,7 @@ import pandaict as pi
 from   pandaict.utils.utils import uuid2elt, elt2uuid
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType
 from   pandaict.topology.routing import *
+from   pandaict.topology.routing import calc_sorted_links_by_connection
 import pandas as pd
 import math
 import csv
@@ -289,6 +290,18 @@ class Core_Test():
         utest.assertEqual(link_bw, link_bw_cmp)
             
         return
+    
+    def test_sorted_link_calc(self, utest):
+    
+        ict_net = self.create_testnet3()
+        link_bw = {}
+        
+        (down_links, up_links) = calc_sorted_links_by_connection(ict_net, ('conn',0))
+              
+        
+            
+        return
+        
         
     
 if __name__ == '__main__':

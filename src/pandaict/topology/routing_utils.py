@@ -103,9 +103,9 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
         nxn1 = __get_nx_node_for_elt(mdg, from_elt)
         nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
         for n2 in nxn2:             
-            mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] or None)            
+            mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] if weight is not None else None)            
             if is_bidirectional(ict_net, ("link", i)):
-                mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] or None)    
+                mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] if weight is not None else None)    
                 
     if validate:
         __validate_multidigraph(ict_net, mdg, protocol)        
@@ -151,39 +151,6 @@ def __get_possible_routes(ict_net, mdg, conn):
         for nxnode in nxp:            
             p += [mdg.nodes[nxnode]['pielt']]
         paths += [p] 
-        
-    return paths
-
-
-def calc_routes_for_connection(ict_net, conn, verbose=False):
-    """
-        Calculates possible routes through the physical network for a given connection. 
-
-        :INPUT:
-            **ict_net** (dict) - The pandaict network
-            
-            **conn** (dataframe) - The connection element for which routes shall be calculated
-
-        :OPTIONAL:
-            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
-        
-        :OUTPUT: 
-            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
-                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
-                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
-                "hops" that information items using the connection can take.  
-        
-        :EXAMPLE:
-            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
-
-    """ 
-    # Create the nxgraph
-    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
-    
-    paths = __get_possible_routes(ict_net, mdg, conn)
-    
-    if verbose:            
-        __print_paths(ict_net, conn, paths)
         
     return paths
 
