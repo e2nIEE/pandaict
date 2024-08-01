@@ -10,7 +10,7 @@ Routing utilities
 .. _calc_routes_for_connection:
 .. autofunction:: pandaict.topology.routing.calc_routes_for_connection
 
-.. __calc_sorted_links_by_connection:
+.. _calc_sorted_links_by_connection:
 .. autofunction:: pandaict.topology.routing.calc_sorted_links_by_connection
 
 
