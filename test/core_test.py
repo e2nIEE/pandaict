@@ -8,8 +8,8 @@ Created on 8.03.2024
 '''
 import unittest
 import pandaict as pi
-from   pandaict.utils.utils import uuid2elt, elt2uuid
-from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType
+from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links
+from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
 import pandas as pd
@@ -296,8 +296,8 @@ class Core_Test():
         ict_net = self.create_testnet3()
         link_bw = {}
         
-        (down_links, up_links) = calc_sorted_links_by_connection(ict_net, ('conn',0))
-              
+        # (down_links, up_links) = calc_sorted_links_by_connection(ict_net, ('conn',0), order=SortType.BANDWIDTH)
+        values, vtype = get_values_for_links(ict_net, [('link',3),('link',4),('link',6)], 'ber')    
         
             
         return

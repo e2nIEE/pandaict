@@ -10,7 +10,7 @@ Created on 30.01.2024
 import pandas as pd
 import networkx as nx
 import uuid
-from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt
+from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
@@ -208,14 +208,14 @@ def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
     return link_bw
 
 
-def calc_routes_for_connection(ict_net, conn, verbose=False):
+def calc_routes_for_connection(ict_net, conn_elt, verbose=False):
     """
         Calculates possible routes through the physical network for a given connection. 
 
         :INPUT:
             **ict_net** (dict) - The pandaict network
             
-            **conn** (dataframe) - The connection element for which routes shall be calculated
+            **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
 
         :OPTIONAL:
             **verbose** (boolean, default False) - If True, prints additional information about found paths. 
@@ -231,6 +231,7 @@ def calc_routes_for_connection(ict_net, conn, verbose=False):
 
     """ 
     # Create the nxgraph
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
     mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
     
     paths = __get_possible_routes(ict_net, mdg, conn)
@@ -239,9 +240,11 @@ def calc_routes_for_connection(ict_net, conn, verbose=False):
         __print_paths(ict_net, conn, paths)
         
     return paths
+            
 
-def calc_sorted_links_by_connection(ict_net, conn, routing_type=RoutingType.LOWEST_TOTAL_LATENCY, 
-                                    order=SortType.LATENCY, verbose=False):
+
+def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.LOWEST_TOTAL_LATENCY, 
+                                    order=SortType.LATENCY, ascending=True):
     """
         Calculates sorted lists of links used by a connection applying a specific routing type.
         There are different options for the sorting order. 
@@ -252,14 +255,15 @@ def calc_sorted_links_by_connection(ict_net, conn, routing_type=RoutingType.LOWE
         :INPUT:
             **ict_net** (dict) - The pandaict network
             
-            **conn** (dataframe) - The connection element for which the lists shall be calculated
+            **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
             
             **routing_type** (RoutingType) - The routing type to be used. Default: LOWEST_TOTAL_LATENCY
             
-            **order** (SortType) - The order in which links are sorted. Default: LATENCY                    
+            **order** (SortType) - Defines which value the links are sorted by. Default: LATENCY                                 
 
         :OPTIONAL:
-            **verbose** (boolean, default False) - If True, prints additional information. 
+            
+            **ascending** (boolean) - Links are sorted in ascending value order if True, descending if False.       
         
         :OUTPUT: 
             **(down_links, up_links)** (tuple of list of dict) - Sorted Links for downstream and upstream connection. 
@@ -270,15 +274,40 @@ def calc_sorted_links_by_connection(ict_net, conn, routing_type=RoutingType.LOWE
             calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])            
 
     """
-    down_links = [{}]
-    up_links = [{}]
-    # Example entry: {"Route": 0, "Probability": 1, "Links": [1,0,4], "Values": [100,300,350]}
+    down_links = []
+    up_links = []
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
+    # Example entry: {"route": 0, "probability": 1, "links": [{'link': 1, 'downstream": True}, {'link': 4, 'downstream": False}], "values": [100,300]}    
     
-    
-    lup_table = calc_lup_table(ict_net, to_elt(ict_net, conn), routing_type)
+    lup_table = calc_lup_table(ict_net, conn_elt, routing_type)
+    for i,r in enumerate(lup_table):
+        if not r['delivering']: 
+            continue 
+        
+        links = r['links']
+        if order==SortType.USAGE: # keep link order in which info items traverse the network  
+            values = range(1, len(links))
+            vtype = 'usage'
+        else:
+            values,vtype = _get_values_for_links(ict_net, [('link', i['link']) for i in links], order)
+            # filter values by link usage direction
+            for vi,v in enumerate(values):
+                if not isinstance(v,tuple):
+                    continue
+                values[vi] = v[0] if links[vi]['downstream'] else v[1]
+                
+        links = [l[1] for l in sorted(zip(values,links), key=lambda pair: pair[0], reverse = not ascending)] # this sorts links according to values in ascending order
+        values = sorted(values, reverse = not ascending) 
+        newentry = [{'route': i, 'probability': r['probability'], 'links': links, 'values': values, 'valuetype': vtype}]
+        if r['downstream']:
+            down_links += newentry 
+        else:
+            up_links += newentry
+            
+    return (down_links, up_links)
 
 
-
+            
 # UNFINISHED / UNTESTED (RJ)
 # def _get_total_volume_conn(conn, downstream, timespan_hours):
 #
