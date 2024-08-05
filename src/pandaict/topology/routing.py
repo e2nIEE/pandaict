@@ -289,7 +289,7 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
             values = range(1, len(links))
             vtype = 'usage'
         else:
-            values,vtype = _get_values_for_links(ict_net, [('link', i['link']) for i in links], order)
+            values,vtype = get_values_for_links(ict_net, [('link', i['link']) for i in links], order)
             # filter values by link usage direction
             for vi,v in enumerate(values):
                 if not isinstance(v,tuple):

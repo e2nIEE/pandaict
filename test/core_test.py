@@ -296,9 +296,42 @@ class Core_Test():
         ict_net = self.create_testnet3()
         link_bw = {}
         
-        # (down_links, up_links) = calc_sorted_links_by_connection(ict_net, ('conn',0), order=SortType.BANDWIDTH)
-        values, vtype = get_values_for_links(ict_net, [('link',3),('link',4),('link',6)], 'ber')    
+        # testing value fetching
+        values, vtype = get_values_for_links(ict_net, [('link',3),('link',4),('link',5),('link',6),('link',10)], 'ber')
+        utest.assertEqual(values, [0.0, 0.0, 0.0, 0.0, 0.0])
+        utest.assertEqual(vtype, 'bit_error_rate')
+        values, vtype = get_values_for_links(ict_net, [('link',0),('link',2),('link',8),('link',9)], 'bandwidth')
+        utest.assertEqual(values, [(1000, 1000), (1000, 1000), (8, 1), (1000, 1000)])
+        utest.assertEqual(vtype, 'bandwidth_Mbps')
+        values, vtype = get_values_for_links(ict_net, [('link',1),('link',7),('link',9),('link',11)], 'latency')
+        utest.assertEqual(values, [100, (200, 300), 100, (300, 300)])
+        utest.assertEqual(vtype, 'latency_ms')
+        values, vtype = get_values_for_links(ict_net, ('link',10), 'bandwidth')
+        utest.assertEqual(values, [(50, 10)])
+        utest.assertEqual(vtype, 'bandwidth_Mbps')
         
+        # testing sorted link fetching
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',0))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 1, 'downstream': True}, {'link': 0, 'downstream': False}, {'link': 8, 'downstream': True}], 
+                                         'values': [100, 100, 200], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 0, 'downstream': True}, {'link': 1, 'downstream': False}, {'link': 8, 'downstream': False}], 
+                                       'values': [100, 100, 300], 'valuetype': 'latency_ms'}])
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',1))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 1, 'downstream': True}, {'link': 10, 'downstream': True}, {'link': 3, 'downstream': False}], 
+                                         'values': [100, 100, 100], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 3, 'downstream': True}, {'link': 1, 'downstream': False}, {'link': 10, 'downstream': False}], 
+                                       'values': [100, 100, 200], 'valuetype': 'latency_ms'}])
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',2))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 0, 'downstream': True}, {'link': 3, 'downstream': False}, {'link': 4, 'downstream': False}, {'link': 7, 'downstream': True}], 
+                                         'values': [100, 100, 200, 200], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 3, 'downstream': True}, {'link': 4, 'downstream': True}, {'link': 0, 'downstream': False}, {'link': 7, 'downstream': False}], 
+                                       'values': [100, 100, 100, 300], 'valuetype': 'latency_ms'}])
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',3))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 2, 'downstream': True}, {'link': 3, 'downstream': False}, {'link': 11, 'downstream': True}], 
+                                         'values': [100, 100, 300], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 3, 'downstream': True}, {'link': 2, 'downstream': False}, {'link': 11, 'downstream': False}], 
+                                       'values': [100, 100, 300], 'valuetype': 'latency_ms'}])
+
             
         return
         
