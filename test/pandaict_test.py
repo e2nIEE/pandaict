@@ -33,9 +33,12 @@ class PandaICT_Test(unittest.TestCase):
     
     def test_lup_table_calc(self):
         self.core_tester.test_lup_table_calc(self)  
-        
+    
     def test_sorted_link_calc(self):    
         self.core_tester.test_sorted_link_calc(self)  
+        
+    def test_mtbf_mttr_calc(self):    
+        self.core_tester.test_mtbf_mttr_calc(self)
         
     # ******* Plotting tests ********
     

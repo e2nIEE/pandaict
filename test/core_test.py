@@ -12,6 +12,7 @@ from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
+from   pandaict.reliability.mtbr_mttf import calc_MTBF_route, calc_MTBF_MTTR_route, calc_MTBF_MTTR_by_lup
 import pandas as pd
 import math
 import csv
@@ -99,11 +100,11 @@ class Core_Test():
     def create_testnet3(self):
         ict_net3   = pi.create_empty_network("Test network 3",True) 
         
-        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","LTE50"])
-        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"])
-        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","RS485"])
-        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"])
-        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"])
+        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","LTE50"], mtbf_h=2000, mttr_h=2)
+        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"], mtbf_h=1000, mttr_h=1)
+        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","RS485"], mtbf_h=3000, mttr_h=3)
+        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"], mtbf_h=2500, mttr_h=1.5)
+        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"], mtbf_h=1500, mttr_h=2.5)
         
         d1         = pi.create_ict_device(ict_net3, name="D1", device_type=pi.DeviceType.SERVER)
         a1a        = pi.create_ict_app(ict_net3, name="A1a", device=d1, app_type=pi.AppType.CLIENT)
@@ -335,8 +336,42 @@ class Core_Test():
             
         return
         
+    def test_mtbf_mttr_calc(self, utest):  
+        ict_net = self.create_testnet3()
         
-    
+        # single route testing
+        for i, _ in ict_net['conn'].iterrows():
+            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)            
+            
+            # downstream direction
+            links_d = [('link', l['link']) for l in lup_table.get_route(0)['links']]
+            (MTBF_d, MTTR_d) = calc_MTBF_MTTR_route(ict_net, links_d)
+            MTBF_d2 = calc_MTBF_route(ict_net, links_d)                
+            # upstream direction
+            links_u = [('link', l['link']) for l in lup_table.get_route(1)['links']]
+            (MTBF_u, MTTR_u) = calc_MTBF_MTTR_route(ict_net, links_u)
+            MTBF_u2 = calc_MTBF_route(ict_net, links_u)                                        
+            
+            utest.assertAlmostEqual(MTBF_d, MTBF_d2, delta=0.00001) # MTBF calculated by different methods must be equal
+            utest.assertAlmostEqual(MTBF_u, MTBF_u2, delta=0.00001)
+            if (set(links_u)==set(links_d)):
+                utest.assertAlmostEqual(MTBF_d, MTBF_u, delta=0.00001)  # MTTR for down- and upstream must be equal
+                utest.assertAlmostEqual(MTBF_d2, MTBF_u2, delta=0.00001)  # MTTR for down- and upstream must be equal
+                utest.assertAlmostEqual(MTTR_d, MTTR_u, delta=0.00001)  # MTTR for down- and upstream must be equal
+
+        # connection level testing
+        expected = [74.074, 1.704, 119.048, 2.095, 53.860, 2.061, 78.534, 1.775]
+        calculated = []
+        for i, _ in ict_net['conn'].iterrows():
+            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY) 
+            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)            
+            calculated += [MTBF_conn, MTTR_conn]
+        
+        utest.assertEqual(len(expected), len(calculated))
+        for i in range(0,len(expected)):
+            utest.assertAlmostEqual(expected[i], calculated[i], delta=0.001)
+        return 
+
 if __name__ == '__main__':
         
     bt = Core_Test()

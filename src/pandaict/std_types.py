@@ -101,8 +101,8 @@ def __local_area_linktypes():
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "mtbf_h": 1000,
+              "mttr_h": 1,
               "uuid": uuid.UUID("4d5b388f-ce1c-407e-81c6-5caa23f1832b"),
             }
         }
@@ -115,8 +115,8 @@ def __wide_area_linktypes():
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "mtbf_h": 200,
+              "mttr_h": 1,
               "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
             },
         "UMTS": 
@@ -125,8 +125,8 @@ def __wide_area_linktypes():
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "mtbf_h": 100,
+              "mttr_h": 1,
               "uuid": uuid.UUID("ed41d4c0-64d2-452d-586a-7c937e259c5b"),
             },                
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
@@ -135,8 +135,8 @@ def __wide_area_linktypes():
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "mtbf_h": 100,
+              "mttr_h": 1,
               "uuid": uuid.UUID("6dd01923-0bce-4f07-8ef0-65a0f214d2cf"),
             },
         "Fiber": # Glass fiber
@@ -145,8 +145,8 @@ def __wide_area_linktypes():
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "mtbf_h": 1000,
+              "mttr_h": 10,
               "uuid": uuid.UUID("eebc167b-b816-468f-bb9a-5e75c7ccd79b"),
             }
         }
