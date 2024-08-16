@@ -13,6 +13,7 @@ from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, Rout
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
 from   pandaict.reliability.mtbr_mttf import calc_MTBF_route, calc_MTBF_MTTR_route, calc_MTBF_MTTR_by_lup
+from   pandaict.std_types import create_std_type
 import pandas as pd
 import math
 import csv
@@ -371,6 +372,56 @@ class Core_Test():
         for i in range(0,len(expected)):
             utest.assertAlmostEqual(expected[i], calculated[i], delta=0.001)
         return 
+    
+    
+    def test_custom_type_creation(self, utest):
+        
+        ict_net = self.create_testnet1()
+        custom_link = { # 10BASE2, old 10 Mbps LAN
+            "bandwidth_Mbps": (10, 10),
+            "latency_ms": 300,
+            "wired": True,
+            "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP', 'SFTP'],
+            "ber_per_km": 0.001,
+            "mtbf_h": 500,
+            "mttr_h": 1,
+            "uuid": uuid.uuid4()     
+        }
+        
+        custom_protocol = { # SFTP       
+            "base_package_size_byte": 500,
+            "info_items":
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE,
+                  InfoItem.CERTIFICATE,
+                  InfoItem.FILE,                                    
+                ], 
+            "uuid": uuid.uuid4()      
+        }
+        
+        create_std_type(ict_net, custom_link, "10BASE2", element="link")
+        create_std_type(ict_net, custom_protocol, "SFTP", element="protocol")
+        
+        ict_net.link.at[0,"type"] = "10BASE2"
+        ict_net.link.at[1,"type"] = "10BASE2"
+        ict_net.link.at[5,"type"] = "10BASE2"        
+        ict_net.node.at[0,"link_types"] += ["10BASE2"]
+        ict_net.node.at[1,"link_types"] += ["10BASE2"]
+        ict_net.conn.at[2,"protocol"] = "SFTP"
+        
+        
+        utest.assertEqual(ict_net.std_types['link']['10BASE2'],  custom_link)
+        utest.assertEqual(ict_net.std_types['protocol']['SFTP'],  custom_protocol)
+        
+        # test save/load
+        pi.to_json(ict_net, 'dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('dummy.json')    
+        utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net_reloaded))
+        
+        # test path calculation for conn 2
+        proutes = calc_routes_for_connection(ict_net, ('conn',2))
+        utest.assertEqual(proutes, [[('device', 3), ('node', 0), ('node', 1), ('device', 4)]])
+        return
 
 if __name__ == '__main__':
         

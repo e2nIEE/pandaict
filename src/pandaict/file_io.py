@@ -45,8 +45,9 @@ def __check_index_and_uuid(df):
     
     if "uuid" in df.keys():
         for i, s in enumerate(df["uuid"]):
-            df.at[i,"uuid"] = uuid.UUID(s)
-    
+            if s is not None:
+                df.at[i,"uuid"] = uuid.UUID(s)
+            
     return df
        
        

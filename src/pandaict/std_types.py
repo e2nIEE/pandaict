@@ -21,16 +21,15 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
         - bandwidth_Mbps, latency_ms, wired (for links)
         - info_items (for protocols)
         
-    additional parameters can be added and later loaded into pandaict with the function
-    "parameter_from_std_type".
-
     The standard type is saved into the pandaict dict of the given network by default.
 
     :INPUT:
-        **ict_net** - The pandaict network
-        **data** - dictionary of standard type parameters
-        **name** - name of the standard type as string
-        **element** - "link"
+        **ict_net** (pandaictNet) - The pandaict network
+        **data** (dict) - dictionary of standard type parameters (without the name)
+        **name** (string) - name of the standard type as string
+        **element** (string, default "link" - Element type, may be "link" or "protocol"
+        **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
+        **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
     
     """
 
@@ -60,9 +59,11 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
     Creates multiple standard types in the type dict.
 
     :INPUT:
-        **ict_net** - The pandaict network
-        **data**    - dictionary of standard type parameter sets
-        **element** - "link"
+        **ict_net** (pandaictNet) - The pandaict network
+        **data** (dict) - dictionary of standard type parameters (including type names)
+        **element** (string, default "link" - Element type, may be "link" or "protocol"
+        **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
+        **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
 
     """
     for name, typdata in data.items():

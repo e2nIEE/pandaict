@@ -36,10 +36,13 @@ class PandaICT_Test(unittest.TestCase):
     
     def test_sorted_link_calc(self):    
         self.core_tester.test_sorted_link_calc(self)  
-        
+    
     def test_mtbf_mttr_calc(self):    
         self.core_tester.test_mtbf_mttr_calc(self)
         
+    def test_custom_type_creation(self):    
+         self.core_tester.test_custom_type_creation(self)
+    
     # ******* Plotting tests ********
     
     def test_plot_dev(self):  
@@ -53,7 +56,8 @@ class PandaICT_Test(unittest.TestCase):
     
     def test_graph_app(self):  
         self.plot_tester.test_plot_dev(self)      
-          
+    
+
 
 if __name__ == '__main__':
     unittest.main()
