@@ -12,7 +12,6 @@ from pandaict.utils.utils import is_bidirectional, get_supported_protocols, get_
 from pandaict.utils.enums import RoutingType
 
 import logging
-from deepdiff.helper import convert_item_or_items_into_compiled_regexes_else_none
 logger = logging.getLogger("pandaICT_Core")
 
 def __get_nx_node_for_elt(mdg, elt):
