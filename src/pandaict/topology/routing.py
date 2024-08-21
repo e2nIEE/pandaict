@@ -11,7 +11,7 @@ import pandas as pd
 import networkx as nx
 import uuid
 from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links
-from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __print_paths
+from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
 
@@ -218,16 +218,16 @@ def calc_routes_for_connection(ict_net, conn_elt, verbose=False):
             **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
 
         :OPTIONAL:
-            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
+            **verbose** (boolean, default False) - If True, prints found paths to the console. 
         
         :OUTPUT: 
-            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
-                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
-                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
-                "hops" that information items using the connection can take.  
+            **routes** (list of dict) - This list contains all possible paths through the network. Each list element represents a path \
+                in form of a dict with two keys: "direction" and "path". The value for "direction" can be "downstream", "upstream" or "bidirectional", \
+                representing the direction the path can be taken as seen from connection level. The value for "path" is a list with pandaict devices or nodes \
+                in pandaict element notation, representing the "hops" of a single path.  
         
         :EXAMPLE:
-            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
+            calc_routes_for_connection(ict_net, ('conn', 2))
 
     """ 
     # Create the nxgraph
@@ -271,7 +271,7 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
                 the usage probability. Also, the lists contain the values that the links were sorted by. 
         
         :EXAMPLE:
-            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])            
+            calc_routes_for_connection(ict_net, ('conn',0))            
 
     """
     down_links = []
@@ -305,3 +305,30 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
             up_links += newentry
             
     return (down_links, up_links)
+
+
+def is_connection_possible(ict_net, conn_elt):
+    """
+        Calculates if there is at least one route for a connection, individually for down-/upstream
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
+        
+        :OUTPUT: 
+            **(down, up)** ((boolean, boolean)) - Indicates if connection in either direction available. True if this is the case, False else.   
+        
+        :EXAMPLE:
+            is_connection_possible(ict_net, ('conn',0))
+
+    """ 
+    # Create the nxgraph
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    
+    n1, n2 = __get_end_nxnodes_for_conn(ict_net, mdg, conn)
+    down = nx.has_path(mdg, n1, n2)
+    up =   nx.has_path(mdg, n2, n1)    
+        
+    return (down, up)

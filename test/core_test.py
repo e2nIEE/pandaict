@@ -374,11 +374,9 @@ class Core_Test():
         return 
     
     
-    def test_custom_type_creation(self, utest):
-        
-        ict_net = self.create_testnet1()
-        custom_link = { # 10BASE2, old 10 Mbps LAN
-            "bandwidth_Mbps": (10, 10),
+    def __get_custom_link_protocol_types(self):
+        custom_link = { # 10BASE2 unidirectional (not too realistic, just for testing)
+            "bandwidth_Mbps": 10,
             "latency_ms": 300,
             "wired": True,
             "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP', 'SFTP'],
@@ -399,18 +397,31 @@ class Core_Test():
             "uuid": uuid.uuid4()      
         }
         
-        create_std_type(ict_net, custom_link, "10BASE2", element="link")
+        return custom_link, custom_protocol
+    
+    def __create_testnet3mod_with_custom_types(self):
+        
+        ict_net = self.create_testnet3()
+        
+        custom_link, custom_protocol = self.__get_custom_link_protocol_types()
+        create_std_type(ict_net, custom_link, "10BASE2_oneway", element="link")
         create_std_type(ict_net, custom_protocol, "SFTP", element="protocol")
         
-        ict_net.link.at[0,"type"] = "10BASE2"
-        ict_net.link.at[1,"type"] = "10BASE2"
-        ict_net.link.at[5,"type"] = "10BASE2"        
-        ict_net.node.at[0,"link_types"] += ["10BASE2"]
-        ict_net.node.at[1,"link_types"] += ["10BASE2"]
-        ict_net.conn.at[2,"protocol"] = "SFTP"
+        ict_net.link.at[4,"type"] = "10BASE2_oneway"
+        ict_net.link.at[9,"type"] = "10BASE2_oneway"
+        ict_net.link.at[11,"type"] = "10BASE2_oneway"        
+        ict_net.node.at[0,"link_types"] += ["10BASE2_oneway"]
+        ict_net.node.at[1,"link_types"] += ["10BASE2_oneway"]
+        ict_net.node.at[2,"link_types"] += ["10BASE2_oneway"]
+        ict_net.conn.at[2,"protocol"] = "TCP"
+    
+        return ict_net, custom_link, custom_protocol
+    
+    def test_custom_type_creation(self, utest):
         
+        ict_net, custom_link, custom_protocol = self.__create_testnet3mod_with_custom_types()            
         
-        utest.assertEqual(ict_net.std_types['link']['10BASE2'],  custom_link)
+        utest.assertEqual(ict_net.std_types['link']['10BASE2_oneway'],  custom_link)
         utest.assertEqual(ict_net.std_types['protocol']['SFTP'],  custom_protocol)
         
         # test save/load
@@ -419,9 +430,32 @@ class Core_Test():
         utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net_reloaded))
         
         # test path calculation for conn 2
-        proutes = calc_routes_for_connection(ict_net, ('conn',2))
-        utest.assertEqual(proutes, [[('device', 3), ('node', 0), ('node', 1), ('device', 4)]])
+        proutes = calc_routes_for_connection(ict_net, ('conn',2), verbose=False)
+        utest.assertEqual(proutes, [{'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 1), ('node', 4), ('node', 2), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'bidirectional', 'path': [('device', 0), ('node', 0), ('node', 1), ('node', 4), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'bidirectional', 'path': [('device', 0), ('node', 0), ('node', 1), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 2), ('node', 4), ('node', 1), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 2), ('node', 4), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 2), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'upstream', 'path': [('device', 3), ('node', 3), ('node', 4), ('node', 0), ('device', 0)]}, 
+                                    {'direction': 'upstream', 'path': [('device', 3), ('node', 3), ('node', 1), ('node', 4), ('node', 0), ('device', 0)]}])
         return
+    
+    def test_is_connection_possible(self, utest):
+        ict_net, _, _ = self.__create_testnet3mod_with_custom_types()  
+        
+        # Remove central node and direct bidir link between N2-N4
+        ict_net.node.at[4,'in_service']  = False
+        ict_net.link.at[10,'in_service'] = False
+        
+        (down1, up1) = is_connection_possible(ict_net, ('conn',0)) 
+        (down2, up2) = is_connection_possible(ict_net, ('conn',1)) 
+        (down3, up3) = is_connection_possible(ict_net, ('conn',2)) 
+        (down4, up4) = is_connection_possible(ict_net, ('conn',3))
+        
+        utest.assertTrue( (down1, up1)==(True,True) and (down2, up2)==(True,False) and (down3, up3)==(True,False) and (down4, up4)==(True,False) ) 
+        
+        return 
 
 if __name__ == '__main__':
         

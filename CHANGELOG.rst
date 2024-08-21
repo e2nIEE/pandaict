@@ -11,3 +11,8 @@ Change Log
 - [ADDED] Standard reference example
 - [ADDED] Jupyter notebook and Sphinx documentation 
 
+
+[1.1.0] - planned
+-------------------------------
+- [ADDED] Calculation functions, cp. issues
+- [FIXED] Load to json bug that caused wrong format for connection peers in loaded networks

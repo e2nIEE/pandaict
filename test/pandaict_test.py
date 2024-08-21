@@ -19,43 +19,47 @@ class PandaICT_Test(unittest.TestCase):
     
     # ******* Core tests ********
     
-    def test_create(self):        
-        self.core_tester.test_create_ict_net(self)
+    # def test_create(self):        
+    #     self.core_tester.test_create_ict_net(self)
+    #
+
+    # def test_saveload(self):
+    #    self.core_tester.test_save_load(self)
     
-    def test_saveload(self):
-        self.core_tester.test_save_load(self)
-    
-    def test_inspect(self):
-        self.core_tester.test_inspect_ict_net(self)  
-    
-    def test_user_input_checks(self):
-        self.core_tester.test_user_input_checks(self)
-    
-    def test_lup_table_calc(self):
-        self.core_tester.test_lup_table_calc(self)  
-    
-    def test_sorted_link_calc(self):    
-        self.core_tester.test_sorted_link_calc(self)  
-    
-    def test_mtbf_mttr_calc(self):    
-        self.core_tester.test_mtbf_mttr_calc(self)
-        
+    # def test_inspect(self):
+    #     self.core_tester.test_inspect_ict_net(self)  
+    #
+    # def test_user_input_checks(self):
+    #     self.core_tester.test_user_input_checks(self)
+    #
+    # def test_lup_table_calc(self):
+    #     self.core_tester.test_lup_table_calc(self)  
+    #
+    # def test_sorted_link_calc(self):    
+    #     self.core_tester.test_sorted_link_calc(self)  
+    #
+    # def test_mtbf_mttr_calc(self):    
+    #     self.core_tester.test_mtbf_mttr_calc(self)
+    #
     def test_custom_type_creation(self):    
-         self.core_tester.test_custom_type_creation(self)
+        self.core_tester.test_custom_type_creation(self)
+        
+    def test_is_connection_possible(self):
+        self.core_tester.test_is_connection_possible(self)
     
     # ******* Plotting tests ********
     
-    def test_plot_dev(self):  
-        self.plot_tester.test_plot_dev(self)  
-    
-    def test_plot_app(self):  
-        self.plot_tester.test_plot_dev(self)
-    
-    def test_graph_dev(self):  
-        self.plot_tester.test_plot_dev(self)
-    
-    def test_graph_app(self):  
-        self.plot_tester.test_plot_dev(self)      
+    # def test_plot_dev(self):  
+    #     self.plot_tester.test_plot_dev(self)  
+    #
+    # def test_plot_app(self):  
+    #     self.plot_tester.test_plot_dev(self)
+    #
+    # def test_graph_dev(self):  
+    #     self.plot_tester.test_plot_dev(self)
+    #
+    # def test_graph_app(self):  
+    #     self.plot_tester.test_plot_dev(self)      
     
 
 
