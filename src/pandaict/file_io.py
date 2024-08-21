@@ -45,22 +45,25 @@ def __check_index_and_uuid(df):
     
     if "uuid" in df.keys():
         for i, s in enumerate(df["uuid"]):
-            df.at[i,"uuid"] = uuid.UUID(s)
-    
+            if s is not None:
+                df.at[i,"uuid"] = uuid.UUID(s)
+            
     return df
        
        
-def __to_type(df, dfkey, totype, dflist=False):
+def __to_type(df, dfkey, totype, dflist=""):
     if dfkey in df.keys():
             for i, s in enumerate(df[dfkey]):
                 if s is not None:
                     if isinstance(s, dict):
                         s = s.get('value', None) # for aenums
-                    if s is not None and dflist:
+                    if s is not None and (dflist=="list" or dflist=="tuple"):
                         if isinstance(s[0], dict):                                                    
                             df.at[i,dfkey] = [totype(e.get('value',None)) for e in s]  # for aenums
-                        else:
+                        elif dflist=="list":
                             df.at[i,dfkey] = [totype(e) for e in s]                        
+                        else:
+                            df.at[i,dfkey] = tuple([totype(e) for e in s])
                     elif s is not None:
                         df.at[i,dfkey] = totype(s)
     return df
@@ -79,13 +82,13 @@ def __json_to_df(df, elt_type):
         df = __to_type(df, 'type', DeviceType)
     elif elt_type=="link":                                
         df = __to_type(df, 'from', tuple)
-        df = __to_type(df, 'to', tuple, dflist=True)
+        df = __to_type(df, 'to', tuple, dflist="list")
     elif elt_type=="app":                        
         df = __to_type(df, 'type', AppType)        
-        df = __to_type(df, 'conversions', tuple, dflist=True)
+        df = __to_type(df, 'conversions', tuple, dflist="list")     
     elif elt_type=="conn":
-        df = __to_type(df, 'peers', tuple)              
-        df = __to_type(df, 'info_items', InfoItem, dflist=True) 
+        df = __to_type(df, 'peers', tuple, dflist="tuple")              
+        df = __to_type(df, 'info_items', InfoItem, dflist="list")       
     elif elt_type=="std_type":
         for pr in df['protocol'].keys():
             if isinstance(df['protocol'][pr], dict):
@@ -96,65 +99,6 @@ def __json_to_df(df, elt_type):
                 df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
     
     return df
-
-# def __json_node_to_df(df):
-#
-#     df = __check_index_and_uuid(df)    
-#     df = __to_type(df, 'type', NodeType)  
-#     df = __to_type(df,'map_to', tuple)   
-#     if 'geodata' in df.keys():
-#         for i, s in enumerate(df["geodata"]):
-#             if s is not None and not (isinstance(s, dict)):
-#                 df.at[i,"geodata"] = tuple(s)        
-#
-#     return df
-#
-# def __json_device_to_df(df):
-#
-#     df = __check_index_and_uuid(df)    
-#     df = __to_type(df, 'type', DeviceType)                 
-#
-#     return df
-#
-# def __json_link_to_df(df):
-#
-#     df = __check_index_and_uuid(df)       
-#     df = __to_type(df, 'map_to', tuple)                            
-#     df = __to_type(df, 'from', tuple)
-#     df = __to_type(df, 'to', tuple, dflist=True)    
-#
-#     return df
-#
-# def __json_app_to_df(df):
-#
-#     df = __check_index_and_uuid(df)  
-#     df = __to_type(df, 'map_to', tuple)                    
-#     df = __to_type(df, 'type', AppType)        
-#     df = __to_type(df, 'conversions', tuple, dflist=True)
-#
-#     return df
-#
-# def __json_conn_to_df(df):
-#
-#     df = __check_index_and_uuid(df)       
-#     df = __to_type(df, 'peers', tuple)              
-#     df = __to_type(df, 'info_items', InfoItem, dflist=True) 
-#
-#     return df
-#
-# def __json_std_type_to_df(df):
-#
-#     df = __check_index_and_uuid(df)       
-#
-#     for pr in df['protocol'].keys():
-#         if isinstance(df['protocol'][pr], dict):
-#             df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
-#             df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
-#     for li in df['link'].keys():
-#         if isinstance(df['link'][li], dict):          
-#             df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})            
-#
-#     return df
 
 def to_json(ict_net, filename, save_std_types=False):
     """

@@ -9,6 +9,8 @@ Created on 8.02.2024
 
 import numpy as np 
 import uuid
+from pandaict.pilogger import pilogger
+
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
@@ -269,6 +271,66 @@ def get_links_between(ict_net, elt1, elt2):
         
     return linklist
 
+def get_values_for_links(ict_net, link_elts, valuetype):
+    """
+    Fetches parameters for links in a list. 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elts** (tuple or list of (str,int) tuples) - single link or List of links, in pandaict element notation. \
+            Note: if the given element or one of the list elements is not a link, a warning is logged and a None is inserted into the return values. 
+        
+        **valuetype** (SortOrder or str) - The type of parameter to be fetched. Possible: any SortOrder aenum value, or one of \
+            ['latency','bandwidth','bit_error_rate','mtbf','mttr', 'length']. \
+            Note: if bit_error_rate is used, total bit error rates (link length * ber_per_km) are returned. 
+                            
+    :OUTPUT:
+        **values** (list) - List of values of the requested type. These may be single int or float values, or tuples. If tuples, \
+            the first element is valid for the link downstream direction, the second element upstream. \
+            Note: this can *not* be used to determine if a link is bidirectional. Use is_bidirectional for this.    
+
+        **vtype** (str) - denominator of value type that is returned. 
+        
+    :EXAMPLE:
+        get_values_for_links(ict_net, [('link',2), ('link', 5)], 'bandwidth')
+    """
+    
+    values = []
+    if not isinstance(link_elts, list):
+        link_elts = [link_elts]
+    for l in link_elts:
+        if l[0] != 'link':
+            values += [None]
+            pilogger.warn("link_elts contains an element which is not a link")
+            continue                 
+        ltype = ict_net.std_types['link'][ict_net.link.iloc[l[1]]['type']]
+        vtype = None
+        
+        if ('latency' in str(valuetype).casefold()):            
+            vtype = 'latency_ms' 
+        elif ('bandwidth' in str(valuetype).casefold()):
+            vtype = 'bandwidth_Mbps'
+        elif ('mtbf' in str(valuetype).casefold()):
+            vtype = 'mtbf_h' 
+        elif ('mttr' in str(valuetype).casefold()):
+            vtype = 'mttr_h'
+        
+        if vtype is not None: 
+            values += [ltype[vtype]]
+        elif ('length' in str(valuetype).casefold()):
+            vtype = 'length_km'
+            values += [ict_net.link.iloc[l[1]]['length_km']]
+        elif ('bit_error_rate' in str(valuetype).casefold() or 'ber' in str(valuetype).casefold()):
+            length = ict_net.link.iloc[l[1]]['length_km']
+            if length is None: 
+                values += [None]
+            else:
+                vtype = 'bit_error_rate' 
+                values += [ltype['ber_per_km']*length]                        
+            
+    return values, vtype    
+
 def is_bidirectional(ict_net, link_elt):
     """
     Check if a link is bidirectional
@@ -287,7 +349,7 @@ def is_bidirectional(ict_net, link_elt):
     if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
         return None
     bw = get_bandwidth_Mbps(ict_net, link_elt)
-    return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  
+    return False if (isinstance(bw, float) or isinstance(bw, int) or len(bw)<2 or bw[1]==0) else True  
    
 def get_supported_protocols(ict_net, link_elt):       
     """

@@ -8,10 +8,12 @@ Created on 8.03.2024
 '''
 import unittest
 import pandaict as pi
-from   pandaict.utils.utils import uuid2elt, elt2uuid
-from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType
+from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links
+from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
+from   pandaict.reliability.mtbr_mttf import calc_MTBF_route, calc_MTBF_MTTR_route, calc_MTBF_MTTR_by_lup
+from   pandaict.std_types import create_std_type
 import pandas as pd
 import math
 import csv
@@ -99,11 +101,11 @@ class Core_Test():
     def create_testnet3(self):
         ict_net3   = pi.create_empty_network("Test network 3",True) 
         
-        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","LTE50"])
-        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"])
-        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","RS485"])
-        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"])
-        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"])
+        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","LTE50"], mtbf_h=2000, mttr_h=2)
+        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"], mtbf_h=1000, mttr_h=1)
+        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","RS485"], mtbf_h=3000, mttr_h=3)
+        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"], mtbf_h=2500, mttr_h=1.5)
+        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"], mtbf_h=1500, mttr_h=2.5)
         
         d1         = pi.create_ict_device(ict_net3, name="D1", device_type=pi.DeviceType.SERVER)
         a1a        = pi.create_ict_app(ict_net3, name="A1a", device=d1, app_type=pi.AppType.CLIENT)
@@ -296,14 +298,165 @@ class Core_Test():
         ict_net = self.create_testnet3()
         link_bw = {}
         
-        (down_links, up_links) = calc_sorted_links_by_connection(ict_net, ('conn',0))
-              
+        # testing value fetching
+        values, vtype = get_values_for_links(ict_net, [('link',3),('link',4),('link',5),('link',6),('link',10)], 'ber')
+        utest.assertEqual(values, [0.0, 0.0, 0.0, 0.0, 0.0])
+        utest.assertEqual(vtype, 'bit_error_rate')
+        values, vtype = get_values_for_links(ict_net, [('link',0),('link',2),('link',8),('link',9)], 'bandwidth')
+        utest.assertEqual(values, [(1000, 1000), (1000, 1000), (8, 1), (1000, 1000)])
+        utest.assertEqual(vtype, 'bandwidth_Mbps')
+        values, vtype = get_values_for_links(ict_net, [('link',1),('link',7),('link',9),('link',11)], 'latency')
+        utest.assertEqual(values, [100, (200, 300), 100, (300, 300)])
+        utest.assertEqual(vtype, 'latency_ms')
+        values, vtype = get_values_for_links(ict_net, ('link',10), 'bandwidth')
+        utest.assertEqual(values, [(50, 10)])
+        utest.assertEqual(vtype, 'bandwidth_Mbps')
         
+        # testing sorted link fetching
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',0))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 1, 'downstream': True}, {'link': 0, 'downstream': False}, {'link': 8, 'downstream': True}], 
+                                         'values': [100, 100, 200], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 0, 'downstream': True}, {'link': 1, 'downstream': False}, {'link': 8, 'downstream': False}], 
+                                       'values': [100, 100, 300], 'valuetype': 'latency_ms'}])
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',1))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 1, 'downstream': True}, {'link': 10, 'downstream': True}, {'link': 3, 'downstream': False}], 
+                                         'values': [100, 100, 100], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 3, 'downstream': True}, {'link': 1, 'downstream': False}, {'link': 10, 'downstream': False}], 
+                                       'values': [100, 100, 200], 'valuetype': 'latency_ms'}])
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',2))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 0, 'downstream': True}, {'link': 3, 'downstream': False}, {'link': 4, 'downstream': False}, {'link': 7, 'downstream': True}], 
+                                         'values': [100, 100, 200, 200], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 3, 'downstream': True}, {'link': 4, 'downstream': True}, {'link': 0, 'downstream': False}, {'link': 7, 'downstream': False}], 
+                                       'values': [100, 100, 100, 300], 'valuetype': 'latency_ms'}])
+        down_links, up_links = calc_sorted_links_by_connection(ict_net, ('conn',3))
+        utest.assertEqual(down_links, [{'route': 0, 'probability': 1.0, 'links': [{'link': 2, 'downstream': True}, {'link': 3, 'downstream': False}, {'link': 11, 'downstream': True}], 
+                                         'values': [100, 100, 300], 'valuetype': 'latency_ms'}])
+        utest.assertEqual(up_links, [{'route': 1, 'probability': 1.0, 'links': [{'link': 3, 'downstream': True}, {'link': 2, 'downstream': False}, {'link': 11, 'downstream': False}], 
+                                       'values': [100, 100, 300], 'valuetype': 'latency_ms'}])
+
             
         return
         
+    def test_mtbf_mttr_calc(self, utest):  
+        ict_net = self.create_testnet3()
         
+        # single route testing
+        for i, _ in ict_net['conn'].iterrows():
+            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)            
+            
+            # downstream direction
+            links_d = [('link', l['link']) for l in lup_table.get_route(0)['links']]
+            (MTBF_d, MTTR_d) = calc_MTBF_MTTR_route(ict_net, links_d)
+            MTBF_d2 = calc_MTBF_route(ict_net, links_d)                
+            # upstream direction
+            links_u = [('link', l['link']) for l in lup_table.get_route(1)['links']]
+            (MTBF_u, MTTR_u) = calc_MTBF_MTTR_route(ict_net, links_u)
+            MTBF_u2 = calc_MTBF_route(ict_net, links_u)                                        
+            
+            utest.assertAlmostEqual(MTBF_d, MTBF_d2, delta=0.00001) # MTBF calculated by different methods must be equal
+            utest.assertAlmostEqual(MTBF_u, MTBF_u2, delta=0.00001)
+            if (set(links_u)==set(links_d)):
+                utest.assertAlmostEqual(MTBF_d, MTBF_u, delta=0.00001)  # MTTR for down- and upstream must be equal
+                utest.assertAlmostEqual(MTBF_d2, MTBF_u2, delta=0.00001)  # MTTR for down- and upstream must be equal
+                utest.assertAlmostEqual(MTTR_d, MTTR_u, delta=0.00001)  # MTTR for down- and upstream must be equal
+
+        # connection level testing
+        expected = [74.074, 1.704, 119.048, 2.095, 53.860, 2.061, 78.534, 1.775]
+        calculated = []
+        for i, _ in ict_net['conn'].iterrows():
+            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY) 
+            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)            
+            calculated += [MTBF_conn, MTTR_conn]
+        
+        utest.assertEqual(len(expected), len(calculated))
+        for i in range(0,len(expected)):
+            utest.assertAlmostEqual(expected[i], calculated[i], delta=0.001)
+        return 
     
+    
+    def __get_custom_link_protocol_types(self):
+        custom_link = { # 10BASE2 unidirectional (not too realistic, just for testing)
+            "bandwidth_Mbps": 10,
+            "latency_ms": 300,
+            "wired": True,
+            "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP', 'SFTP'],
+            "ber_per_km": 0.001,
+            "mtbf_h": 500,
+            "mttr_h": 1,
+            "uuid": uuid.uuid4()     
+        }
+        
+        custom_protocol = { # SFTP       
+            "base_package_size_byte": 500,
+            "info_items":
+                [ InfoItem.REQUEST,
+                  InfoItem.RESPONSE,
+                  InfoItem.CERTIFICATE,
+                  InfoItem.FILE,                                    
+                ], 
+            "uuid": uuid.uuid4()      
+        }
+        
+        return custom_link, custom_protocol
+    
+    def __create_testnet3mod_with_custom_types(self):
+        
+        ict_net = self.create_testnet3()
+        
+        custom_link, custom_protocol = self.__get_custom_link_protocol_types()
+        create_std_type(ict_net, custom_link, "10BASE2_oneway", element="link")
+        create_std_type(ict_net, custom_protocol, "SFTP", element="protocol")
+        
+        ict_net.link.at[4,"type"] = "10BASE2_oneway"
+        ict_net.link.at[9,"type"] = "10BASE2_oneway"
+        ict_net.link.at[11,"type"] = "10BASE2_oneway"        
+        ict_net.node.at[0,"link_types"] += ["10BASE2_oneway"]
+        ict_net.node.at[1,"link_types"] += ["10BASE2_oneway"]
+        ict_net.node.at[2,"link_types"] += ["10BASE2_oneway"]
+        ict_net.conn.at[2,"protocol"] = "TCP"
+    
+        return ict_net, custom_link, custom_protocol
+    
+    def test_custom_type_creation(self, utest):
+        
+        ict_net, custom_link, custom_protocol = self.__create_testnet3mod_with_custom_types()            
+        
+        utest.assertEqual(ict_net.std_types['link']['10BASE2_oneway'],  custom_link)
+        utest.assertEqual(ict_net.std_types['protocol']['SFTP'],  custom_protocol)
+        
+        # test save/load
+        pi.to_json(ict_net, 'dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('dummy.json')    
+        utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net_reloaded))
+        
+        # test path calculation for conn 2
+        proutes = calc_routes_for_connection(ict_net, ('conn',2), verbose=False)
+        utest.assertEqual(proutes, [{'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 1), ('node', 4), ('node', 2), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'bidirectional', 'path': [('device', 0), ('node', 0), ('node', 1), ('node', 4), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'bidirectional', 'path': [('device', 0), ('node', 0), ('node', 1), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 2), ('node', 4), ('node', 1), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 2), ('node', 4), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'downstream', 'path': [('device', 0), ('node', 0), ('node', 2), ('node', 3), ('device', 3)]}, 
+                                    {'direction': 'upstream', 'path': [('device', 3), ('node', 3), ('node', 4), ('node', 0), ('device', 0)]}, 
+                                    {'direction': 'upstream', 'path': [('device', 3), ('node', 3), ('node', 1), ('node', 4), ('node', 0), ('device', 0)]}])
+        return
+    
+    def test_is_connection_possible(self, utest):
+        ict_net, _, _ = self.__create_testnet3mod_with_custom_types()  
+        
+        # Remove central node and direct bidir link between N2-N4
+        ict_net.node.at[4,'in_service']  = False
+        ict_net.link.at[10,'in_service'] = False
+        
+        (down1, up1) = is_connection_possible(ict_net, ('conn',0)) 
+        (down2, up2) = is_connection_possible(ict_net, ('conn',1)) 
+        (down3, up3) = is_connection_possible(ict_net, ('conn',2)) 
+        (down4, up4) = is_connection_possible(ict_net, ('conn',3))
+        
+        utest.assertTrue( (down1, up1)==(True,True) and (down2, up2)==(True,False) and (down3, up3)==(True,False) and (down4, up4)==(True,False) ) 
+        
+        return 
+
 if __name__ == '__main__':
         
     bt = Core_Test()

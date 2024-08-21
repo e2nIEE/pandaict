@@ -7,6 +7,8 @@ from pandaict.std_types import *
 from pandaict.file_io import *
 from pandaict.diagnosis import *
 from pandaict.topology import *
+from pandaict.reliability import *
+
 
 # Track which connectors have been used
 connectors_installed = [] 

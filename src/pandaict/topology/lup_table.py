@@ -37,6 +37,7 @@ class LUP_table:
             self._index += 1
             return item
         else:
+            self._index = 0
             raise StopIteration
         
     def add_route(self, downstream: bool, delivering: bool, probability: float, links: list):        
