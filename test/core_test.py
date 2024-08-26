@@ -18,7 +18,9 @@ import pandas as pd
 import math
 import csv
 import uuid
-from create import create_ict_app
+from pandaict.create import create_ict_app
+from pandaict.topology.ip_address import IP_address
+from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elts
 
 class Core_Test():
     
@@ -454,6 +456,19 @@ class Core_Test():
         (down4, up4) = is_connection_possible(ict_net, ('conn',3))
         
         utest.assertTrue( (down1, up1)==(True,True) and (down2, up2)==(True,False) and (down3, up3)==(True,False) and (down4, up4)==(True,False) ) 
+        
+        return 
+    
+    def test_ip_support(self, utest):
+        ip = IP_address("192.168.0.1/22") 
+        lip = ip.last_hostIP_in_network()
+        ip.inc()
+        ip.inc(own_network_only=True)    
+        
+        ict_net = self.create_testnet3()
+        init_extend_network(ict_net)
+        # CH: Continue testing without end_ip
+        (done_all, next_ip) = assign_ipaddr_to_elts(ict_net, [('node',0),('node',1),('device',0)], start_ip = "10.0.0.1/24", end_ip="10.0.0.10") # "netmask="255.255.255.0")
         
         return 
 

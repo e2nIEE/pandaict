@@ -19,10 +19,9 @@ class PandaICT_Test(unittest.TestCase):
     
     # ******* Core tests ********
     
-    # def test_create(self):        
-    #     self.core_tester.test_create_ict_net(self)
-    #
-
+    def test_create(self):        
+        self.core_tester.test_create_ict_net(self)
+        
     # def test_saveload(self):
     #    self.core_tester.test_save_load(self)
     
@@ -41,11 +40,14 @@ class PandaICT_Test(unittest.TestCase):
     # def test_mtbf_mttr_calc(self):    
     #     self.core_tester.test_mtbf_mttr_calc(self)
     #
-    def test_custom_type_creation(self):    
-        self.core_tester.test_custom_type_creation(self)
-        
-    def test_is_connection_possible(self):
-        self.core_tester.test_is_connection_possible(self)
+    # def test_custom_type_creation(self):    
+    #     self.core_tester.test_custom_type_creation(self)
+    #
+    # def test_is_connection_possible(self):
+    #     self.core_tester.test_is_connection_possible(self)
+    
+    #def test_ip_support(self):
+    #    self.core_tester.test_ip_support(self)
     
     # ******* Plotting tests ********
     
