@@ -19,7 +19,7 @@ class PandaICT_Test(unittest.TestCase):
     
     # ******* Core tests ********
     
-    def test_create(self):        
+    def test_create(self):
         self.core_tester.test_create_ict_net(self)
     
     def test_saveload(self):
@@ -35,23 +35,23 @@ class PandaICT_Test(unittest.TestCase):
         self.core_tester.test_lup_table_calc(self)
 
     def test_calc_conn_vol_MB(self):
-        self.core_tester.test_calc_conn_vol_MB((self)
+        self.core_tester.test_calc_conn_vol_MB(self)
         
-    # def test_sorted_link_calc(self):    
-    #     self.core_tester.test_sorted_link_calc(self)  
+    #def test_sorted_link_calc(self):
+    #   self.core_tester.test_sorted_link_calc(self)
         
     # ******* Plotting tests ********
     
-    #def test_plot_dev(self):
-        #self.plot_tester.test_plot_dev(self)
+    def test_plot_dev(self):
+        self.plot_tester.test_plot_dev(self)
         
     def test_plot_app(self):
-        self.plot_tester.test_plot_dev(self)
+       self.plot_tester.test_plot_dev(self)
         
-    def test_graph_dev(self):  
+    def test_graph_dev(self):
         self.plot_tester.test_plot_dev(self)
     
-    def test_graph_app(self):  
+    def test_graph_app(self):
         self.plot_tester.test_plot_dev(self)
 
 
