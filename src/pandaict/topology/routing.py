@@ -10,7 +10,7 @@ Created on 30.01.2024
 import pandas as pd
 import networkx as nx
 import uuid
-from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt
+from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_conn_by_app
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
@@ -131,6 +131,47 @@ def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
     tot_bw_down = _get_total_bandwidth_conn_Mbps(ict_net, conn, True)
     tot_bw_up   = _get_total_bandwidth_conn_Mbps(ict_net, conn, False)
     return (tot_bw_down, tot_bw_up)
+
+
+#Gourab:Data Volume CAlculation
+def calc_conn_vol_MB(ict_net, app_elt, time_delta):
+    """
+    Calculate total data volume, in MB.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network
+
+        **app_elt** (tuple or uuid) - id of apps element to calculate the data volume
+        
+        **time_delta** (tuple or uuid) - calculating the data volume for a cetrain period
+
+    :OUTPUT:
+        **res** (dictionary) - Datavolume used by each app with the connection in its downstream and upstream direction 
+        and total datavolume transferred summing all the connected connections for 1 day
+
+    :EXAMPLE:
+        calc_conn_vol_MB(ict_net, ("app", 4), 86400)
+    """
+    # call out conn from utils
+    conns, conn_apps = get_conn_by_app(ict_net, app_elt)
+    # conns, conn_apps, conn_details = get_conn_by_app(ict_net, app_elt)
+    res_dict = dict()
+    dv_down = []
+    dv_up = []
+    for one_conn in conns:
+        bw = calc_conn_bandwidth_Mbps(ict_net, one_conn)
+        key_name = ict_net.conn.loc[one_conn[1], ['from', 'to']]
+        key_name = str(ict_net['app'].loc[key_name['from'], 'name']) + ' ' + str(ict_net['app'].loc[key_name['to'], 'name'])
+
+        res_dict[key_name] = dict()
+        res_dict[key_name]['down']= bw[0] * time_delta / 8
+        dv_down.append(res_dict[key_name]['down'])
+        res_dict[key_name]['up']= bw[1] * time_delta / 8
+        dv_up.append(res_dict[key_name]['up'])
+    res_dict['tot_dv_down'] = sum(dv_down)
+    res_dict['tot_dv_up'] = sum(dv_up)
+    return res_dict
+
 
 def calc_link_bandwidth_Mbps(ict_net, lup_table):
     """
