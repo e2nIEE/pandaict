@@ -329,18 +329,19 @@ def get_bandwidth_Mbps(ict_net, link_elt):
 def get_conn_by_app(ict_net, app_elt):
     
     """
-    Get bandwidth of a link
+    Get connections by app
 
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **link_elt** (str, int) - The link's pandaict notation element identifier.                 
+        **app_elt** (str, int) - The app's pandaict notation element identifier.                 
                             
     :OUTPUT:
-        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction 
+        **connections** (tuple) - All connections related to the given app
+
 
     :EXAMPLE:
-        get_bandwidth_Mbps(ict_net, ('link',2))
+        get_conn_by_app(ict_net, ('app',2) or ('app', 'D4'))
     """ 
     # get the connected conns
     app_type, app_element = app_elt

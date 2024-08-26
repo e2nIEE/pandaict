@@ -136,25 +136,24 @@ def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
 #Gourab:Data Volume CAlculation
 def calc_conn_vol_MB(ict_net, app_elt, time_delta):
     """
-    Calculate total data volume, in MB.
+    Calculate total data volume, in MB (Mega Byte).
 
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network
 
         **app_elt** (tuple or uuid) - id of apps element to calculate the data volume
         
-        **time_delta** (tuple or uuid) - calculating the data volume for a cetrain period
+        **time_delta** (int) - calculating the data volume for a cetrain period in seconds
 
     :OUTPUT:
         **res** (dictionary) - Datavolume used by each app with the connection in its downstream and upstream direction 
         and total datavolume transferred summing all the connected connections for 1 day
 
     :EXAMPLE:
-        calc_conn_vol_MB(ict_net, ("app", 4), 86400)
+        calc_conn_vol_MB(ict_net, ('app', 2), 86400)
     """
     # call out conn from utils
     conns, conn_apps = get_conn_by_app(ict_net, app_elt)
-    # conns, conn_apps, conn_details = get_conn_by_app(ict_net, app_elt)
     res_dict = dict()
     dv_down = []
     dv_up = []
