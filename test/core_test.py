@@ -13,6 +13,7 @@ from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, Rout
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
 from   pandaict.reliability.mtbr_mttf import calc_MTBF_route, calc_MTBF_MTTR_route, calc_MTBF_MTTR_by_lup
+from   pandaict.reliability.ber import calc_ber_route, calc_ber_by_lup
 from   pandaict.std_types import create_std_type
 import pandas as pd
 import math
@@ -20,7 +21,7 @@ import csv
 import uuid
 from pandaict.create import create_ict_app
 from pandaict.topology.ip_address import IP_address
-from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elts
+from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
 
 class Core_Test():
     
@@ -103,11 +104,11 @@ class Core_Test():
     def create_testnet3(self):
         ict_net3   = pi.create_empty_network("Test network 3",True) 
         
-        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","LTE50"], mtbf_h=2000, mttr_h=2)
-        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"], mtbf_h=1000, mttr_h=1)
-        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","RS485"], mtbf_h=3000, mttr_h=3)
-        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"], mtbf_h=2500, mttr_h=1.5)
-        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"], mtbf_h=1500, mttr_h=2.5)
+        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","Fiber","ADSL8","LTE50"], mtbf_h=2000, mttr_h=2, ber=0.001)
+        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"], mtbf_h=1000, mttr_h=1, ber=0.002)
+        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","UMTS"], mtbf_h=3000, mttr_h=3, ber=0.003)
+        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","UMTS","LTE50"], mtbf_h=2500, mttr_h=1.5, ber=0.004)
+        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"], mtbf_h=1500, mttr_h=2.5, ber=0.005)
         
         d1         = pi.create_ict_device(ict_net3, name="D1", device_type=pi.DeviceType.SERVER)
         a1a        = pi.create_ict_app(ict_net3, name="A1a", device=d1, app_type=pi.AppType.CLIENT)
@@ -339,10 +340,12 @@ class Core_Test():
             
         return
         
-    def test_mtbf_mttr_calc(self, utest):  
+    def test_mtbf_mttr_ber_calc(self, utest):  
         ict_net = self.create_testnet3()
         
         # single route testing
+        ber_d = []
+        ber_u = []
         for i, _ in ict_net['conn'].iterrows():
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)            
             
@@ -362,17 +365,36 @@ class Core_Test():
                 utest.assertAlmostEqual(MTBF_d2, MTBF_u2, delta=0.00001)  # MTTR for down- and upstream must be equal
                 utest.assertAlmostEqual(MTTR_d, MTTR_u, delta=0.00001)  # MTTR for down- and upstream must be equal
 
+            ber_d += [calc_ber_route(ict_net, links_d)]
+            ber_u += [calc_ber_route(ict_net, links_u)]
+            
+        expected_ber_d = [0.005091, 0.007582, 0.013137, 0.007633]
+        expected_ber_u = [0.005091, 0.007581, 0.009665, 0.007633]
+        utest.assertEqual(len(expected_ber_d), len(ber_d))
+        for i in range(0, len(expected_ber_d)):
+            utest.assertAlmostEqual(expected_ber_d[i], ber_d[i], delta=0.00001)
+            utest.assertAlmostEqual(expected_ber_u[i], ber_u[i], delta=0.00001)
+                 
         # connection level testing
-        expected = [74.074, 1.704, 119.048, 2.095, 53.860, 2.061, 78.534, 1.775]
-        calculated = []
+        expected_MTBF = [74.074, 119.048, 53.860, 78.534]
+        expected_MTTR = [1.704, 2.095, 2.061, 1.775]
+        expected_ber = [0.005091, 0.007582, 0.013137, 0.007633]
+        calculated_MTBF = []
+        calculated_MTTR = []
+        calculated_ber = []
         for i, _ in ict_net['conn'].iterrows():
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY) 
-            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)            
-            calculated += [MTBF_conn, MTTR_conn]
+            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)
+            ber_conn = calc_ber_by_lup(ict_net, lup_table, downstream=True)                        
+            calculated_MTBF += [MTBF_conn]
+            calculated_MTTR += [MTTR_conn]
+            calculated_ber += [ber_conn]
         
-        utest.assertEqual(len(expected), len(calculated))
-        for i in range(0,len(expected)):
-            utest.assertAlmostEqual(expected[i], calculated[i], delta=0.001)
+        utest.assertEqual(len(expected_MTBF), len(calculated_MTBF))
+        for i in range(0,len(expected_MTBF)):
+            utest.assertAlmostEqual(expected_MTBF[i], calculated_MTBF[i], delta=0.001)
+            utest.assertAlmostEqual(expected_MTTR[i], calculated_MTTR[i], delta=0.001)
+            utest.assertAlmostEqual(expected_ber[i], calculated_ber[i], delta=0.001)
         return 
     
     
@@ -464,11 +486,33 @@ class Core_Test():
         lip = ip.last_hostIP_in_network()
         ip.inc()
         ip.inc(own_network_only=True)    
-        
+                
         ict_net = self.create_testnet3()
         init_extend_network(ict_net)
-        # CH: Continue testing without end_ip
-        (done_all, next_ip) = assign_ipaddr_to_elts(ict_net, [('node',0),('node',1),('device',0)], start_ip = "10.0.0.1/24", end_ip="10.0.0.10") # "netmask="255.255.255.0")
+        assign_ipaddr_to_elt(ict_net, ('device',0), ip="192.168.1.1/24")
+        assign_ipaddr_to_elt(ict_net, ('device',1), ip="192.168.2.1/24")
+        assign_ipaddr_to_elt(ict_net, ('device',2), ip="192.168.3.1/24")
+        assign_ipaddr_to_elt(ict_net, ('device',3), ip="192.168.4.1/24")
+        assign_ipaddr_to_elt(ict_net, ('node',0), ip=["192.168.1.0/24", "10.1.1.0/20", "10.2.1.0/20", "10.0.1.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',1), ip=["192.168.2.0/24", "10.2.2.0/20", "10.0.2.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',2), ip=["192.168.3.0/24", "10.1.3.0/20", "10.2.3.0/20", "10.4.3.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',3), ip=["192.168.4.0/24", "10.1.4.0/20", "10.4.4.0/20", "10.0.4.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',4), ip=["10.2.5.0/20", "10.0.5.0/20"])
+        
+        # (done_all, next_ip) = assign_ipaddr_to_elts(ict_net, [('node',0),('node',1),('device',0)], ip_range = "192.168.0.0/24")
+        # (done_all2, next_ip2) = assign_ipaddr_to_elts(ict_net, [('node',0),('node',1)], start_ip = "10.0.0.1", netmask="255.255.255.0")
+
+        set_static_iptable_entry(ict_net, ('node',0), "192.168.4.1", "10.1.3.0", link_idx=1, metric=10)
+        set_static_iptable_entry(ict_net, ('node',2), "192.168.4.1", "10.4.4.0", metric=10)
+        
+        lup_table0 = calc_lup_table(ict_net, ('conn', 0), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table0)
+        lup_table1 = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table1)
+        lup_table2 = calc_lup_table(ict_net, ('conn', 2), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table2)
+        lup_table3 = calc_lup_table(ict_net, ('conn', 3), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table3)
         
         return 
 

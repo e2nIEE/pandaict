@@ -11,7 +11,6 @@ import numpy as np
 import uuid
 from pandaict.pilogger import pilogger
 
-
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
 def uuid2elt(ict_net, uid):    
@@ -386,4 +385,12 @@ def get_bandwidth_Mbps(ict_net, link_elt):
     """  
     
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
+
+def flatten2d(l2d):
+    newlist = []
+    for sl in l2d:
+        for e in sl:
+            newlist += [e]
+    return newlist
+
 

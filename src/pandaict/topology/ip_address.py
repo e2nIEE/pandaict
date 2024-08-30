@@ -19,10 +19,12 @@ from psutil._common import addr
 
 class IP_address: 
             
-    def __init__(self, ip_string):
-        ip = ""
-        netmask= None        
+    def __init__(self, ip_string, netmask_string=None):
+        self.ip = ""
+        self.netmask= None        
         self.from_string(ip_string)    
+        if netmask_string is not None and self.netmask is None: 
+            self.netmask = netmask_string
    
     def __repr__(self):
         if self.netmask is not None:
@@ -137,3 +139,9 @@ class IP_address:
         ours_int = self._ipv4_to_int(self.ip)
         theirs_int = self._ipv4_to_int(ip_addr.ip)
         return ours_int > theirs_int
+    
+    def is_same_network(self, other):
+        nwaddr1 = self._ipv4_to_int(self.ip) & self._ipv4_to_int(self.netmask) 
+        nwaddr2 = self._ipv4_to_int(other.ip) & self._ipv4_to_int(other.netmask) 
+        return nwaddr1==nwaddr2 
+            
