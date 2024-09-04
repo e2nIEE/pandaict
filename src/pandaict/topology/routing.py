@@ -16,8 +16,6 @@ from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
 from pandaict.topology.ip_support import __get_element_by_ipaddr
 from pandaict.pilogger import pilogger
-from debugpy._vendored.pydevd.stubs._django_manager_body import none
-
 
 # checks if there is a static route with destination to_dev and, if yes, removes edges from the mdg that are not on the static route
 def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):    
@@ -36,7 +34,7 @@ def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):
         gw_nxnode = __get_nx_node_for_elt(mdg, gw_elt)
         # delete all outgoing links of my_nxnode except the one to gw_nxnode 
         if not mdg.has_edge(my_nxnode, gw_nxnode): # make sure there actually is a link remaining
-            pilogger.warn("Could not respect static route for node "+str(ict_net.node.iloc[iptable_entry.node_idx]['name'])+" - no link to gateway")
+            pilogger.warning("Could not respect static route for node "+str(ict_net.node.iloc[iptable_entry.node_idx]['name'])+" - no link to gateway")
             continue 
         edges_to_remove = []
         for e in mdg.out_edges(my_nxnode):
@@ -83,7 +81,7 @@ def __get_pihops(mdg, route):
     return pihops 
 
 def _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respect_iptables=True): 
-                    
+    # TODO: this gives different results for different respect_iptables settings when ict_net does not contain iptables. Investigate??                  
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
     # create nxgraph for connection and get routes        
@@ -334,7 +332,7 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
     # Example entry: {"route": 0, "probability": 1, "links": [{'link': 1, 'downstream": True}, {'link': 4, 'downstream": False}], "values": [100,300]}    
     
-    lup_table = calc_lup_table(ict_net, conn_elt, routing_type)
+    lup_table = calc_lup_table(ict_net, conn_elt, routing_type, respect_iptables=False)
     for i,r in enumerate(lup_table):
         if not r['delivering']: 
             continue 

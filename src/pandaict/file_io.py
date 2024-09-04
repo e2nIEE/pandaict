@@ -69,6 +69,8 @@ def __to_type(df, dfkey, totype, dflist=""):
     return df
                     
 def __json_to_df(df, elt_type):
+    if df.empty:
+        return df
     df = __check_index_and_uuid(df)
     if elt_type in ["node","link","app"]:
         df = __to_type(df,'map_to', tuple)        
@@ -96,8 +98,7 @@ def __json_to_df(df, elt_type):
                 df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
         for li in df['link'].keys():
             if isinstance(df['link'][li], dict):          
-                df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
-    
+                df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})   
     return df
 
 def to_json(ict_net, filename, save_std_types=False):
@@ -121,10 +122,8 @@ def to_json(ict_net, filename, save_std_types=False):
             jdevc = __df_to_json(ict_net.device)
             jappc = __df_to_json(ict_net.app)
             jconn = __df_to_json(ict_net.conn)            
-            if save_std_types:
-                jstdt = __std_type_dict_to_json(ict_net.std_types)
-            else:
-                jstdt = "{}"
+            jstdt = __std_type_dict_to_json(ict_net.std_types) if save_std_types else "{}"
+            jipta = __df_to_json(ict_net.iptables) if "iptables" in ict_net.keys() else "{}"
             json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
                         "node":       json.loads(jnode),
                         "link":       json.loads(jlink),
@@ -132,6 +131,7 @@ def to_json(ict_net, filename, save_std_types=False):
                         "app":        json.loads(jappc),
                         "conn":       json.loads(jconn),
                         "std_type":   json.loads(jstdt),
+                        "iptables":   json.loads(jipta),
                         }, pifile, indent=2)                            
         except:
             pilogger.error("Error while writing net to "+filename)  
@@ -176,6 +176,7 @@ def from_json(filename):
     ict_net.app        = __json_to_df(pd.DataFrame(jall["app"]),"app")
     ict_net.conn       = __json_to_df(pd.DataFrame(jall["conn"]),"conn")
     ict_net.std_types  = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
+    ict_net.iptables   = __json_to_df(pd.DataFrame(jall["iptables"]),"iptables")
 
     return ict_net
 

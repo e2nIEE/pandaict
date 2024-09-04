@@ -1,11 +1,11 @@
-'''
+"""
 # Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
 # and Energy System Technology (IEE), Kassel. All rights reserved.
 
 Created on 22.08.2024
 
 @author: jringelstein
-'''
+"""
 
 import pandas as pd
 import networkx as nx
@@ -18,8 +18,22 @@ from pandaict.utils.enums import RoutingType, SortType
 from psutil._common import addr
 
 class IP_address: 
-            
+    """
+        Class for IP address handling (currently only IPv4)
+    """        
     def __init__(self, ip_string, netmask_string=None):
+        """
+        Constructs an IP address object.
+        
+        :INPUT:
+            **ip_string** (string) - IP address in string representation, e.g. "10.2.2.1". May use CIDR notation, e.g. "10.2.2.1/22". \
+                If CIDR notation is used and netmask_string is omitted, the netmasks will be derated using the CIDR notation.
+        
+        :OPTIONAL:
+            **netmask_string** (string, default None) - Netmask in string representation, e.g. "255.255.255.0". \
+                Note: if the IP is given using CIDR notation, netmask_string will be ignored. 
+            
+        """ 
         self.ip = ""
         self.netmask= None        
         self.from_string(ip_string)    
@@ -33,7 +47,15 @@ class IP_address:
             return self.ip
     
     def from_string(self, ip_string):
-        if not(self.validate_ip(ip_string)):
+        """
+        Converts string into IP and netmask and stores result in current IP_address object
+        
+        :INPUT:
+            **ip_string** (string) - IP address in string representation, e.g. "10.2.2.1". May use CIDR notation, e.g. "10.2.2.1/22". \
+                If CIDR notation is used and netmask_string is omitted, the netmaks will be derated using the CIDR notation.
+                    
+        """ 
+        if not(self.__validate_ip(ip_string)):
             print("Invalid IP string: "+ip_string)
         if ':' in ip_string: 
             # assume IPv6
@@ -48,10 +70,10 @@ class IP_address:
             self.netmask = None
         
         
-    def validate_ip(self, ip_string):
+    def __validate_ip(self, ip_string):
         try:
             if '.' in ip_string:
-                pattern = "^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$"
+                pattern = r"^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$"
                 if re.match(pattern, ip_string) is None: 
                     return False                
                 if '/' in ip_string: 
@@ -69,39 +91,51 @@ class IP_address:
         return True    
     
     def is_IPV4(self):
+        """
+        Checks if object is an IPv4 address
+        
+        :OUTPUT:
+            **ipv4** (boolean) - True if IPv4 detected, False otherwise
+                        
+        """ 
         if ":" in self.ip:
             return False 
         else:
             return True
     
-    def _ipv4_to_int(self, ip_string):
+    def __ipv4_to_int(self, ip_string):
         (i4, i3, i2, i1) = ip_string.split(".")
         return int(i4) << 24 | int(i3) << 16 | int(i2) << 8 | int(i1)
     
-    def _int_to_ipv4(self, i):
-        return str((i >> 24 & 255, i >> 16 & 255, i >> 8 & 255, i & 255)).replace('(','').replace(', ','.').replace(')','')
+    def __int_to_ipv4(self, i):
+        return str((i >> 24 & 255, i >> 16 & 255, i >> 8 & 255, i & 255)).replace('(','').replace(', ','.').replace(')','')    
     
-    def is_IPV6(self):
-        if ":" in self.ip:
-            return True 
-        else:
-            return False        
-    
-    def split_cidr(self, cidr_ip):    
+    def __split_cidr(self, cidr_ip):    
         if "." in cidr_ip: # IPv4
             ip, prefix = cidr_ip.split("/")        
             if prefix is not None:            
                 if prefix <= 32:                    
-                    mask = self._int_to_ipv4(int(~((1 << (32-prefix)) - 1)))
+                    mask = self.__int_to_ipv4(int(~((1 << (32-prefix)) - 1)))
             return ip, mask
         
     def inc(self, own_network_only = False):
-        # increase without respecting netmask
+        """
+        Increases IP, with or without respecting netmask.
+        IP is usually increased by one, but the host IP ending values 0 and 255 are avoided (reserved for network and broadcast) 
+        
+        :OPTIONAL:
+            **own_network_only** (boolean, default False) - If True, the IP is not increased if it would leave the own network address space. If False, \
+                the IP is increased anyhow. 
+            
+        :OUTPUT:
+            **success** (boolean) - True if IP was successfully increased, False if increasing was not possible
+                        
+        """ 
         if self.is_IPV4:            
-            ip_int = self._ipv4_to_int(self.ip)            
+            ip_int = self.__ipv4_to_int(self.ip)            
             
             if own_network_only and self.netmask is not None:                
-                mask_int = self._ipv4_to_int(self.netmask)
+                mask_int = self.__ipv4_to_int(self.netmask)
                 host_ip = (ip_int & ~mask_int) + 1
                 if (host_ip & 255) == 0:
                     host_ip += 1
@@ -117,31 +151,58 @@ class IP_address:
                     ip_int += 1
                 if (ip_int & 255) == 255:
                     ip_int += 2
-            self.ip = self._int_to_ipv4(ip_int)
+            self.ip = self.__int_to_ipv4(ip_int)
             return True
         
     def last_hostIP_in_network(self):
+        """
+        Calculates highest possible host IP in this IP's network 
+        
+        :OUTPUT:
+            **last_ip** (IP_address) - IP_address object representing the highest host IP in the network 
+                                    
+        """ 
         if self.is_IPV4:
             if self.netmask is None:
                 return IP_address("255.255.255.254")
             else: 
-                ip_int = self._ipv4_to_int(self.ip) 
-                mask_int = self._ipv4_to_int(self.netmask)          
+                ip_int = self.__ipv4_to_int(self.ip) 
+                mask_int = self.__ipv4_to_int(self.netmask)          
                 n = bin(mask_int).count('1')
                 lip = (ip_int & mask_int) + (1 << (32-n)) - 1
                 if lip & 255 == 255: 
                     lip -= 1
-                last_ip = IP_address(self._int_to_ipv4(lip))
+                last_ip = IP_address(self.__int_to_ipv4(lip))
                 last_ip.netmask = self.netmask
                 return last_ip
     
-    def greater_than(self, ip_addr):
-        ours_int = self._ipv4_to_int(self.ip)
-        theirs_int = self._ipv4_to_int(ip_addr.ip)
+    def greater_than(self, other):
+        """
+        Determines if current IP is greater than another one 
+        
+        :INPUT:
+            **other** (IP_address) - IP address object to compare to
+            
+        :OUTPUT:
+            **is_greater** (boolean) - True if current IP is greater than ip_addr, False otherwise  
+                                    
+        """
+        ours_int = self.__ipv4_to_int(self.ip)
+        theirs_int = self.__ipv4_to_int(other.ip)
         return ours_int > theirs_int
     
     def is_same_network(self, other):
-        nwaddr1 = self._ipv4_to_int(self.ip) & self._ipv4_to_int(self.netmask) 
-        nwaddr2 = self._ipv4_to_int(other.ip) & self._ipv4_to_int(other.netmask) 
+        """
+        Determines if other IP is in the same network as current IP 
+        
+        :INPUT:
+            **other** (IP_address) - IP address object to check
+            
+        :OUTPUT:
+            **same_network** (boolean) - True if other IP is in the same network as current IP, False otherwise  
+                                    
+        """
+        nwaddr1 = self.__ipv4_to_int(self.ip) & self.__ipv4_to_int(self.netmask) 
+        nwaddr2 = self.__ipv4_to_int(other.ip) & self.__ipv4_to_int(other.netmask) 
         return nwaddr1==nwaddr2 
             

@@ -10,6 +10,7 @@ Created on 8.02.2024
 import numpy as np 
 import uuid
 from pandaict.pilogger import pilogger
+from debugpy._vendored.pydevd.stubs._django_manager_body import none
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
@@ -239,7 +240,7 @@ def get_links_at(ict_net, elt):
                 linklist += [i]
     return linklist
 
-def get_links_between(ict_net, elt1, elt2):    
+def get_links_between(ict_net, elt1, elt2, respect_direction=False):    
     """
     Fetch list of links that are connecting two pandaict elements
 
@@ -249,6 +250,9 @@ def get_links_between(ict_net, elt1, elt2):
         **elt1** (str, int) - pandaict notation element identifier of first element. Must be node or device.
         
         **elt2** (str, int) - pandaict notation element identifier of second element. Must be node or device.
+        
+    :OPTIONAL:
+        **respect_direction** (boolean, default False) - If True, result excludes unidirectional links from elt2 to elt1. If False, those are included.             
                             
     :OUTPUT:
         **linklist** (list) - List of indexes of the ict_net.link table that reference links which \
@@ -258,13 +262,17 @@ def get_links_between(ict_net, elt1, elt2):
         get_links_between(ict_net, ('device',2), ('node',1))
     """
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):
+        raise UserWarning("Both elt parameters must be device or node-type elements")
         return []
     linklist = []
     for i, l in ict_net.link.iterrows():
         lfrom = l['from']
         lto   = l['to'] if isinstance(l['to'],list) else [l['to']]
         for eltto in lto:
-            if {lfrom, eltto}=={elt1, elt2}:
+            if respect_direction and not is_bidirectional(ict_net, ('link',i)):
+                if [lfrom, eltto]==[elt1, elt2]:
+                    linklist += [i]
+            elif {lfrom, eltto}=={elt1, elt2}:
                 linklist += [i]
                 break        
         
@@ -386,11 +394,48 @@ def get_bandwidth_Mbps(ict_net, link_elt):
     
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
 
+def get_neighbour_elts(ict_net, elt, respect_in_service=False):
+    """
+    Get direct neighbours of a node or device 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **elt** (str, int) - The node or device pandaict notation element identifier.                 
+                            
+    :OPTIONAL:
+        **respect_in_service** (boolean, default False) - If True, the result contains only neighbours directly reachable through in-service links. \
+            If False, all neighbours are included, even the ones where all direct links are out of service.  
+        
+    :OUTPUT:
+        **neighbours** (set of (str, int)) - set of direct neighbours to elt 
+
+    :EXAMPLE:
+        get_neighbour_elts(ict_net, ('node',2))
+    """  
+    link_idxs = get_links_at(ict_net, elt)
+    if link_idxs is None:
+        return None
+    neighbours = set([])
+    for li in link_idxs: 
+        l = ict_net.link.iloc[li]
+        if respect_in_service and not(l.in_service): 
+            continue        
+        neighbours.add(l['from'])
+        to = l['to'] if isinstance(l['to'], list) else [l['to']]
+        for n in to:
+            neighbours.add(n)
+    neighbours.remove(elt) # remove ourselves    
+    return neighbours
+
 def flatten2d(l2d):
     newlist = []
     for sl in l2d:
-        for e in sl:
-            newlist += [e]
+        if isinstance(sl, list):
+            for e in sl:    
+                newlist += [e]
+        else:
+            newlist += [sl]
     return newlist
 
 
