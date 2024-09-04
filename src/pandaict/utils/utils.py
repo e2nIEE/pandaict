@@ -10,7 +10,6 @@ Created on 8.02.2024
 import numpy as np 
 import uuid
 from pandaict.pilogger import pilogger
-from debugpy._vendored.pydevd.stubs._django_manager_body import none
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
