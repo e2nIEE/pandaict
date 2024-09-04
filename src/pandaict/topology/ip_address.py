@@ -15,7 +15,6 @@ from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
-from psutil._common import addr
 
 class IP_address: 
     """
