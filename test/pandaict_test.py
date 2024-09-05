@@ -51,17 +51,17 @@ class PandaICT_Test(unittest.TestCase):
     
     # ******* Plotting tests ********
     
-    # def test_plot_dev(self):  
-    #     self.plot_tester.test_plot_dev(self)  
-    #
-    # def test_plot_app(self):  
-    #     self.plot_tester.test_plot_dev(self)
-    #
-    # def test_graph_dev(self):  
-    #     self.plot_tester.test_plot_dev(self)
-    #
-    # def test_graph_app(self):  
-    #     self.plot_tester.test_plot_dev(self)      
+    def test_plot_dev(self):  
+        self.plot_tester.test_plot_dev(self)  
+    
+    def test_plot_app(self):  
+        self.plot_tester.test_plot_dev(self)
+    
+    def test_graph_dev(self):  
+        self.plot_tester.test_plot_dev(self)
+    
+    def test_graph_app(self):  
+        self.plot_tester.test_plot_dev(self)      
     
 
 
