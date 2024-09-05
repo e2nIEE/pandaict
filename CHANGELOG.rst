@@ -19,4 +19,5 @@ Change Log
 - [ADDED] Calculation of data volume needed for a connection
 - [ADDED] Connectivity check
 - [ADDED] Fetching of links for a connection, sorted by adjustable item (e.g. latency)
+- [ADDED] Support for IP networks, IP routing table calculation for nodes
 - [ADDED] Updated docs
