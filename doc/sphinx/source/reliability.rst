@@ -4,6 +4,7 @@
 Reliability functions
 #####################
 
+.. note:: More details can be found in the `Jupyter Doc on Reliability in pandaICT <https://recode.pages.fraunhofer.de/pandaict/jupyter/_build/html/pandaICT_reliability_metrics.html>`_
 
 MTBF and MTTR 
 =============

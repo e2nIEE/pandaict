@@ -40,7 +40,7 @@ def __inspect_link(ict_net, passed):
     
         # check for double linkage (excluding multicasts)
         from_elt = l["from"]
-        to_elt   = l["to"]
+        to_elt   = l["to"][0]
         linklist = get_links_between(ict_net, from_elt, to_elt)
         if len(linklist) > 1: 
             linklist.remove(i)
@@ -107,6 +107,37 @@ def __inspect_conn(ict_net, passed):
     
     return passed
 
+def __inspect_ip(ict_net, passed):
+    if "ip_addr" not in ict_net['node'].keys():
+        return passed
+    # check for double IP addresses (could be intended, warn only)    
+    all_ips = [i for i in ict_net['node']['ip_addr']]        # get all node ips, 2d list
+    all_ips = [i for sub in all_ips for i in sub]            # flattens list
+    all_ips += [i for i in ict_net['device']['ip_addr']]     # add device ips
+    duplicates = set([d for d in all_ips if all_ips.count(d)>1])  # get duplicates
+    for d in duplicates: 
+        passed = __log_info_and_return_false("Warning: found duplicate IP "+str(d))        
+
+    # check if routers have as many ip_addr as netmask and link_types
+    for i, n in ict_net.node.iterrows():
+        if (n.type == NodeType.ROUTER):
+            l = [len(n['ip_addr']), len(n['netmask']), len(n['link_types'])]
+            if len(set(l))!=1:
+                 passed = __log_info_and_return_false("Warning: node "+str(n['name'])+" has different length ip_addr, netmask and/or link_types")              
+                 
+    # check for existence of ips in static iptable entries
+    if ict_net.iptables is not None:
+        for i, t in ict_net.iptables.iterrows():
+            if t['destination'] not in all_ips:
+                 passed = __log_info_and_return_false("Warning: iptables entry "+str(i)+" has non-existing destination ip "+str(t['destination']))                 
+            if t['gateway'] not in all_ips:
+                 passed = __log_info_and_return_false("Warning: iptables entry "+str(i)+" has non-existing gateway ip "+str(t['gateway']))                 
+    
+    return passed
+
+
+    
+
 def inspect(ict_net):
     """
     Performs a consistency check on an ict network. This checks if all required parameters are present and all elements
@@ -127,7 +158,8 @@ def inspect(ict_net):
     passed = __inspect_link(ict_net, passed)    
     passed = __inspect_device(ict_net, passed)    
     passed = __inspect_app(ict_net, passed)
-    passed = __inspect_conn(ict_net, passed)                    
+    passed = __inspect_conn(ict_net, passed)  
+    passed = __inspect_ip(ict_net, passed)                     
            
     # check for isolated network areas    
     # check if all connections have at least one possible route (including protocols) 

@@ -205,7 +205,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
         **from_elt** ((string,int) or UUID4) - Link start element, in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node.     
         
-        **to_elt** ((string,int) or UUID4) - Link end element, in pandaict element notation if use_uuid == False, \
+        **to_elt** ((string,int) or UUID4 or list of such) - Link end element or list of elements in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node. 
         
     :OPTIONAL:

@@ -13,12 +13,15 @@ from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, Rout
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
 from   pandaict.reliability.mtbr_mttf import calc_MTBF_route, calc_MTBF_MTTR_route, calc_MTBF_MTTR_by_lup
+from   pandaict.reliability.ber import calc_ber_route, calc_ber_by_lup
 from   pandaict.std_types import create_std_type
 import pandas as pd
 import math
 import csv
 import uuid
-from create import create_ict_app
+from pandaict.create import create_ict_app
+from pandaict.topology.ip_address import IP_address
+from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
 
 class Core_Test():
     
@@ -101,11 +104,11 @@ class Core_Test():
     def create_testnet3(self):
         ict_net3   = pi.create_empty_network("Test network 3",True) 
         
-        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","LTE50"], mtbf_h=2000, mttr_h=2)
-        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"], mtbf_h=1000, mttr_h=1)
-        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","RS485"], mtbf_h=3000, mttr_h=3)
-        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","RS485","LTE50"], mtbf_h=2500, mttr_h=1.5)
-        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"], mtbf_h=1500, mttr_h=2.5)
+        n1      = pi.create_ict_node(ict_net3, name="N1", node_type=NodeType.ROUTER, link_types=["Fiber","Fiber","ADSL8","LTE50"], mtbf_h=2000, mttr_h=2, ber=0.001)
+        n2      = pi.create_ict_node(ict_net3, name="N2", node_type=NodeType.ROUTER, link_types=["LAN1000","ADSL8","LTE50"], mtbf_h=1000, mttr_h=1, ber=0.002)
+        n3      = pi.create_ict_node(ict_net3, name="N3", node_type=NodeType.ROUTER, link_types=["LAN1000","Fiber","ADSL8","UMTS"], mtbf_h=3000, mttr_h=3, ber=0.003)
+        n4      = pi.create_ict_node(ict_net3, name="N4", node_type=NodeType.ROUTER, link_types=["Fiber","ADSL8","UMTS","LTE50"], mtbf_h=2500, mttr_h=1.5, ber=0.004)
+        n5      = pi.create_ict_node(ict_net3, name="N5", node_type=NodeType.ROUTER, link_types=["ADSL8","LTE50"], mtbf_h=1500, mttr_h=2.5, ber=0.005)
         
         d1         = pi.create_ict_device(ict_net3, name="D1", device_type=pi.DeviceType.SERVER)
         a1a        = pi.create_ict_app(ict_net3, name="A1a", device=d1, app_type=pi.AppType.CLIENT)
@@ -253,16 +256,17 @@ class Core_Test():
         ict_net  = self.create_testnet1()
         ict_net2 = self.create_testnet2()
     
-        utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net2))   
+        utest.assertTrue(ict_net.equals_excluding_uuids(ict_net2))   
         return  
     
-    def test_save_load(self, utest): 
+    def test_save_load(self, utest, ict_net=None): 
     
-        ict_net = self.create_testnet2()
+        if ict_net is None: 
+            ict_net = self.create_testnet2()
         pi.to_json(ict_net, 'dummy.json', save_std_types=True)
         ict_net_reloaded = pi.from_json('dummy.json')
     
-        utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net_reloaded))
+        utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         return
     
     def test_inspect_ict_net(self, utest):        
@@ -282,7 +286,7 @@ class Core_Test():
         link_bw = {}
         for i, _ in ict_net['conn'].iterrows():
             # TODO: what if connection is not at all possible? 
-            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)
+            lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY, respect_iptables=False)
             link_bw = add_link_bandwidth_Mbps(ict_net, link_bw, lup_table)
         
         link_bw_cmp = {1: [0.8854053333333334, 11.4694144], 8: [0.8738, 0.0006144], 0: [0.012219733333333333, 3.741], 10: [0.011605333333333334, 11.4688], 3: [14.341802666666666, 26.258810666666665], 4: [2.8672, 0.011605333333333334], 7: [0.011605333333333334, 2.8672], 2: [26.235599999999998, 0.005802666666666667], 11: [26.235599999999998, 0.005802666666666667]}
@@ -300,7 +304,7 @@ class Core_Test():
         
         # testing value fetching
         values, vtype = get_values_for_links(ict_net, [('link',3),('link',4),('link',5),('link',6),('link',10)], 'ber')
-        utest.assertEqual(values, [0.0, 0.0, 0.0, 0.0, 0.0])
+        utest.assertEqual(values, [0.0001, 0.001, 0.001, 0.0015, 0.001])
         utest.assertEqual(vtype, 'bit_error_rate')
         values, vtype = get_values_for_links(ict_net, [('link',0),('link',2),('link',8),('link',9)], 'bandwidth')
         utest.assertEqual(values, [(1000, 1000), (1000, 1000), (8, 1), (1000, 1000)])
@@ -337,10 +341,12 @@ class Core_Test():
             
         return
         
-    def test_mtbf_mttr_calc(self, utest):  
+    def test_mtbf_mttr_ber_calc(self, utest):  
         ict_net = self.create_testnet3()
         
         # single route testing
+        ber_d = []
+        ber_u = []
         for i, _ in ict_net['conn'].iterrows():
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)            
             
@@ -360,17 +366,36 @@ class Core_Test():
                 utest.assertAlmostEqual(MTBF_d2, MTBF_u2, delta=0.00001)  # MTTR for down- and upstream must be equal
                 utest.assertAlmostEqual(MTTR_d, MTTR_u, delta=0.00001)  # MTTR for down- and upstream must be equal
 
+            ber_d += [calc_ber_route(ict_net, links_d)]
+            ber_u += [calc_ber_route(ict_net, links_u)]
+            
+        expected_ber_d = [0.005091, 0.007582, 0.013137, 0.007633]
+        expected_ber_u = [0.005091, 0.007581, 0.009665, 0.007633]
+        utest.assertEqual(len(expected_ber_d), len(ber_d))
+        for i in range(0, len(expected_ber_d)):
+            utest.assertAlmostEqual(expected_ber_d[i], ber_d[i], delta=0.00001)
+            utest.assertAlmostEqual(expected_ber_u[i], ber_u[i], delta=0.00001)
+                 
         # connection level testing
-        expected = [74.074, 1.704, 119.048, 2.095, 53.860, 2.061, 78.534, 1.775]
-        calculated = []
+        expected_MTBF = [74.074, 119.048, 53.860, 78.534]
+        expected_MTTR = [1.704, 2.095, 2.061, 1.775]
+        expected_ber = [0.005091, 0.007582, 0.013137, 0.007633]
+        calculated_MTBF = []
+        calculated_MTTR = []
+        calculated_ber = []
         for i, _ in ict_net['conn'].iterrows():
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY) 
-            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)            
-            calculated += [MTBF_conn, MTTR_conn]
+            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)
+            ber_conn = calc_ber_by_lup(ict_net, lup_table, downstream=True)                        
+            calculated_MTBF += [MTBF_conn]
+            calculated_MTTR += [MTTR_conn]
+            calculated_ber += [ber_conn]
         
-        utest.assertEqual(len(expected), len(calculated))
-        for i in range(0,len(expected)):
-            utest.assertAlmostEqual(expected[i], calculated[i], delta=0.001)
+        utest.assertEqual(len(expected_MTBF), len(calculated_MTBF))
+        for i in range(0,len(expected_MTBF)):
+            utest.assertAlmostEqual(expected_MTBF[i], calculated_MTBF[i], delta=0.001)
+            utest.assertAlmostEqual(expected_MTTR[i], calculated_MTTR[i], delta=0.001)
+            utest.assertAlmostEqual(expected_ber[i], calculated_ber[i], delta=0.001)
         return 
     
     
@@ -427,7 +452,7 @@ class Core_Test():
         # test save/load
         pi.to_json(ict_net, 'dummy.json', save_std_types=True)
         ict_net_reloaded = pi.from_json('dummy.json')    
-        utest.assertTrue(ict_net.equals_excluding_uuids_and_std_types(ict_net_reloaded))
+        utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         
         # test path calculation for conn 2
         proutes = calc_routes_for_connection(ict_net, ('conn',2), verbose=False)
@@ -455,6 +480,54 @@ class Core_Test():
         
         utest.assertTrue( (down1, up1)==(True,True) and (down2, up2)==(True,False) and (down3, up3)==(True,False) and (down4, up4)==(True,False) ) 
         
+        return 
+    
+    def test_ip_support(self, utest):    
+        # TODO: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
+                            
+        ict_net = self.create_testnet3()
+        init_extend_network(ict_net)
+        assign_ipaddr_to_elt(ict_net, ('device',0), ip="192.168.1.1/24")
+        assign_ipaddr_to_elt(ict_net, ('device',1), ip="192.168.2.1/24")
+        assign_ipaddr_to_elt(ict_net, ('device',2), ip="192.168.3.1/24")
+        assign_ipaddr_to_elt(ict_net, ('device',3), ip="192.168.4.1/24")
+        assign_ipaddr_to_elt(ict_net, ('node',0), ip=["192.168.1.0/24", "10.1.1.0/20", "10.2.1.0/20", "10.0.1.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',1), ip=["192.168.2.0/24", "10.2.2.0/20", "10.0.2.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',2), ip=["192.168.3.0/24", "10.1.3.0/20", "10.2.3.0/20", "10.4.3.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',3), ip=["192.168.4.0/24", "10.2.4.0/20", "10.4.4.0/20", "10.0.4.0/20"])
+        assign_ipaddr_to_elt(ict_net, ('node',4), ip=["10.2.5.0/20", "10.0.5.0/20"])            
+
+        set_static_iptable_entry(ict_net, ('node',0), "192.168.4.1", "10.1.3.0", link_idx=1, metric=10)
+        set_static_iptable_entry(ict_net, ('node',2), "192.168.4.1", "10.4.4.0", metric=10)    
+        lup_table0 = calc_lup_table(ict_net, ('conn', 0), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table0)
+        lup_table1 = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table1)
+        lup_table2 = calc_lup_table(ict_net, ('conn', 2), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table2)
+        lup_table3 = calc_lup_table(ict_net, ('conn', 3), RoutingType.LOWEST_TOTAL_LATENCY, include_hops=True) 
+        update_iptables(ict_net, lup_table3)
+        
+        expected = {'node_idx': {0: 0, 1: 2, 2: 1, 3: 0, 4: 0, 5: 1, 6: 1, 7: 3, 8: 3, 9: 3, 10: 3, 11: 2}, 
+                    'entry': {0: 0, 1: 0, 2: 0, 3: 1, 4: 2, 5: 1, 6: 2, 7: 0, 8: 1, 9: 2, 10: 3, 11: 1}, 
+                    'destination': {0: '192.168.4.1', 1: '192.168.4.1', 2: '192.168.1.1', 3: '192.168.1.1', 4: '192.168.2.1', 
+                                    5: '192.168.2.1', 6: '192.168.4.1', 7: '192.168.4.1', 8: '192.168.2.1', 9: '192.168.1.1', 
+                                    10: '192.168.3.1', 11: '192.168.3.1'}, 
+                    'netmask': {0: '255.255.240.0', 1: '255.255.240.0', 2: '255.255.240.0', 3: '255.255.255.0', 4: '255.255.240.0', 
+                                5: '255.255.255.0', 6: '255.255.240.0', 7: '255.255.255.0', 8: '255.255.240.0', 9: '255.255.240.0', 
+                                10: '255.255.240.0', 11: '255.255.255.0'}, 
+                    'gateway': {0: '10.1.3.0', 1: '10.4.4.0', 2: '10.2.1.0', 3: '192.168.1.1', 4: '10.2.2.0', 
+                                5: '192.168.2.1', 6: '10.0.4.0', 7: '192.168.4.1', 8: '10.0.2.0', 9: '10.0.2.0', 
+                                10: '10.4.3.0', 11: '192.168.3.1'},                     
+                    'link_idx': {0: 1, 1: 3, 2: 1, 3: 0, 4: 2, 5: 0, 6: 2, 7: 0, 8: 3, 9: 3, 10: 2, 11: 0},
+                    'type': {0: 'static', 1: 'static', 2: 'dynamic', 3: 'dynamic', 4: 'dynamic', 5: 'dynamic', 6: 'dynamic', 
+                             7: 'dynamic', 8: 'dynamic', 9: 'dynamic', 10: 'dynamic', 11: 'dynamic'}, 
+                    'metric': {0: 10.0, 1: 10.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0, 6: 0.0, 7: 0.0, 8: 0.0, 9: 0.0, 10: 0.0, 11: 0.0}}
+        utest.assertEqual(ict_net.iptables.to_dict(), expected)
+        
+        # test save/load and inspect with routing tables
+        self.test_save_load(utest, ict_net)
+        utest.assertTrue(pi.inspect(ict_net))
         return 
 
 if __name__ == '__main__':

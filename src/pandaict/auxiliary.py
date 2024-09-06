@@ -187,7 +187,7 @@ class pandaICTNet(ADict):
             par + res + res_cost
         return "\n".join(lines)
     
-    def equals_excluding_uuids_and_std_types(self, other):
+    def equals_excluding_uuids(self, other, include_std_types=False):
         """
         Compares this network to another one
         
@@ -208,7 +208,7 @@ class pandaICTNet(ADict):
             if 'uuid' in cols: 
                 cols.remove('uuid')                        
             if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
-                return False                        
+                return False                
         return True
     
     def get_elts_by_name_dict(self, typefilter=None):

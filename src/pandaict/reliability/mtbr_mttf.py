@@ -16,6 +16,7 @@ from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
 from pandaict.pilogger import pilogger
 
+#TODO check if MTBF/MTTR of devices is correctly respected
 
 def _calc_MTBF_MTTR_serial2(mtbf_mttr1, mtbf_mttr2):    
     """
@@ -104,13 +105,13 @@ def calc_MTBF_route(ict_net, links):
         
         if li==len(links)-1: # last link in the chain
             # add only link 
-            if mtbf_link != 0:
+            if mtbf_link is not None and mtbf_link != 0:
                 MTBF_route += 1/mtbf_link
             break
         else: # update total  MTBF and MTTR
-            if mtbf_link != 0:
+            if mtbf_link is not None and mtbf_link != 0:
                 MTBF_route += 1/mtbf_link
-            if mtbf_node != 0:
+            if mtbf_node is not None and mtbf_node != 0:
                 MTBF_route += 1/mtbf_node
         
         lni = nni

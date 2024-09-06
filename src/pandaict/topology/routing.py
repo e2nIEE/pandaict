@@ -14,6 +14,35 @@ from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
+from pandaict.topology.ip_support import __get_element_by_ipaddr
+from pandaict.pilogger import pilogger
+
+# checks if there is a static route with destination to_dev and, if yes, removes edges from the mdg that are not on the static route
+def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):    
+    if "iptables" not in ict_net.keys() or ict_net.iptables.empty:
+        return mdg
+    # We need sender and destination IPs
+    from_ip = ict_net.device.iloc[from_dev[1]].ip_addr 
+    to_ip = ict_net.device.iloc[to_dev[1]].ip_addr
+     
+    for _, iptable_entry in ict_net.iptables[ict_net.iptables.destination==to_ip].iterrows():
+        if not iptable_entry.type=="static":
+            continue
+        my_nxnode = __get_nx_node_for_elt(mdg, ('node', iptable_entry.node_idx))
+        # get gateway node 
+        gw_elt = __get_element_by_ipaddr(ict_net, iptable_entry.gateway)
+        gw_nxnode = __get_nx_node_for_elt(mdg, gw_elt)
+        # delete all outgoing links of my_nxnode except the one to gw_nxnode 
+        if not mdg.has_edge(my_nxnode, gw_nxnode): # make sure there actually is a link remaining
+            pilogger.warning("Could not respect static route for node "+str(ict_net.node.iloc[iptable_entry.node_idx]['name'])+" - no link to gateway")
+            continue 
+        edges_to_remove = []
+        for e in mdg.out_edges(my_nxnode):
+            if not e==(my_nxnode, gw_nxnode):
+                edges_to_remove += [e]
+        mdg.remove_edges_from(edges_to_remove)        
+    
+    return mdg
 
 
 def __get_pilinks_lowest_weight(ict_net, mdg, routes):
@@ -44,27 +73,46 @@ def __get_pilinks_lowest_weight(ict_net, mdg, routes):
             raise UserWarning("Internal error: calculated link is invalid")
     return pilinks
 
-def _calc_lup_table_lowest_latency(ict_net, conn_elt): 
-                    
+def __get_pihops(mdg, route):
+    pihops = []
+    for i in range(0,len(route)):
+        elt = mdg.nodes.get(route[i])['pielt']
+        pihops += [elt]
+    return pihops 
+
+def _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respect_iptables=True): 
+    # TODO: this gives different results for different respect_iptables settings when ict_net does not contain iptables. Investigate??                  
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
     # create nxgraph for connection and get routes        
-    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)
+    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)    
     from_dev = ('device', ict_net.app.iloc[conn['from']]['device'])
     to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
+    if respect_iptables:
+        mdg_orig = mdg.copy()
+        __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)    
     from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
     droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
+    if respect_iptables:
+        mdg = mdg_orig
+        __modify_multidigraph_by_iptables(ict_net, mdg, to_dev, from_dev)
     uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')        
-    
+        
     pidlinks = __get_pilinks_lowest_weight(ict_net, mdg, droutes)
     piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)    
-    lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks)
-    lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks)
+    if include_hops: 
+        pidhops = __get_pihops(mdg, droutes)
+        piuhops = __get_pihops(mdg, uroutes)
+    else:
+        pidhops = None 
+        piuhops = None        
+    lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks, hops=pidhops)
+    lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks, hops=piuhops)
         
     return lup_table
 
-def calc_lup_table(ict_net, conn_elt, routing_type):
+def calc_lup_table(ict_net, conn_elt, routing_type, include_hops=False, respect_iptables=True):
     """
     Calculate link usage probability table.
     NOTE: currently only RoutingType.LOWEST_TOTAL_LATENCY supported 
@@ -76,6 +124,11 @@ def calc_lup_table(ict_net, conn_elt, routing_type):
         
         **routing_type** (RoutingType) - The routing type to use for the calculation. Use a RoutingType enum.
                             
+    :OPTIONAL:
+        **include_hops** (boolean, default False) - If True, hops (e.g. devices and nodes along the route) are included in the result. If False, they are not included.
+        
+        **respect_iptables** (boolean, default True) - If True, static routes set in IP routing tables are respected (if there are any). If False, static routing is disregarded. 
+         
     :OUTPUT:
         **lup_table** (LUP_table) - Link usage probability table 
 
@@ -83,7 +136,7 @@ def calc_lup_table(ict_net, conn_elt, routing_type):
         calc_lup_table(ict_net, ('conn',2), RoutingType.LOWEST_TOTAL_LATENCY)
     """
     if routing_type == RoutingType.LOWEST_TOTAL_LATENCY:
-        return _calc_lup_table_lowest_latency(ict_net, conn_elt)
+        return _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=include_hops, respect_iptables=respect_iptables)
     
 
 def _get_info_item_package_size_byte(ict_net, info_item_type, protocol):
@@ -279,7 +332,7 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
     # Example entry: {"route": 0, "probability": 1, "links": [{'link': 1, 'downstream": True}, {'link': 4, 'downstream": False}], "values": [100,300]}    
     
-    lup_table = calc_lup_table(ict_net, conn_elt, routing_type)
+    lup_table = calc_lup_table(ict_net, conn_elt, routing_type, respect_iptables=False)
     for i,r in enumerate(lup_table):
         if not r['delivering']: 
             continue 
