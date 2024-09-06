@@ -28,3 +28,10 @@ Link bandwith usage
 
 .. _add_link_bandwidth_Mbps:
 .. autofunction:: pandaict.topology.routing.add_link_bandwidth_Mbps
+
+
+Connection Data Volume
+-------------------
+
+.. _calc_conn_vol_MB:
+.. autofunction:: pandaict.topology.routing.calc_conn_vol_MB

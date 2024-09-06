@@ -391,7 +391,44 @@ def get_bandwidth_Mbps(ict_net, link_elt):
         get_bandwidth_Mbps(ict_net, ('link',2))
     """  
     
-    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
+
+#Gourab:Data Volume
+def get_conn_by_app(ict_net, app_elt):
+    
+    """
+    Get connections by app
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **app_elt** (str, int) - The app's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **connections** (tuple) - All connections related to the given app
+
+
+    :EXAMPLE:
+        get_conn_by_app(ict_net, ('app',2) or ('app', 'D4'))
+    """ 
+    # get the connected conns
+    app_type, app_element = app_elt
+    if isinstance(app_element, int):
+        app_element = app_element
+    elif isinstance(app_element, str) and app_element in ict_net[app_type]['uuid'].values:
+        app_element = ict_net[app_type].loc[ict_net[app_type]['uuid'] == app_element].index.values[0]
+    elif isinstance(app_element, str) and app_element in ict_net[app_type]['name'].values:
+        app_element = ict_net[app_type].loc[ict_net[app_type]['name'] == app_element].index.values[0]
+    app_elt = (app_type, app_element)
+    conns = []
+    conn_apps = []
+    for idx, one_conn in ict_net.conn.iterrows():
+        if app_elt in one_conn.peers:
+            conn_apps.append(one_conn.peers[0] if one_conn.peers[0] != app_elt else one_conn.peers[1])
+            conns.append(('conn', idx))
+    return conns, conn_apps
+
+
 
 def get_neighbour_elts(ict_net, elt, respect_in_service=False):
     """

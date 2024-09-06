@@ -340,6 +340,24 @@ class Core_Test():
 
             
         return
+
+    def test_calc_conn_vol_MB(self, utest):
+        ict_net = self.create_testnet3()
+        res_exp = calc_conn_vol_MB(ict_net, ("app", "D2"), 86400)
+        expected_res = {'D2 A1a': {'down': 9437.04, 'up': 6.63552},
+                        'D2 D4': {'down': 125.33760000000001, 'up': 123863.04},
+                        'tot_dv_down': 9562.377600000002,
+                        'tot_dv_up': 123869.67551999999}
+        utest.assertEqual(res_exp, expected_res)
+
+        res_cal = calc_conn_vol_MB(ict_net, ("app", "D4"), 86400)
+        calculated_res = {'D2 D4': {'down': 125.33760000000001, 'up': 123863.04},
+                          'A1b D4': {'down': 125.33760000000001, 'up': 30965.76},
+                          'D3 D4': {'down': 283344.48, 'up': 62.668800000000005},
+                          'tot_dv_down': 283595.1552, 'tot_dv_up': 154891.4688}
+        utest.assertEqual(res_cal, calculated_res)
+
+        return
         
     def test_mtbf_mttr_ber_calc(self, utest):  
         ict_net = self.create_testnet3()
