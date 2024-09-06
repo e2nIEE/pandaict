@@ -9,6 +9,7 @@ Created on 8.02.2024
 
 import numpy as np 
 import uuid
+from pandaict.pilogger import pilogger
 
 # Convert uuid to (elt_type, index) of element in ict_net
 # Returns None if uuid not found anywhere in ict_net
@@ -57,11 +58,31 @@ def elt2uuid(ict_net, elt):
     """    
     uid = None
     try:
-        uid = ict_net[elt[0]].loc[elt[1]]['uuid']
+        uid = get_elt(ict_net,elt)['uuid']
         return uid
     except:
         return None
     
+def to_elt(ict_net, any_id):
+    """
+    Converts any id type into pandaict element identifier.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **any_id** ((str, int) tuple or UUID) - identifier of an element that exists in ict_net     
+                            
+    :OUTPUT:
+        **elt_id** ((str, int) tuple) - The element in pandapower element notation.  
+
+    :EXAMPLES:
+        to_elt(ict_net, ('device',2))
+        to_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
+    """ 
+    if isinstance(any_id, uuid.UUID): 
+        return uuid2elt(any_id)
+    else:
+        return any_id
     
 def check_all_uuid(ids, allow_list=True):
     """
@@ -85,6 +106,7 @@ def check_all_uuid(ids, allow_list=True):
             raise UserWarning("element must be uuid4")                    
     else:
         raise UserWarning("Element is None, must be uuid4")
+    
 def get_elt(ict_net, elt):
     """
     Fetch element by pandaict element identifier.
@@ -123,6 +145,7 @@ def get_elt_by_uuid(ict_net, uid):
     """
     return get_elt(ict_net, uuid2elt(ict_net, uid))
 
+
 def get_elts_any(ict_net, elt_ids, expected=None):           
     """
     Fetch single or multiple elements by any identifier.
@@ -141,7 +164,7 @@ def get_elts_any(ict_net, elt_ids, expected=None):
 
     :EXAMPLES:
         get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
-        get_elt(ict_net, ['device', 0], ['node, 3], expected=['device', 'node'])
+        get_elt(ict_net, [('device', 0), ('node, 3)], expected=['device', 'node'])
     """
     if isinstance(elt_ids, list):
         _elt_ids = elt_ids
@@ -216,7 +239,7 @@ def get_links_at(ict_net, elt):
                 linklist += [i]
     return linklist
 
-def get_links_between(ict_net, elt1, elt2):    
+def get_links_between(ict_net, elt1, elt2, respect_direction=False):    
     """
     Fetch list of links that are connecting two pandaict elements
 
@@ -226,6 +249,9 @@ def get_links_between(ict_net, elt1, elt2):
         **elt1** (str, int) - pandaict notation element identifier of first element. Must be node or device.
         
         **elt2** (str, int) - pandaict notation element identifier of second element. Must be node or device.
+        
+    :OPTIONAL:
+        **respect_direction** (boolean, default False) - If True, result excludes unidirectional links from elt2 to elt1. If False, those are included.             
                             
     :OUTPUT:
         **linklist** (list) - List of indexes of the ict_net.link table that reference links which \
@@ -235,21 +261,81 @@ def get_links_between(ict_net, elt1, elt2):
         get_links_between(ict_net, ('device',2), ('node',1))
     """
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):
+        raise UserWarning("Both elt parameters must be device or node-type elements")
         return []
     linklist = []
     for i, l in ict_net.link.iterrows():
         lfrom = l['from']
-        if isinstance(l['to'], list):
-            for lto in l['to']:
-                if (lfrom==elt1 and lto==elt2) or (lfrom==elt2 and lto==elt1):
+        lto   = l['to'] if isinstance(l['to'],list) else [l['to']]
+        for eltto in lto:
+            if respect_direction and not is_bidirectional(ict_net, ('link',i)):
+                if [lfrom, eltto]==[elt1, elt2]:
                     linklist += [i]
-                    break
-        else:                            
-            lto   = l['to'] 
-            if (lfrom==elt1 and lto==elt2) or (lfrom==elt2 and lto==elt1):
+            elif {lfrom, eltto}=={elt1, elt2}:
                 linklist += [i]
+                break        
         
     return linklist
+
+def get_values_for_links(ict_net, link_elts, valuetype):
+    """
+    Fetches parameters for links in a list. 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **link_elts** (tuple or list of (str,int) tuples) - single link or List of links, in pandaict element notation. \
+            Note: if the given element or one of the list elements is not a link, a warning is logged and a None is inserted into the return values. 
+        
+        **valuetype** (SortOrder or str) - The type of parameter to be fetched. Possible: any SortOrder aenum value, or one of \
+            ['latency','bandwidth','bit_error_rate','mtbf','mttr', 'length']. \
+            Note: if bit_error_rate is used, total bit error rates (link length * ber_per_km) are returned. 
+                            
+    :OUTPUT:
+        **values** (list) - List of values of the requested type. These may be single int or float values, or tuples. If tuples, \
+            the first element is valid for the link downstream direction, the second element upstream. \
+            Note: this can *not* be used to determine if a link is bidirectional. Use is_bidirectional for this.    
+
+        **vtype** (str) - denominator of value type that is returned. 
+        
+    :EXAMPLE:
+        get_values_for_links(ict_net, [('link',2), ('link', 5)], 'bandwidth')
+    """
+    
+    values = []
+    if not isinstance(link_elts, list):
+        link_elts = [link_elts]
+    for l in link_elts:
+        if l[0] != 'link':
+            values += [None]
+            pilogger.warn("link_elts contains an element which is not a link")
+            continue                 
+        ltype = ict_net.std_types['link'][ict_net.link.iloc[l[1]]['type']]
+        vtype = None
+        
+        if ('latency' in str(valuetype).casefold()):            
+            vtype = 'latency_ms' 
+        elif ('bandwidth' in str(valuetype).casefold()):
+            vtype = 'bandwidth_Mbps'
+        elif ('mtbf' in str(valuetype).casefold()):
+            vtype = 'mtbf_h' 
+        elif ('mttr' in str(valuetype).casefold()):
+            vtype = 'mttr_h'
+        
+        if vtype is not None: 
+            values += [ltype[vtype]]
+        elif ('length' in str(valuetype).casefold()):
+            vtype = 'length_km'
+            values += [ict_net.link.iloc[l[1]]['length_km']]
+        elif ('bit_error_rate' in str(valuetype).casefold() or 'ber' in str(valuetype).casefold()):
+            length = ict_net.link.iloc[l[1]]['length_km']
+            if length is None: 
+                values += [None]
+            else:
+                vtype = 'bit_error_rate' 
+                values += [ltype['ber_per_km']*length]                        
+            
+    return values, vtype    
 
 def is_bidirectional(ict_net, link_elt):
     """
@@ -269,7 +355,7 @@ def is_bidirectional(ict_net, link_elt):
     if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
         return None
     bw = get_bandwidth_Mbps(ict_net, link_elt)
-    return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  
+    return False if (isinstance(bw, float) or isinstance(bw, int) or len(bw)<2 or bw[1]==0) else True  
    
 def get_supported_protocols(ict_net, link_elt):       
     """
@@ -306,4 +392,49 @@ def get_bandwidth_Mbps(ict_net, link_elt):
     """  
     
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
+
+def get_neighbour_elts(ict_net, elt, respect_in_service=False):
+    """
+    Get direct neighbours of a node or device 
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **elt** (str, int) - The node or device pandaict notation element identifier.                 
+                            
+    :OPTIONAL:
+        **respect_in_service** (boolean, default False) - If True, the result contains only neighbours directly reachable through in-service links. \
+            If False, all neighbours are included, even the ones where all direct links are out of service.  
+        
+    :OUTPUT:
+        **neighbours** (set of (str, int)) - set of direct neighbours to elt 
+
+    :EXAMPLE:
+        get_neighbour_elts(ict_net, ('node',2))
+    """  
+    link_idxs = get_links_at(ict_net, elt)
+    if link_idxs is None:
+        return None
+    neighbours = set([])
+    for li in link_idxs: 
+        l = ict_net.link.iloc[li]
+        if respect_in_service and not(l.in_service): 
+            continue        
+        neighbours.add(l['from'])
+        to = l['to'] if isinstance(l['to'], list) else [l['to']]
+        for n in to:
+            neighbours.add(n)
+    neighbours.remove(elt) # remove ourselves    
+    return neighbours
+
+def flatten2d(l2d):
+    newlist = []
+    for sl in l2d:
+        if isinstance(sl, list):
+            for e in sl:    
+                newlist += [e]
+        else:
+            newlist += [sl]
+    return newlist
+
 

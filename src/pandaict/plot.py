@@ -7,6 +7,7 @@ Created on Wed Mar  6 11:34:37 2024
 
 import networkx as nx
 import PIL
+import numpy as np
 from PIL import Image
 
 import matplotlib.pyplot as plt
@@ -35,7 +36,7 @@ def create_plot(net, draw_type='dev', custom_icons=None):
         
         
     :OUTPUT:
-        **Returns** -  matplotlib.pyplot: The Matplotlib plot object.
+        **plot** -  The pyplot figure object.
         
      
     :OPTIONAL: custom_icons to be used as optional
@@ -55,11 +56,9 @@ def create_plot(net, draw_type='dev', custom_icons=None):
         plot = create_plot(net, draw_type='app', custom_icons=None)
         plot.show()
         
-    """
-    
-
-    G, edge_labels = __create_g__(custom_icons, draw_type, net)
-
+    """    
+    G, edge_labels = __create_g__(custom_icons, draw_type, net)        
+            
     ax, fig, pos = __init_networkx__(G, draw_type, edge_labels)
 
     # Transform from data coordinates (scaled between xlim and ylim) to display coordinates
@@ -71,21 +70,22 @@ def create_plot(net, draw_type='dev', custom_icons=None):
     icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.02
     icon_center = icon_size / 2.0
 
-    __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure)
-
-    # TODO: the opened image file seem to create a ResourceWarning... need to re-position file closing??
-    for gnode in G.nodes(data=True):
-        gnode[1]['image'].close()
+    __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure)        
     
-    # plt.show()
-    return plt
-
+    # plt.show()        
+    return plt.gcf()    
+            
+        
 def __create_g__(custom_icons, draw_type, net):
     icons = __get_icons__(custom_icons)
 
     # Load images
-    images = {k: PIL.Image.open(fname) for k, fname in icons.items()}
-
+    images = {}
+    for k, fname in icons.items():
+        with PIL.Image.open(fname) as imgfile:
+            i = np.asarray(imgfile)
+            images.update({k: i})            
+    
     G = __create_graph__(draw_type, images, net)
         
     # Define colors for 'link' and 'conn' edges
