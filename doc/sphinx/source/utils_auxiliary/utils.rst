@@ -44,6 +44,11 @@ Get related elements
 Link utilities 
 ==============
 
+
+.. _get_values_for_links:
+.. autofunction:: pandaict.utils.utils.get_values_for_links
+
+
 .. _is_bidirectional:
 
 .. autofunction:: pandaict.utils.utils.is_bidirectional

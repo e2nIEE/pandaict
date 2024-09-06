@@ -97,12 +97,17 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
             continue                 
                                 
         # find nx nodes connected by the link
+        
         from_elt = l['from']        
         to_elt = l['to']
         weight = __get_weight(ict_net, l, weights)        
         nxn1 = __get_nx_node_for_elt(mdg, from_elt)
+        if nxn1 is None: 
+            continue
         nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
-        for n2 in nxn2:             
+        for n2 in nxn2:
+            if n2 is None: 
+                continue     
             mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] if weight is not None else None)            
             if is_bidirectional(ict_net, ("link", i)):
                 mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] if weight is not None else None)    
@@ -116,17 +121,29 @@ def __print_paths(ict_net, conn, paths):
     lhops = []
     for p in paths:
         hops = ""
-        for elt in p:
+        for elt in p['path']:
             if elt[0] in ['device','node']:
                 hops += get_elt(ict_net,elt)['name'] + "-"
                         
         hops = hops[:-1]
-        lhops += [hops]
+        lhops += [p['direction'] + ": " +hops]
     
     print("Paths for connection " + str(conn['name']) + " over " + str(conn['protocol']) + ": " + str(lhops))
 
 
-def __get_possible_routes(ict_net, mdg, conn):
+def __get_pict_paths(mdg, nfrom, nto):
+    nxpaths = list(nx.all_simple_paths(mdg, source=nfrom, target=nto))
+    if len(nxpaths)==0:
+        return None
+    paths = []
+    for nxp in nxpaths:
+        p = []
+        for nxnode in nxp:            
+            p += [mdg.nodes[nxnode]['pielt']]
+        paths += [p] 
+    return paths
+
+def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
     # Fetch devices used by the connection
     try:
         dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
@@ -141,18 +158,35 @@ def __get_possible_routes(ict_net, mdg, conn):
         logger.debug("__get_nx_node_for_elt failed for "+str(dev1) if n1 is None else str(dev2))
         return None
     
+    return n1,n2
+    
+def __get_possible_routes(ict_net, mdg, conn):
+    
+    n1, n2 = __get_end_nxnodes_for_conn(ict_net, mdg, conn)
     # Calculate paths between nxnodes and translate back to pandaICT elt representation
-    nxpaths = list(nx.all_simple_paths(mdg, source=n1, target=n2))
-    if len(nxpaths)==0:
-        return None
+    nxpaths_down = __get_pict_paths(mdg, n1, n2)
+    nxpaths_up   = __get_pict_paths(mdg, n2, n1)
+    # differentiate bidirectional, up- and downstream paths 
     paths = []
-    for nxp in nxpaths:
-        p = []
-        for nxnode in nxp:            
-            p += [mdg.nodes[nxnode]['pielt']]
-        paths += [p] 
+    directions = []
+    if nxpaths_down is not None:
+        for p in nxpaths_down:
+            if p in nxpaths_up or list(reversed(p)) in nxpaths_up:
+                d = "bidirectional"
+            else:
+                d = "downstream"
+            paths += [p]
+            directions += [d]
+    if nxpaths_up is not None:
+        for p in nxpaths_up:
+            if p in paths or list(reversed(p)) in paths: 
+                continue
+            else:             
+                paths += [p]
+                directions += ["upstream"]
         
-    return paths
+    return [{'direction': directions[i], 'path': paths[i]} for i in range(0, len(paths))]
 
 
+    
 
