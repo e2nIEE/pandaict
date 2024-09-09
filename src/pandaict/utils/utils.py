@@ -267,6 +267,7 @@ def is_bidirectional(ict_net, link_elt):
         is_bidirectional(ict_net, ('link',2))
     """
     if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
+        pilogger.warn("link_elt is not a link")
         return None
     bw = get_bandwidth_Mbps(ict_net, link_elt)
     return False if (isinstance(bw, float) or len(bw)<2 or bw[1]==0) else True  
@@ -305,5 +306,86 @@ def get_bandwidth_Mbps(ict_net, link_elt):
         get_bandwidth_Mbps(ict_net, ('link',2))
     """  
     
-    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']  
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
+
+def __get_elt_idx_by_name(ict_net, elt_name, elt_type):
+    if elt_name in ict_net[elt_type]['name'].values:
+        elt_id = ict_net[elt_type].loc[ict_net[elt_type]['name'] == elt_name].index.values[0]
+        return elt_id 
+    else:
+        return None
+
+def get_elt_id_by_name(ict_net, elt_name, expected=None):
+    """
+    Fetch element id in pandaict notation by the element name.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **elt_name** (string) - the name of an element that exists in ict_net            
+    
+    :OPTIONAL:
+    
+        **expected** (string) - the expected element type. Must be one of ['node', 'device', 'link', 'conn', 'app'].
+                            
+    :OUTPUT:
+        **elt_id** ((string, int) tuple) - The pandaict element id. 
+
+    :EXAMPLE:
+        get_elt_id_by_name(ict_net, "A2", expected=app")
+    """
+    if expected is not None:
+        if expected not in ['node', 'device', 'link', 'conn', 'app']:
+            pilogger.warn("called with invalid expected parameter")
+            return None
+        elt_idx = __get_elt_idx_by_name(ict_net, elt_name, expected)        
+    else:    
+        for expected in ['node', 'device', 'link', 'conn', 'app']:
+            elt_idx = __get_elt_idx_by_name(ict_net, elt_name, expected)
+            if elt_idx is not None:                 
+                break
+    if elt_idx is not None:
+        return (expected, elt_idx)
+    else:
+        return None
+    
+#Gourab:Data Volume
+def get_conn_by_app(ict_net, app_elt):
+    
+    """
+    Get connections by app
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network     
+
+        **app_elt** (str, int) - The app's pandaict notation element identifier.                 
+                            
+    :OUTPUT:
+        **(conns, conn_apps)** (tuple of list) - Lists of connections and peers: conns lists the connections of the app_elt (up- and downstream), conn_apps lists the peer apps. 
+
+    :EXAMPLE:
+        get_conn_by_app(ict_net, ('app',2))
+        
+    """ 
+    # get the connected conns
+    if (not isinstance(app_elt, tuple) or app_elt[0] != "app"):
+        pilogger.warn("app_elt is not an app")
+        return None
+    #app_type, app_element = app_elt    
+    # if isinstance(app_element, int):
+    #     app_element = app_element
+    # elif isinstance(app_element, str) and app_element in ict_net[app_type]['uuid'].values:
+    #     app_element = ict_net[app_type].loc[ict_net[app_type]['uuid'] == app_element].index.values[0]
+    # elif isinstance(app_element, str) and app_element in ict_net[app_type]['name'].values:
+    #     app_element = ict_net[app_type].loc[ict_net[app_type]['name'] == app_element].index.values[0]
+    # app_elt = (app_type, app_element)
+    conns = []
+    conn_apps = []
+    for idx, one_conn in ict_net.conn.iterrows():
+        if app_elt in one_conn.peers:
+            conn_apps.append(one_conn.peers[0] if one_conn.peers[0] != app_elt else one_conn.peers[1])
+            conns.append(('conn', idx))
+    return conns, conn_apps
+
+
 

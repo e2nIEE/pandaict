@@ -10,10 +10,40 @@ Created on 30.01.2024
 import pandas as pd
 import networkx as nx
 import uuid
-from pandaict.utils.utils import uuid2elt, get_elts_any
-from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt
+
+from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links, get_conn_by_app
+from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
 from pandaict.topology.lup_table import LUP_table
-from pandaict.utils.enums import RoutingType
+from pandaict.utils.enums import RoutingType, SortType
+from pandaict.topology.ip_support import __get_element_by_ipaddr
+from pandaict.pilogger import pilogger
+
+# checks if there is a static route with destination to_dev and, if yes, removes edges from the mdg that are not on the static route
+def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):    
+    if "iptables" not in ict_net.keys() or ict_net.iptables.empty:
+        return mdg
+    # We need sender and destination IPs
+    from_ip = ict_net.device.iloc[from_dev[1]].ip_addr 
+    to_ip = ict_net.device.iloc[to_dev[1]].ip_addr
+     
+    for _, iptable_entry in ict_net.iptables[ict_net.iptables.destination==to_ip].iterrows():
+        if not iptable_entry.type=="static":
+            continue
+        my_nxnode = __get_nx_node_for_elt(mdg, ('node', iptable_entry.node_idx))
+        # get gateway node 
+        gw_elt = __get_element_by_ipaddr(ict_net, iptable_entry.gateway)
+        gw_nxnode = __get_nx_node_for_elt(mdg, gw_elt)
+        # delete all outgoing links of my_nxnode except the one to gw_nxnode 
+        if not mdg.has_edge(my_nxnode, gw_nxnode): # make sure there actually is a link remaining
+            pilogger.warning("Could not respect static route for node "+str(ict_net.node.iloc[iptable_entry.node_idx]['name'])+" - no link to gateway")
+            continue 
+        edges_to_remove = []
+        for e in mdg.out_edges(my_nxnode):
+            if not e==(my_nxnode, gw_nxnode):
+                edges_to_remove += [e]
+        mdg.remove_edges_from(edges_to_remove)        
+    
+    return mdg
 
 
 def __get_pilinks_lowest_weight(ict_net, mdg, routes):
@@ -44,27 +74,46 @@ def __get_pilinks_lowest_weight(ict_net, mdg, routes):
             raise UserWarning("Internal error: calculated link is invalid")
     return pilinks
 
-def _calc_lup_table_lowest_latency(ict_net, conn_elt): 
-                    
+def __get_pihops(mdg, route):
+    pihops = []
+    for i in range(0,len(route)):
+        elt = mdg.nodes.get(route[i])['pielt']
+        pihops += [elt]
+    return pihops 
+
+def _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respect_iptables=True): 
+    # TODO: this gives different results for different respect_iptables settings when ict_net does not contain iptables. Investigate??                  
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
     # create nxgraph for connection and get routes        
-    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)
+    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)    
     from_dev = ('device', ict_net.app.iloc[conn['from']]['device'])
     to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
+    if respect_iptables:
+        mdg_orig = mdg.copy()
+        __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)    
     from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
     droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
+    if respect_iptables:
+        mdg = mdg_orig
+        __modify_multidigraph_by_iptables(ict_net, mdg, to_dev, from_dev)
     uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')        
-    
+        
     pidlinks = __get_pilinks_lowest_weight(ict_net, mdg, droutes)
     piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)    
-    lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks)
-    lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks)
+    if include_hops: 
+        pidhops = __get_pihops(mdg, droutes)
+        piuhops = __get_pihops(mdg, uroutes)
+    else:
+        pidhops = None 
+        piuhops = None        
+    lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks, hops=pidhops)
+    lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks, hops=piuhops)
         
     return lup_table
 
-def calc_lup_table(ict_net, conn_elt, routing_type):
+def calc_lup_table(ict_net, conn_elt, routing_type, include_hops=False, respect_iptables=True):
     """
     Calculate link usage probability table.
     NOTE: currently only RoutingType.LOWEST_TOTAL_LATENCY supported 
@@ -74,8 +123,13 @@ def calc_lup_table(ict_net, conn_elt, routing_type):
 
         **conn_elt** (tuple or uuid) - id of connection element to calculate the lup table for
         
-        **routing_type** - The routing type to use for the calculation. Use a RoutingType enum.
+        **routing_type** (RoutingType) - The routing type to use for the calculation. Use a RoutingType enum.
                             
+    :OPTIONAL:
+        **include_hops** (boolean, default False) - If True, hops (e.g. devices and nodes along the route) are included in the result. If False, they are not included.
+        
+        **respect_iptables** (boolean, default True) - If True, static routes set in IP routing tables are respected (if there are any). If False, static routing is disregarded. 
+         
     :OUTPUT:
         **lup_table** (LUP_table) - Link usage probability table 
 
@@ -83,7 +137,7 @@ def calc_lup_table(ict_net, conn_elt, routing_type):
         calc_lup_table(ict_net, ('conn',2), RoutingType.LOWEST_TOTAL_LATENCY)
     """
     if routing_type == RoutingType.LOWEST_TOTAL_LATENCY:
-        return _calc_lup_table_lowest_latency(ict_net, conn_elt)
+        return _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=include_hops, respect_iptables=respect_iptables)
     
 
 def _get_info_item_package_size_byte(ict_net, info_item_type, protocol):
@@ -131,6 +185,48 @@ def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
     tot_bw_down = _get_total_bandwidth_conn_Mbps(ict_net, conn, True)
     tot_bw_up   = _get_total_bandwidth_conn_Mbps(ict_net, conn, False)
     return (tot_bw_down, tot_bw_up)
+
+
+#Gourab:Data Volume CAlculation
+def calc_conn_vol_MB(ict_net, app_elt, time_delta):
+    """
+    Calculate total data volume created/received by an app during a given time period, in MB.
+
+    :INPUT:
+        **ict_net** (pandaictNet) - A pandaict network
+
+        **app_elt** (tuple or uuid) - app element to calculate the data volume for
+        
+        **time_delta** (int) - time period in seconds
+
+    :OUTPUT:
+        **res** (dictionary) - Data volume used by app per connection in its downstream and upstream direction 
+        and total datavolume transferred summing all the connections for 1 day
+
+    :EXAMPLE:
+        calc_conn_vol_MB(ict_net, ('app', 2), 86400)
+    """
+    # call out conn from utils
+    conns, conn_apps = get_conn_by_app(ict_net, app_elt)
+    res_dict = dict()
+    dv_down = []
+    dv_up = []
+    for one_conn in conns:
+        bw = calc_conn_bandwidth_Mbps(ict_net, one_conn)
+        key_name = str(one_conn)
+        #key_name = ict_net.conn.loc[one_conn[1], ['from', 'to']]
+        #key_name = str(ict_net['app'].loc[key_name['from'], 'name']) + ' ' + str(ict_net['app'].loc[key_name['to'], 'name'])
+
+        res_dict[key_name] = dict()
+        res_dict[key_name]['down']= bw[0] * time_delta / 8
+        dv_down.append(res_dict[key_name]['down'])
+        res_dict[key_name]['up']= bw[1] * time_delta / 8
+        dv_up.append(res_dict[key_name]['up'])
+    #res_dict['tot_dv_down'] = sum(dv_down)
+    #res_dict['tot_dv_up'] = sum(dv_up)
+    res_dict['total'] = { 'down': sum(dv_down), 'up': sum(dv_up) }
+    return res_dict
+
 
 def calc_link_bandwidth_Mbps(ict_net, lup_table):
     """
@@ -187,7 +283,7 @@ def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
                 lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)
                 link_bw   = add_link_bandwidth_Mbps(ict_net, link_bw, lup_table)
     """     
-    # Calculate total data volume over timespan
+    # Calculate total data bandwidth for connection down/upstream
     tot_bw_down, tot_bw_up = calc_conn_bandwidth_Mbps(ict_net, lup_table.conn_elt)    
     
     for r in lup_table:         
@@ -207,51 +303,128 @@ def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
             
     return link_bw
 
-# UNFINISHED / UNTESTED (RJ)
-# def _get_total_volume_conn(conn, downstream, timespan_hours):
-#
-#     totvolume = 0
-#
-#     for i in range(0,len(conn.info_items)): 
-#         if downstream and conn.producer[i]==1 or not downstream and conn.producer[i]==0: 
-#             continue
-#         if conn.prod_freq_ms[i] is None or conn.prod_freq_ms[i]<0:
-#             continue
-#         ii = conn.info_items[i]
-#         ii_number = (timespan_hours*60*60*1000) / conn.prod_freq_ms[i] # Number of info items produced for timespan
-#         ii_size = _get_info_item_package_size_byte(conn.info_items[i], conn.protocol)
-#         totvolume += ii_number*ii_size
-#
-#     return totvolume
-#
-# def calc_link_volume_bytes(ict_net, lup_table, timespan_hours):
-#
-#     conn = ("conn", lup_table.conn_idx)
-#     link_shares = {}  # shares of info items that use links, down/upstream
-#     link_volumes = {} # data volumes adding up on links, down/upstream
-#
-#     # Calculate total data volume over timespan
-#     tot_volume_down = _get_total_volume_conn(conn, True, timespan_hours)
-#     tot_volume_up   = _get_total_volume_conn(conn, False, timespan_hours)
-#
-#     # DOWNSTREAM
-#     for route in lup_table:
-#         if not route.downstream or not route.delivering:
-#             continue
-#         for l in route.links: # for ex. [(4,True),(8,False),(2,True)]
-#             share = link_shares.get(l[0], (0,0))
-#             if l[1]: 
-#                 share[0] += route.probability
-#             else:
-#                 share[1] += route.probability
-#             link_shares.update({l[0]: share})
-#
-#     for l, ls in link_shares.items():
-#         down_volume = ls[0]*tot_volume_down + (link_volumes.get(l, None)[0] or 0)
-#         up_volume = ls[1]*tot_volume_down + (link_volumes.get(l, None)[1] or 0)                
-#         link_volumes.update({l: (down_volume, up_volume)}) 
-#
-#     # UPSTREAM
-#     # TODO: Add
-#
-#     return link_volumes
+
+def calc_routes_for_connection(ict_net, conn_elt, verbose=False):
+    """
+        Calculates possible routes through the physical network for a given connection. 
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
+
+        :OPTIONAL:
+            **verbose** (boolean, default False) - If True, prints found paths to the console. 
+        
+        :OUTPUT: 
+            **routes** (list of dict) - This list contains all possible paths through the network. Each list element represents a path \
+                in form of a dict with two keys: "direction" and "path". The value for "direction" can be "downstream", "upstream" or "bidirectional", \
+                representing the direction the path can be taken as seen from connection level. The value for "path" is a list with pandaict devices or nodes \
+                in pandaict element notation, representing the "hops" of a single path.  
+        
+        :EXAMPLE:
+            calc_routes_for_connection(ict_net, ('conn', 2))
+
+    """ 
+    # Create the nxgraph
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    
+    paths = __get_possible_routes(ict_net, mdg, conn)
+    
+    if verbose:            
+        __print_paths(ict_net, conn, paths)
+        
+    return paths
+            
+
+
+def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.LOWEST_TOTAL_LATENCY, 
+                                    order=SortType.LATENCY, ascending=True):
+    """
+        Calculates sorted lists of links used by a connection applying a specific routing type.
+        There are different options for the sorting order. 
+        This is e.g. useful for calculating the maximal available bandwidth for the connection 
+        (lowest bandwith of all the links used or weighted sum of lowest bandwidths if there are multiple routes),
+        the total mean time between failure etc.
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
+            
+            **routing_type** (RoutingType) - The routing type to be used. Default: LOWEST_TOTAL_LATENCY
+            
+            **order** (SortType) - Defines which value the links are sorted by. Default: LATENCY                                 
+
+        :OPTIONAL:
+            
+            **ascending** (boolean) - Links are sorted in ascending value order if True, descending if False.       
+        
+        :OUTPUT: 
+            **(down_links, up_links)** (tuple of list of dict) - Sorted Links for downstream and upstream connection. 
+                If there are multiple routes used by the routing type, the lists contain all of them, including 
+                the usage probability. Also, the lists contain the values that the links were sorted by. 
+        
+        :EXAMPLE:
+            calc_routes_for_connection(ict_net, ('conn',0))            
+
+    """
+    down_links = []
+    up_links = []
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
+    # Example entry: {"route": 0, "probability": 1, "links": [{'link': 1, 'downstream": True}, {'link': 4, 'downstream": False}], "values": [100,300]}    
+    
+    lup_table = calc_lup_table(ict_net, conn_elt, routing_type, respect_iptables=False)
+    for i,r in enumerate(lup_table):
+        if not r['delivering']: 
+            continue 
+        
+        links = r['links']
+        if order==SortType.USAGE: # keep link order in which info items traverse the network  
+            values = range(1, len(links))
+            vtype = 'usage'
+        else:
+            values,vtype = get_values_for_links(ict_net, [('link', i['link']) for i in links], order)
+            # filter values by link usage direction
+            for vi,v in enumerate(values):
+                if not isinstance(v,tuple):
+                    continue
+                values[vi] = v[0] if links[vi]['downstream'] else v[1]
+                
+        links = [l[1] for l in sorted(zip(values,links), key=lambda pair: pair[0], reverse = not ascending)] # this sorts links according to values in ascending order
+        values = sorted(values, reverse = not ascending) 
+        newentry = [{'route': i, 'probability': r['probability'], 'links': links, 'values': values, 'valuetype': vtype}]
+        if r['downstream']:
+            down_links += newentry 
+        else:
+            up_links += newentry
+            
+    return (down_links, up_links)
+
+
+def is_connection_possible(ict_net, conn_elt):
+    """
+        Calculates if there is at least one route for a connection, individually for down-/upstream
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn_elt** (tuple or uuid) - The connection element for which routes shall be calculated
+        
+        :OUTPUT: 
+            **(down, up)** ((boolean, boolean)) - Indicates if connection in either direction available. True if this is the case, False else.   
+        
+        :EXAMPLE:
+            is_connection_possible(ict_net, ('conn',0))
+
+    """ 
+    # Create the nxgraph
+    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    
+    n1, n2 = __get_end_nxnodes_for_conn(ict_net, mdg, conn)
+    down = nx.has_path(mdg, n1, n2)
+    up =   nx.has_path(mdg, n2, n1)    
+        
+    return (down, up)

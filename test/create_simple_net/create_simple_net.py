@@ -334,6 +334,7 @@ if __name__ == '__main__':
     #pp.to_json(net2, "dummy.json")
     pi.to_json(ict_net, "UC4_simple_ict.json")    
     ict_net_reloaded = pi.from_json("UC4_simple_ict.json")
+    print(ict_net)
     print("A")
     # test_net()
     #get_timeseries()

@@ -52,3 +52,11 @@ Link utilities
 .. _get_bandwidth_Mbps:
 
 .. autofunction:: pandaict.utils.utils.get_bandwidth_Mbps
+
+
+Get connections by app 
+======================
+
+.. _get_conn_by_app:
+
+.. autofunction:: pandaict.utils.utils.get_conn_by_app
