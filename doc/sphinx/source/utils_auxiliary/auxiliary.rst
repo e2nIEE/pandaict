@@ -10,7 +10,7 @@ Network Comparison
 
 .. _equals_excluding_uuids_and_std_types:
 
-.. autofunction:: pandaict.pandaICTNet.equals_excluding_uuids
+.. autofunction:: pandaict.pandaICTNet.equals_excluding_uuids_and_std_types
 
 Element Dicts
 =============

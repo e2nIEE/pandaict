@@ -17,8 +17,6 @@ Basic standard types
 Link types
 ----------
 
-.. note:: Link types currently do not have an extra flag for bidrectionality. A link is considered bidirectional if its bandwith_Mbps is a tuple, otherwise unidirectional.  
-
 .. tabularcolumns:: |l|l|l|l|l|l|l|l|
 .. csv-table:: 
    :file: linktypes.csv
@@ -37,8 +35,6 @@ Protocol types
 
 Adding and creating standard types
 ==================================
-
-.. note:: Link types currently do not have an extra flag for bidrectionality. A link is considered bidirectional if its bandwith_Mbps is a tuple, otherwise unidirectional. 
 
 .. _create_std_type:
 
