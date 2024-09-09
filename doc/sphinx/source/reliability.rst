@@ -18,5 +18,18 @@ MTBF and MTTR
 .. _calc_MTBF_MTTR_by_lup:
 .. autofunction:: pandaict.reliability.mtbr_mttf.calc_MTBF_MTTR_by_lup
 
+Bit error rate
+==============
+
+.. _calc_ber_route:
+.. autofunction:: pandaict.reliability.ber.calc_ber_route
+
+.. _calc_ber_by_lup:
+.. autofunction:: pandaict.reliability.ber.calc_ber_by_lup
+
+
+
+
+
 	
     

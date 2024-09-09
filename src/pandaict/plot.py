@@ -32,9 +32,8 @@ def create_plot(net, draw_type='dev', custom_icons=None):
             "app":  "icons/app.png",\n
             "device": "icons/device.png",\n
             "converter": "icons/convert.png",
-        
-        
-        
+    
+            
     :OUTPUT:
         **plot** -  The pyplot figure object.
         

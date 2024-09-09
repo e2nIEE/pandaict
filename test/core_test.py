@@ -6,9 +6,9 @@ Created on 8.03.2024
 
 @authors: jringelstein
 '''
-import unittest
+import unittest 
 import pandaict as pi
-from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links
+from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links, get_elt_id_by_name
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
@@ -343,18 +343,19 @@ class Core_Test():
 
     def test_calc_conn_vol_MB(self, utest):
         ict_net = self.create_testnet3()
-        res_exp = calc_conn_vol_MB(ict_net, ("app", "D2"), 86400)
-        expected_res = {'D2 A1a': {'down': 9437.04, 'up': 6.63552},
-                        'D2 D4': {'down': 125.33760000000001, 'up': 123863.04},
-                        'tot_dv_down': 9562.377600000002,
-                        'tot_dv_up': 123869.67551999999}
+        app_elt = get_elt_id_by_name(ict_net, "D2", expected="app")
+        res_exp = calc_conn_vol_MB(ict_net, app_elt, 86400)
+        expected_res = {"('conn', 0)": {'down': 9437.04, 'up': 6.63552},
+                        "('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
+                        "total": {'down':  9562.377600000002, 'up': 123869.67551999999}} 
         utest.assertEqual(res_exp, expected_res)
-
-        res_cal = calc_conn_vol_MB(ict_net, ("app", "D4"), 86400)
-        calculated_res = {'D2 D4': {'down': 125.33760000000001, 'up': 123863.04},
-                          'A1b D4': {'down': 125.33760000000001, 'up': 30965.76},
-                          'D3 D4': {'down': 283344.48, 'up': 62.668800000000005},
-                          'tot_dv_down': 283595.1552, 'tot_dv_up': 154891.4688}
+        
+        app_elt = get_elt_id_by_name(ict_net, "D4", expected="app")
+        res_cal = calc_conn_vol_MB(ict_net, app_elt, 86400)
+        calculated_res = {"('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
+                          "('conn', 2)": {'down': 125.33760000000001, 'up': 30965.76},
+                          "('conn', 3)": {'down': 283344.48, 'up': 62.668800000000005},
+                          "total": {'down': 283595.1552, 'up': 154891.4688}}
         utest.assertEqual(res_cal, calculated_res)
 
         return

@@ -24,6 +24,12 @@ Also, ports of router-type nodes are implicitely defined. Each port of a router-
 The node's IPs and associated netmasks are given as lists with the same length of link_types, hence defining the router ports and associated IP addresses. 
 This also means that the link_types list might contain the same linktype multiple times.   
 
+.. note:: Please refer to test/core_test.test_ip_support for an example on IP network creation and routing table calculation. The modeled testnet is this: 
+
+.. image:: ../pics/IP_Testnet.png
+		:width: 100%
+		:align: left
+		
 Functions
 =========
 
@@ -35,8 +41,6 @@ You can find detailed information in the following documentation:
     ip_support/ip_address
     ip_support/ip_support
 
-.. note:: Please refer to test/core_test.test_ip_support for an example on IP network creation and routing table calculation. The modeled testnet is this: 
 
-.. image:: ../pics/IP_Testnet.png
-		:width: 100%
-		:align: left
+   
+ 

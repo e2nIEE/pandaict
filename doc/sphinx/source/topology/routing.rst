@@ -31,7 +31,7 @@ Link bandwith usage
 
 
 Connection Data Volume
--------------------
+----------------------
 
 .. _calc_conn_vol_MB:
 .. autofunction:: pandaict.topology.routing.calc_conn_vol_MB

@@ -39,7 +39,7 @@ class PandaICT_Test(unittest.TestCase):
         
     def test_sorted_link_calc(self):
        self.core_tester.test_sorted_link_calc(self)
-
+    
     def test_mtbf_mttr_ber_calc(self):    
         self.core_tester.test_mtbf_mttr_ber_calc(self)
     
@@ -56,10 +56,10 @@ class PandaICT_Test(unittest.TestCase):
     
     def test_plot_dev(self):
         self.plot_tester.test_plot_dev(self)
-        
+    
     def test_plot_app(self):
         self.plot_tester.test_plot_dev(self)
-        
+    
     def test_graph_dev(self):
         self.plot_tester.test_plot_dev(self)
     

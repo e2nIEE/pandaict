@@ -190,18 +190,18 @@ def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
 #Gourab:Data Volume CAlculation
 def calc_conn_vol_MB(ict_net, app_elt, time_delta):
     """
-    Calculate total data volume, in MB (Mega Byte).
+    Calculate total data volume created/received by an app during a given time period, in MB.
 
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network
 
-        **app_elt** (tuple or uuid) - id of apps element to calculate the data volume
+        **app_elt** (tuple or uuid) - app element to calculate the data volume for
         
-        **time_delta** (int) - calculating the data volume for a cetrain period in seconds
+        **time_delta** (int) - time period in seconds
 
     :OUTPUT:
-        **res** (dictionary) - Datavolume used by each app with the connection in its downstream and upstream direction 
-        and total datavolume transferred summing all the connected connections for 1 day
+        **res** (dictionary) - Data volume used by app per connection in its downstream and upstream direction 
+        and total datavolume transferred summing all the connections for 1 day
 
     :EXAMPLE:
         calc_conn_vol_MB(ict_net, ('app', 2), 86400)
@@ -213,16 +213,18 @@ def calc_conn_vol_MB(ict_net, app_elt, time_delta):
     dv_up = []
     for one_conn in conns:
         bw = calc_conn_bandwidth_Mbps(ict_net, one_conn)
-        key_name = ict_net.conn.loc[one_conn[1], ['from', 'to']]
-        key_name = str(ict_net['app'].loc[key_name['from'], 'name']) + ' ' + str(ict_net['app'].loc[key_name['to'], 'name'])
+        key_name = str(one_conn)
+        #key_name = ict_net.conn.loc[one_conn[1], ['from', 'to']]
+        #key_name = str(ict_net['app'].loc[key_name['from'], 'name']) + ' ' + str(ict_net['app'].loc[key_name['to'], 'name'])
 
         res_dict[key_name] = dict()
         res_dict[key_name]['down']= bw[0] * time_delta / 8
         dv_down.append(res_dict[key_name]['down'])
         res_dict[key_name]['up']= bw[1] * time_delta / 8
         dv_up.append(res_dict[key_name]['up'])
-    res_dict['tot_dv_down'] = sum(dv_down)
-    res_dict['tot_dv_up'] = sum(dv_up)
+    #res_dict['tot_dv_down'] = sum(dv_down)
+    #res_dict['tot_dv_up'] = sum(dv_up)
+    res_dict['total'] = { 'down': sum(dv_down), 'up': sum(dv_up) }
     return res_dict
 
 

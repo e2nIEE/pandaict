@@ -63,7 +63,7 @@ Link utilities
 
 
 Get connections by app 
-==============
+======================
 
 .. _get_conn_by_app:
 
