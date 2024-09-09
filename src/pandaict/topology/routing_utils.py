@@ -8,7 +8,7 @@ Created on 30.01.2024
 '''
 
 import networkx as nx
-from pandaict.utils.utils import is_bidirectional, get_supported_protocols, get_elt
+from pandaict.utils.utils import is_bidirectional, get_supported_protocols
 from pandaict.utils.enums import RoutingType
 
 import logging
@@ -24,10 +24,6 @@ def __get_nx_node_for_elt(mdg, elt):
         return node[0]
 
 
-def __log_debug_and_return_false(debugstr):
-    logger.debug(debugstr)
-    return False
-
 def __validate_multidigraph(ict_net, mdg, protocol=None):
     
     passed = True
@@ -39,18 +35,21 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
         pinode2  = mdg.nodes[nxnode2]['pielt']
         pilink   = nxedge[1][2]['pielt']
         if pilink[0] != 'link':
-            passed = __log_debug_and_return_false("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")            
+            logger.debug("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")
+            passed = False
         else:
             pifrom = ict_net.link.iloc[pilink[1]]['from']
             pito = ict_net.link.iloc[pilink[1]]['to']                            
             
             if not((pinode1==pifrom and pinode2 in pito) or (is_bidirectional(ict_net, pilink) and pinode2==pifrom and pinode1 in pito)):
-                passed = __log_debug_and_return_false("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")                
+                logger.debug("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")
+                passed = False
                 
             if protocol is not None:
                 if protocol not in get_supported_protocols(ict_net, pilink):
-                    passed = __log_debug_and_return_false("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
-                                str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))                    
+                    logger.debug("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
+                                str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))
+                    passed = False  
         
     if not passed:        
         if logger.level != logging.DEBUG:
@@ -97,20 +96,15 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
             continue                 
                                 
         # find nx nodes connected by the link
-        
         from_elt = l['from']        
         to_elt = l['to']
         weight = __get_weight(ict_net, l, weights)        
         nxn1 = __get_nx_node_for_elt(mdg, from_elt)
-        if nxn1 is None: 
-            continue
         nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
-        for n2 in nxn2:
-            if n2 is None: 
-                continue     
-            mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] if weight is not None else None)            
+        for n2 in nxn2:             
+            mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] or None)            
             if is_bidirectional(ict_net, ("link", i)):
-                mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] if weight is not None else None)    
+                mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] or None)    
                 
     if validate:
         __validate_multidigraph(ict_net, mdg, protocol)        
@@ -121,29 +115,17 @@ def __print_paths(ict_net, conn, paths):
     lhops = []
     for p in paths:
         hops = ""
-        for elt in p['path']:
+        for elt in p:
             if elt[0] in ['device','node']:
-                hops += get_elt(ict_net,elt)['name'] + "-"
+                hops += ict_net[elt[0]].iloc[elt[1]]['name'] + "-"
                         
         hops = hops[:-1]
-        lhops += [p['direction'] + ": " +hops]
+        lhops += [hops]
     
     print("Paths for connection " + str(conn['name']) + " over " + str(conn['protocol']) + ": " + str(lhops))
 
 
-def __get_pict_paths(mdg, nfrom, nto):
-    nxpaths = list(nx.all_simple_paths(mdg, source=nfrom, target=nto))
-    if len(nxpaths)==0:
-        return None
-    paths = []
-    for nxp in nxpaths:
-        p = []
-        for nxnode in nxp:            
-            p += [mdg.nodes[nxnode]['pielt']]
-        paths += [p] 
-    return paths
-
-def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
+def __get_possible_routes(ict_net, mdg, conn):
     # Fetch devices used by the connection
     try:
         dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
@@ -154,39 +136,58 @@ def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
     # Fetch nynodes representing the devices
     n1 = __get_nx_node_for_elt(mdg, dev1)
     n2 = __get_nx_node_for_elt(mdg, dev2)
-    if (n1 is None or n2 is None):
-        logger.debug("__get_nx_node_for_elt failed for "+str(dev1) if n1 is None else str(dev2))
+    if (n1 is None):
+        logger.debug("__get_nx_node_for_elt failed for "+str(n1))
+        return None 
+    if (n2 is None):
+        logger.debug("__get_nx_node_for_elt failed for "+str(n2))
         return None
     
-    return n1,n2
-    
-def __get_possible_routes(ict_net, mdg, conn):
-    
-    n1, n2 = __get_end_nxnodes_for_conn(ict_net, mdg, conn)
     # Calculate paths between nxnodes and translate back to pandaICT elt representation
-    nxpaths_down = __get_pict_paths(mdg, n1, n2)
-    nxpaths_up   = __get_pict_paths(mdg, n2, n1)
-    # differentiate bidirectional, up- and downstream paths 
+    nxpaths = list(nx.all_simple_paths(mdg, source=n1, target=n2))
+    if len(nxpaths)==0:
+        return None
     paths = []
-    directions = []
-    if nxpaths_down is not None:
-        for p in nxpaths_down:
-            if p in nxpaths_up or list(reversed(p)) in nxpaths_up:
-                d = "bidirectional"
-            else:
-                d = "downstream"
-            paths += [p]
-            directions += [d]
-    if nxpaths_up is not None:
-        for p in nxpaths_up:
-            if p in paths or list(reversed(p)) in paths: 
-                continue
-            else:             
-                paths += [p]
-                directions += ["upstream"]
+    for nxp in nxpaths:
+        p = []
+        for nxnode in nxp:            
+            p += [mdg.nodes[nxnode]['pielt']]
+        paths += [p] 
         
-    return [{'direction': directions[i], 'path': paths[i]} for i in range(0, len(paths))]
+    return paths
 
 
+def calc_routes_for_connection(ict_net, conn, verbose=False):
+    """
+        Calculates possible routes through the physical network for a given connection. 
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+            
+            **conn** (dataframe) - The connection element for which routes shall be calculated
+
+        :OPTIONAL:
+            **verbose** (boolean, default False) - If True, prints additional information about found paths. 
+        
+        :OUTPUT: 
+            **routes** (2D list of (string, int)) - A list of possible paths through the network. The list is \
+                two-dimensional (i,j), where each row (i) represents a single path, again consisting of a number \
+                of pandaict devices or nodes. These are given in pandaict element notation and indicate the \
+                "hops" that information items using the connection can take.  
+        
+        :EXAMPLE:
+            calc_routes_for_connection(ict_net, ict_net.conn.iloc[0])
+
+    """ 
+    # Create the nxgraph
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
     
+    paths = __get_possible_routes(ict_net, mdg, conn)
+    
+    if verbose:            
+        __print_paths(ict_net, conn, paths)
+        
+    return paths
+
+
 
