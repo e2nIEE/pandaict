@@ -7,11 +7,7 @@ Created on 30.01.2024
 @author: jringelstein
 '''
 
-import pandas as pd
 from pandaict.utils.utils import uuid2elt, get_elts_any
-
-import uuid
-
 
 class LUP_table: 
             
@@ -37,10 +33,14 @@ class LUP_table:
             self._index += 1
             return item
         else:
+            self._index = 0
             raise StopIteration
         
-    def add_route(self, downstream: bool, delivering: bool, probability: float, links: list):        
-        self._lupdf += [{'downstream': downstream, 'delivering': delivering, 'probability': probability, 'links': links}]
+    def add_route(self, downstream: bool, delivering: bool, probability: float, links: list, hops: list):        
+        new_entry = {'downstream': downstream, 'delivering': delivering, 'probability': probability, 'links': links}
+        if hops is not None: 
+            new_entry.update({'hops': hops})
+        self._lupdf += [new_entry]
         self._num_routes += 1
     
     def get_route(self, idx):

@@ -170,13 +170,13 @@ class pandaICTNet(ADict):
             if not et.startswith("_") and isinstance(self[et], pd.DataFrame) and len(self[et]) > 0:
                 n_rows = self[et].shape[0]
                 if 'res_' in et:
-                    res.append("   - %s (%i %s)" % (et, n_rows, "element" + _plural_s(n_rows)))
+                    res.append("   - %s (%i %s)" % (et, n_rows, "element" + __plural_s(n_rows)))
                 elif et == 'group':
                     n_groups = len(set(self[et].index))
                     par.append('   - %s (%i %s, %i %s)' % (
-                        et, n_groups, "group" + _plural_s(n_groups), n_rows, "row" + _plural_s(n_rows)))
+                        et, n_groups, "group" + __plural_s(n_groups), n_rows, "row" + __plural_s(n_rows)))
                 else:
-                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + _plural_s(n_rows)))
+                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + __plural_s(n_rows)))
         res_cost = [" and the following result values:",
                     "   - %s" % "res_cost"] if "res_cost" in self.keys() else []
         if not len(par) + len(res):
@@ -187,7 +187,7 @@ class pandaICTNet(ADict):
             par + res + res_cost
         return "\n".join(lines)
     
-    def equals_excluding_uuids_and_std_types(self, other):
+    def equals_excluding_uuids(self, other, include_std_types=False):
         """
         Compares this network to another one
         
@@ -208,7 +208,7 @@ class pandaICTNet(ADict):
             if 'uuid' in cols: 
                 cols.remove('uuid')                        
             if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
-                return False                        
+                return False                
         return True
     
     def get_elts_by_name_dict(self, typefilter=None):
@@ -279,7 +279,7 @@ class pandaICTNet(ADict):
             alldict.update({tf: typedict})
         return alldict
         
-def _plural_s(number):
+def __plural_s(number):
     if number > 1:
         return "s"
     else:

@@ -7,9 +7,7 @@ Created on 30.01.2024
 @author: jringelstein
 '''
 
-import pandas as pd
 import networkx as nx
-import uuid
 
 from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links, get_conn_by_app
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
@@ -81,7 +79,7 @@ def __get_pihops(mdg, route):
         pihops += [elt]
     return pihops 
 
-def _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respect_iptables=True): 
+def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respect_iptables=True): 
     # TODO: this gives different results for different respect_iptables settings when ict_net does not contain iptables. Investigate??                  
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
@@ -137,10 +135,10 @@ def calc_lup_table(ict_net, conn_elt, routing_type, include_hops=False, respect_
         calc_lup_table(ict_net, ('conn',2), RoutingType.LOWEST_TOTAL_LATENCY)
     """
     if routing_type == RoutingType.LOWEST_TOTAL_LATENCY:
-        return _calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=include_hops, respect_iptables=respect_iptables)
+        return __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=include_hops, respect_iptables=respect_iptables)
     
 
-def _get_info_item_package_size_byte(ict_net, info_item_type, protocol):
+def __get_info_item_package_size_byte(ict_net, info_item_type, protocol):
     
     pt = ict_net['std_types']['protocol'][protocol]
     pack_size = pt['base_package_size_byte']
@@ -150,7 +148,7 @@ def _get_info_item_package_size_byte(ict_net, info_item_type, protocol):
     
     return pack_size
     
-def _get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
+def __get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
     
     totbw = 0
     if not conn.in_service:
@@ -161,7 +159,7 @@ def _get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
         if conn.prod_freq_ms[i] is None or conn.prod_freq_ms[i]<0:
             continue
         ii = conn.info_items[i]
-        iibw = (_get_info_item_package_size_byte(ict_net, ii, conn.protocol)*8/1E6) / (conn.prod_freq_ms[i]/1000)
+        iibw = (__get_info_item_package_size_byte(ict_net, ii, conn.protocol)*8/1E6) / (conn.prod_freq_ms[i]/1000)
         totbw += iibw
     
     return totbw
@@ -182,20 +180,19 @@ def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
         calc_conn_bandwidth_Mbps(ict_net, ('conn',2))
     """        
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
-    tot_bw_down = _get_total_bandwidth_conn_Mbps(ict_net, conn, True)
-    tot_bw_up   = _get_total_bandwidth_conn_Mbps(ict_net, conn, False)
+    tot_bw_down = __get_total_bandwidth_conn_Mbps(ict_net, conn, True)
+    tot_bw_up   = __get_total_bandwidth_conn_Mbps(ict_net, conn, False)
     return (tot_bw_down, tot_bw_up)
 
 
-#Gourab:Data Volume CAlculation
-def calc_conn_vol_MB(ict_net, app_elt, time_delta):
+def calc_app_vol_MB(ict_net, app_elt, time_delta):
     """
     Calculate total data volume created/received by an app during a given time period, in MB.
 
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network
 
-        **app_elt** (tuple or uuid) - app element to calculate the data volume for
+        **app_elt** ((string, int) tuple) - app element to calculate the data volume for
         
         **time_delta** (int) - time period in seconds
 
@@ -213,17 +210,12 @@ def calc_conn_vol_MB(ict_net, app_elt, time_delta):
     dv_up = []
     for one_conn in conns:
         bw = calc_conn_bandwidth_Mbps(ict_net, one_conn)
-        key_name = str(one_conn)
-        #key_name = ict_net.conn.loc[one_conn[1], ['from', 'to']]
-        #key_name = str(ict_net['app'].loc[key_name['from'], 'name']) + ' ' + str(ict_net['app'].loc[key_name['to'], 'name'])
-
+        key_name = str(one_conn)      
         res_dict[key_name] = dict()
         res_dict[key_name]['down']= bw[0] * time_delta / 8
         dv_down.append(res_dict[key_name]['down'])
         res_dict[key_name]['up']= bw[1] * time_delta / 8
         dv_up.append(res_dict[key_name]['up'])
-    #res_dict['tot_dv_down'] = sum(dv_down)
-    #res_dict['tot_dv_up'] = sum(dv_up)
     res_dict['total'] = { 'down': sum(dv_down), 'up': sum(dv_up) }
     return res_dict
 

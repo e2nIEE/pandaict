@@ -45,6 +45,11 @@ class AppType(Enum):
 class RoutingType(Enum):  
     # RANDOM_ROUNDROBIN       = 1                            
     # FLOODING                = 2
-    LOWEST_TOTAL_LATENCY    = 3 
+    LOWEST_TOTAL_LATENCY      = 3 
     # BALANCED_BANDWITH_USAGE = 4
-
+    
+class SortType(Enum):  
+    USAGE           = 1
+    LATENCY         = 2
+    BIT_ERROR_RATE  = 3 
+    BANDWIDTH       = 4
