@@ -1,0 +1,656 @@
+2024-09-09 10:37:01,213 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 10:37:01,606 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 10:37:01,606 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:21:55,394 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:06,308 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:16,798 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:17,203 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:17,203 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:47,035 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:47,420 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:22:47,420 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:25:52,473 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:25:52,892 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:25:52,892 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:26:26,672 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:26:27,055 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:26:27,055 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:27:08,300 WARNING  app_elt is not an app
+2024-09-09 11:27:08,300 WARNING  app_elt is not an app
+2024-09-09 11:27:31,542 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:27:31,921 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:27:31,921 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:29:43,209 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:29:43,609 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:29:43,609 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:35:07,461 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:35:07,869 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:35:07,869 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:35:44,319 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:35:44,707 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:35:44,707 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:37:02,966 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:37:03,356 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:37:03,356 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:38:02,173 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:38:02,329 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:38:02,329 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-09 11:38:03,344 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-09 11:38:03,344 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-09 11:38:03,349 INFO     ----------- INSPECTION PASSED -----------
+2024-09-09 11:38:03,349 INFO     ----------- INSPECTION PASSED -----------
+2024-09-09 11:38:03,479 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-09 11:38:03,479 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-09 11:38:03,484 INFO     ----------- INSPECTION PASSED -----------
+2024-09-09 11:38:03,484 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:20,845 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 09:55:21,150 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 09:55:21,150 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 09:55:22,371 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 09:55:22,371 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 09:55:22,376 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:22,376 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:22,516 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 09:55:22,516 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 09:55:22,521 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:22,521 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:35,725 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 09:55:35,890 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 09:55:35,890 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 09:55:36,875 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 09:55:36,875 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 09:55:36,880 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:36,880 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:37,017 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 09:55:37,017 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 09:55:37,023 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 09:55:37,023 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:29:36,023 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:29:36,201 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:29:36,201 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:29:37,205 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 10:29:37,205 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 10:29:37,210 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:29:37,210 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:29:37,340 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 10:29:37,340 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 10:29:37,345 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:29:37,345 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:45:16,722 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:45:17,140 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:45:17,140 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:45:20,522 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 10:45:20,522 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 10:45:20,555 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:45:20,555 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:47:16,825 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:47:16,993 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:47:16,993 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 10:47:17,986 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 10:47:17,986 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 10:47:17,991 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:47:17,991 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:47:18,128 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 10:47:18,128 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 10:47:18,133 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 10:47:18,133 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:00:33,947 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:00:34,133 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:00:34,133 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:00:35,166 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:00:35,166 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:00:35,171 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:00:35,171 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:00:35,302 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:00:35,302 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:00:35,307 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:00:35,307 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:12:02,016 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:12:02,193 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:12:02,193 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:12:03,185 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:12:03,185 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:12:03,191 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:12:03,191 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:12:03,324 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:12:03,324 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:12:03,329 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:12:03,329 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:13:29,657 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:13:29,810 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:13:29,810 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:13:30,793 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:13:30,793 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:13:30,798 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:13:30,798 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:13:30,927 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:13:30,927 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:13:30,932 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:13:30,932 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:14:37,673 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:14:37,842 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:14:37,842 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:14:38,849 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:14:38,849 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:14:38,855 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:14:38,855 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:14:38,986 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:14:38,986 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:14:38,991 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:14:38,991 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:20:24,288 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:20:24,470 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:20:24,470 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:19,276 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:19,450 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:19,450 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:20,519 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:21:20,519 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:21:20,525 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:20,525 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:20,655 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:21:20,655 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:21:20,660 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:20,660 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:55,135 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:55,294 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:55,294 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:21:56,278 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:21:56,278 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:21:56,283 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:56,283 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:56,412 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:21:56,412 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:21:56,417 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:21:56,417 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:29:55,490 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:29:55,659 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:29:55,659 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:29:56,669 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:29:56,669 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:29:56,675 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:29:56,675 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:29:56,808 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:29:56,808 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:29:56,813 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:29:56,813 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:42:36,496 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:42:36,674 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:42:36,674 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:42:37,648 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:42:37,648 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:42:37,653 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:42:37,653 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:42:37,783 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:42:37,783 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:42:37,788 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:42:37,788 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:46:43,322 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:46:43,477 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:46:43,477 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:43,881 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:43,883 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:43,883 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:43,883 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:43,883 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,460 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:46:44,460 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:46:44,465 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:46:44,465 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:46:44,500 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,500 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,500 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,500 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,501 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,501 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,501 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,501 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,503 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,503 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,503 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,503 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,521 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,524 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,524 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,524 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,524 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,539 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,539 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,540 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,540 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,540 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,540 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,540 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,540 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,543 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,543 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,543 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,543 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,558 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,561 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,561 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,561 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,561 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,597 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:46:44,597 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:46:44,602 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:46:44,602 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:46:44,634 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,634 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,634 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,634 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,635 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,635 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,635 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,635 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,636 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,636 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,636 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,636 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,637 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,637 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,637 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,637 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,637 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,637 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,638 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,638 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,639 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,640 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,640 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,640 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,640 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,641 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,641 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,641 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,641 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,641 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,641 DEBUG    __get_nx_node_for_elt found nodes [4, 8] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,642 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,642 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,642 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,642 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,642 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,642 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,643 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,643 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,643 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,643 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,674 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,674 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,675 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,675 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,675 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,675 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,675 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,675 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,677 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,677 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,677 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,677 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,678 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,678 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,678 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,678 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,679 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,679 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,679 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,679 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,681 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,681 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,681 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,681 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,682 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,684 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,684 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,684 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,684 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,685 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,685 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,685 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,685 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,686 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,686 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,686 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,686 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,688 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,688 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,688 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,688 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,719 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,719 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,720 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,720 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,720 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,720 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,720 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,720 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,722 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,722 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,722 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,722 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,725 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,725 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,725 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,725 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,725 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,725 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,726 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,726 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,728 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,728 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,728 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,728 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,730 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,730 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,731 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,731 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,731 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,731 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,731 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,731 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,733 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,733 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,733 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,733 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,736 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,736 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,736 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,736 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,737 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,737 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,737 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,737 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,739 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,739 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,739 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,739 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,741 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,741 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,742 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,742 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,742 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,742 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,742 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,742 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,744 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,744 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,744 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,744 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,746 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,748 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,748 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,748 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,748 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,750 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,752 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,752 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,752 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,752 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,754 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,754 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:44,754 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,754 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:44,754 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,754 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,755 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,755 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,756 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,756 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:44,757 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:44,757 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,356 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,356 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,357 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,357 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,357 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,357 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,357 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,357 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,359 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,359 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,359 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,359 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,360 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,360 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,360 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,360 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,361 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,361 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,361 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,361 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,363 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,363 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,363 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,363 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,364 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,366 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,366 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,366 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,366 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,367 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,367 DEBUG    __get_nx_node_for_elt found nodes [5, 9] sharing same pielt ('device', 0) - this shouldn't happen
+2024-09-10 11:46:45,368 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,368 DEBUG    __get_nx_node_for_elt found nodes [6, 10] sharing same pielt ('device', 1) - this shouldn't happen
+2024-09-10 11:46:45,368 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,368 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,368 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,368 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,370 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,370 DEBUG    __get_nx_node_for_elt found nodes [7, 11] sharing same pielt ('device', 2) - this shouldn't happen
+2024-09-10 11:46:45,370 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:46:45,370 DEBUG    __get_nx_node_for_elt found nodes [8, 12] sharing same pielt ('device', 3) - this shouldn't happen
+2024-09-10 11:47:04,134 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:47:04,287 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:47:04,287 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:47:05,301 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:47:05,301 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:47:05,306 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:47:05,306 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:47:05,436 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:47:05,436 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:47:05,441 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:47:05,441 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:52:01,796 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:52:01,980 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:52:01,980 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:52:02,972 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:52:02,972 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:52:02,977 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:52:02,977 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:52:45,213 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:52:45,367 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:52:45,367 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:52:46,343 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:52:46,343 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:52:46,348 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:52:46,348 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:53:39,101 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:53:39,253 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:53:39,253 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:53:40,258 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:53:40,258 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:53:40,264 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:53:40,264 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:53:40,393 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:53:40,393 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:53:40,398 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:53:40,398 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:21,827 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:54:21,984 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:54:21,984 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:54:22,952 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:54:22,952 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:54:22,958 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:22,958 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:23,084 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:54:23,084 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:54:23,090 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:23,090 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:49,233 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:54:49,393 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:54:49,393 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:54:50,395 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:54:50,395 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:54:50,401 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:50,401 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:50,530 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:54:50,530 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:54:50,535 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:54:50,535 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:55:01,269 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:55:01,423 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:55:01,423 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:55:02,472 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:55:02,472 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:55:02,478 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:55:02,478 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:55:02,619 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:55:02,619 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:55:02,624 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:55:02,624 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:58:37,434 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:58:37,599 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:58:37,599 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 11:58:38,639 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:58:38,639 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 11:58:38,645 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:58:38,645 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:58:38,772 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:58:38,772 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 11:58:38,777 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 11:58:38,777 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 12:01:09,007 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 12:01:09,180 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 12:01:09,180 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 12:01:10,152 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 12:01:10,152 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 12:01:10,158 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 12:01:10,158 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 12:01:10,290 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 12:01:10,290 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 12:01:10,295 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 12:01:10,295 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:44:54,949 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:45:34,581 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:45:55,621 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:46:14,821 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:46:51,528 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:08,182 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:08,370 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:08,370 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:26,087 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:26,257 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:26,257 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:48:27,598 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:48:27,598 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:49:06,143 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:49:06,305 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:49:06,305 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:49:07,538 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:49:07,538 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:49:27,205 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:49:27,361 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:49:27,361 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:49:28,599 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:49:28,599 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:50:53,167 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:50:53,333 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:50:53,333 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:50:54,560 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:50:54,560 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:50:54,566 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:50:54,566 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:50:54,699 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:50:54,699 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:50:54,704 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:50:54,704 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:51:38,843 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:51:39,007 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:51:39,007 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:51:40,312 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:51:40,312 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:51:40,317 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:51:40,317 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:51:40,443 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:51:40,443 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:51:40,448 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:51:40,448 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:52:30,997 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:52:31,166 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:52:31,166 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:52:32,568 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:52:32,568 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:52:32,574 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:52:32,574 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:52:32,706 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:52:32,706 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:52:32,710 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:52:32,710 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:04,147 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:59:04,329 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:59:04,329 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:59:05,307 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:59:05,307 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:59:05,312 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:05,312 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:05,445 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:59:05,445 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:59:05,450 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:05,450 INFO     ----------- INSPECTION PASSED -----------

@@ -8,7 +8,11 @@ Routing utilities
 -----------------
 
 .. _calc_routes_for_connection:
-.. autofunction:: pandaict.topology.routing_utils.calc_routes_for_connection
+.. autofunction:: pandaict.topology.routing.calc_routes_for_connection
+
+.. _calc_sorted_links_by_connection:
+.. autofunction:: pandaict.topology.routing.calc_sorted_links_by_connection
+
 
 Link bandwith usage
 -------------------
@@ -29,5 +33,5 @@ Link bandwith usage
 Connection Data Volume
 ----------------------
 
-.. _calc_conn_vol_MB:
-.. autofunction:: pandaict.topology.routing.calc_conn_vol_MB
+.. _calc_app_vol_MB:
+.. autofunction:: pandaict.topology.routing.calc_app_vol_MB

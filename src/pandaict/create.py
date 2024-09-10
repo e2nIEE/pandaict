@@ -32,18 +32,18 @@ def __create_net_index_check(ict_net, index, elttype):
     if index is not None and index in ict_net[elttype].index:
         raise UserWarning("A "+str(elttype)+" with index %s already exists" % index)
 
-def __create_std_type_check(ict_net, std_type_elt, allowed_dtypes, expected_elt_type):
+def __create_std_type_check(ict_net, std_type_elt, allowed_dtypes, expected_elt_type, allow_list=False):
     
-    if std_type_elt is not None:
-        if not isinstance(std_type_elt, allowed_dtypes):
+    if std_type_elt is not None:        
+        if (not allow_list and isinstance(std_type_elt, (list, tuple))):
+            raise UserWarning("std type element must not be list")
+        lste = std_type_elt if isinstance(std_type_elt, (list, tuple)) else [std_type_elt]
+        for ste in lste:   
+            if not isinstance(ste, allowed_dtypes):
                 raise UserWarning("std type element must be one of "+str(allowed_dtypes)) 
-        elif isinstance(std_type_elt, list) or isinstance(std_type_elt, tuple):
-            for ste in std_type_elt:
-                if ste not in ict_net.std_types[expected_elt_type].keys():
-                    raise UserWarning("std type element "+str(ste)+" not found in "+str(expected_elt_type)+" std_types")
-        elif std_type_elt not in ict_net.std_types[expected_elt_type].keys():
-            raise UserWarning("std type element "+str(std_type_elt)+" not found in "+str(expected_elt_type)+" std_types")
-
+            if ste not in ict_net.std_types[expected_elt_type].keys():
+                raise UserWarning("std type element "+str(ste)+" not found in "+str(expected_elt_type)+" std_types")
+        
 def __check_uuid(ict_net, uid):
     if uid is not None:
         if not isinstance(uid, uuid.UUID) and not isinstance(uid, str):
@@ -99,7 +99,7 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
                 raise UserWarning("geodata must contain 'type' and 'coordinates' keys") 
         elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
             raise UserWarning("geodata must be (float, float) tuple or geojson")                 
-    __create_std_type_check(ict_net, link_types, (str, list), 'link')
+    __create_std_type_check(ict_net, link_types, (str), 'link', allow_list=True)
     __check_uuid(ict_net, uid) 
 
 def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=True, use_uuid=False, uid=None, 
@@ -205,7 +205,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
         **from_elt** ((string,int) or UUID4) - Link start element, in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node.     
         
-        **to_elt** ((string,int) or UUID4) - Link end element, in pandaict element notation if use_uuid == False, \
+        **to_elt** ((string,int) or UUID4 or list of such) - Link end element or list of elements in pandaict element notation if use_uuid == False, \
             else as UUID. Element type must be device or node. 
         
     :OPTIONAL:

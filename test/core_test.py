@@ -341,17 +341,17 @@ class Core_Test():
             
         return
 
-    def test_calc_conn_vol_MB(self, utest):
+    def test_calc_app_vol_MB(self, utest):
         ict_net = self.create_testnet3()
         app_elt = get_elt_id_by_name(ict_net, "D2", expected="app")
-        res_exp = calc_conn_vol_MB(ict_net, app_elt, 86400)
+        res_exp = calc_app_vol_MB(ict_net, app_elt, 86400)
         expected_res = {"('conn', 0)": {'down': 9437.04, 'up': 6.63552},
                         "('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                         "total": {'down':  9562.377600000002, 'up': 123869.67551999999}} 
         utest.assertEqual(res_exp, expected_res)
         
         app_elt = get_elt_id_by_name(ict_net, "D4", expected="app")
-        res_cal = calc_conn_vol_MB(ict_net, app_elt, 86400)
+        res_cal = calc_app_vol_MB(ict_net, app_elt, 86400)
         calculated_res = {"('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                           "('conn', 2)": {'down': 125.33760000000001, 'up': 30965.76},
                           "('conn', 3)": {'down': 283344.48, 'up': 62.668800000000005},

@@ -34,8 +34,8 @@ class PandaICT_Test(unittest.TestCase):
     def test_lup_table_calc(self):
         self.core_tester.test_lup_table_calc(self)
 
-    def test_calc_conn_vol_MB(self):
-        self.core_tester.test_calc_conn_vol_MB(self)
+    def test_calc_app_vol_MB(self):
+        self.core_tester.test_calc_app_vol_MB(self)
         
     def test_sorted_link_calc(self):
        self.core_tester.test_sorted_link_calc(self)

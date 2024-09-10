@@ -7,8 +7,6 @@ Created on 2.02.2024
 @author: jringelstein
 '''
 
-import pandas as pd
-import warnings
 import uuid
 from   pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
@@ -21,16 +19,15 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
         - bandwidth_Mbps, latency_ms, wired (for links)
         - info_items (for protocols)
         
-    additional parameters can be added and later loaded into pandaict with the function
-    "parameter_from_std_type".
-
     The standard type is saved into the pandaict dict of the given network by default.
 
     :INPUT:
-        **ict_net** - The pandaict network
-        **data** - dictionary of standard type parameters
-        **name** - name of the standard type as string
-        **element** - "link"
+        **ict_net** (pandaictNet) - The pandaict network
+        **data** (dict) - dictionary of standard type parameters (without the name)
+        **name** (string) - name of the standard type as string
+        **element** (string, default "link" - Element type, may be "link" or "protocol"
+        **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
+        **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
     
     """
 
@@ -60,9 +57,11 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
     Creates multiple standard types in the type dict.
 
     :INPUT:
-        **ict_net** - The pandaict network
-        **data**    - dictionary of standard type parameter sets
-        **element** - "link"
+        **ict_net** (pandaictNet) - The pandaict network
+        **data** (dict) - dictionary of standard type parameters (including type names)
+        **element** (string, default "link" - Element type, may be "link" or "protocol"
+        **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
+        **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
 
     """
     for name, typdata in data.items():
@@ -76,7 +75,7 @@ def __controller_area_linktypes():
               "latency_ms": 1,
               "wired": True,
               "protocols": ['Binary'],
-              "ber_per_km": 0,
+              "ber_per_km": 0.005,
               "mtbf_h": 0,
               "mttr_h": 0,
               "uuid": uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"),
@@ -86,7 +85,7 @@ def __controller_area_linktypes():
               "latency_ms": 100,
               "wired": True,    
               "protocols": ['MODBUS-SMA'],    
-              "ber_per_km": 0,
+              "ber_per_km": 0.005,
               "mtbf_h": 0,
               "mttr_h": 0,
               "uuid": uuid.UUID("77fbef84-195f-40de-882b-3d8824c0d3a5"),
@@ -100,9 +99,9 @@ def __local_area_linktypes():
               "latency_ms": 100,
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.0005,
+              "mtbf_h": 1000,
+              "mttr_h": 1,
               "uuid": uuid.UUID("4d5b388f-ce1c-407e-81c6-5caa23f1832b"),
             }
         }
@@ -114,9 +113,9 @@ def __wide_area_linktypes():
               "latency_ms": (100,200),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.0005,
+              "mtbf_h": 200,
+              "mttr_h": 1,
               "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
             },
         "UMTS": 
@@ -124,9 +123,9 @@ def __wide_area_linktypes():
               "latency_ms": (300,300),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.0005,
+              "mtbf_h": 100,
+              "mttr_h": 1,
               "uuid": uuid.UUID("ed41d4c0-64d2-452d-586a-7c937e259c5b"),
             },                
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
@@ -134,9 +133,9 @@ def __wide_area_linktypes():
               "latency_ms": (200,300),
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.0005,
+              "mtbf_h": 100,
+              "mttr_h": 1,
               "uuid": uuid.UUID("6dd01923-0bce-4f07-8ef0-65a0f214d2cf"),
             },
         "Fiber": # Glass fiber
@@ -144,9 +143,9 @@ def __wide_area_linktypes():
               "latency_ms": 100,
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.0001,
+              "mtbf_h": 1000,
+              "mttr_h": 10,
               "uuid": uuid.UUID("eebc167b-b816-468f-bb9a-5e75c7ccd79b"),
             }
         }

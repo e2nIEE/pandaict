@@ -1,0 +1,906 @@
+{
+  "info": "pandaICT net file",
+  "pandaict_version": "1.1.0",
+  "name": "Test network 2",
+  "connectors": [],
+  "node": {
+    "name": {
+      "0": "Node1",
+      "1": "Node2"
+    },
+    "type": {
+      "0": {
+        "name": "ROUTER",
+        "value": 2,
+        "values": [
+          2
+        ]
+      },
+      "1": {
+        "name": "ROUTER",
+        "value": 2,
+        "values": [
+          2
+        ]
+      }
+    },
+    "in_service": {
+      "0": true,
+      "1": true
+    },
+    "uuid": {
+      "0": "6f40720e-cc9d-41fe-90b1-a825cd48013c",
+      "1": "b0a0ec5c-2bde-4417-90ab-e53463c87207"
+    },
+    "geodata": {
+      "0": null,
+      "1": null
+    },
+    "link_types": {
+      "0": [
+        "Fiber",
+        "LAN1000"
+      ],
+      "1": [
+        "Fiber",
+        "LAN1000",
+        "ADSL8",
+        "LTE50"
+      ]
+    },
+    "ber": {
+      "0": 0.0,
+      "1": 0.0
+    },
+    "mtbf_h": {
+      "0": 0.0,
+      "1": 0.0
+    },
+    "mttr_h": {
+      "0": 0.0,
+      "1": 0.0
+    }
+  },
+  "link": {
+    "name": {
+      "0": "CC_Node1",
+      "1": "Node1_Node2",
+      "2": "Node2_Conv1",
+      "3": "Node2_Conv2",
+      "4": "Node2_Conv3",
+      "5": "Node2_PQ1",
+      "6": "Node2_PQ2",
+      "7": "Conv1_PC1",
+      "8": "Conv2_PC2",
+      "9": "Conv3_SC"
+    },
+    "type": {
+      "0": "LAN1000",
+      "1": "Fiber",
+      "2": "ADSL8",
+      "3": "LTE50",
+      "4": "ADSL8",
+      "5": "LAN1000",
+      "6": "LAN1000",
+      "7": "LAN1000",
+      "8": "RS485",
+      "9": "Binary"
+    },
+    "in_service": {
+      "0": true,
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true,
+      "7": true,
+      "8": true,
+      "9": true
+    },
+    "uuid": {
+      "0": "8a559b60-2679-4cc1-9e21-7a310223d4a8",
+      "1": "2e2fa149-ea6f-4a64-8434-60fc78d3105e",
+      "2": "aa2d8087-9b69-4b69-91ab-31d1160e6995",
+      "3": "483f7b6f-8e09-4620-826d-80416a8ed5e1",
+      "4": "074bd8d5-f885-4ddf-8348-32b1c8389897",
+      "5": "0799c725-2298-4865-807c-3a0cbb42dbc8",
+      "6": "71c2a951-a3df-4a32-b535-9390d41001d2",
+      "7": "24b42294-a35a-4c96-a4a4-330bcb12bcc0",
+      "8": "08ea2189-988a-4885-a4d3-8b702db3c0d2",
+      "9": "9fb187bf-289a-48a7-aec3-b1cfc1df9a4e"
+    },
+    "from": {
+      "0": [
+        "device",
+        3
+      ],
+      "1": [
+        "node",
+        0
+      ],
+      "2": [
+        "node",
+        1
+      ],
+      "3": [
+        "node",
+        1
+      ],
+      "4": [
+        "node",
+        1
+      ],
+      "5": [
+        "node",
+        1
+      ],
+      "6": [
+        "node",
+        1
+      ],
+      "7": [
+        "device",
+        0
+      ],
+      "8": [
+        "device",
+        1
+      ],
+      "9": [
+        "device",
+        2
+      ]
+    },
+    "to": {
+      "0": [
+        [
+          "node",
+          0
+        ]
+      ],
+      "1": [
+        [
+          "node",
+          1
+        ]
+      ],
+      "2": [
+        [
+          "device",
+          0
+        ]
+      ],
+      "3": [
+        [
+          "device",
+          1
+        ]
+      ],
+      "4": [
+        [
+          "device",
+          2
+        ]
+      ],
+      "5": [
+        [
+          "device",
+          4
+        ]
+      ],
+      "6": [
+        [
+          "device",
+          5
+        ]
+      ],
+      "7": [
+        [
+          "device",
+          7
+        ]
+      ],
+      "8": [
+        [
+          "device",
+          8
+        ]
+      ],
+      "9": [
+        [
+          "device",
+          6
+        ]
+      ]
+    },
+    "length_km": {
+      "0": 0.01,
+      "1": 25.0,
+      "2": 5.0,
+      "3": 10.0,
+      "4": 5.0,
+      "5": 0.01,
+      "6": 0.01,
+      "7": 0.01,
+      "8": 0.01,
+      "9": 0.001
+    }
+  },
+  "device": {
+    "name": {
+      "0": "Conv1",
+      "1": "Conv2",
+      "2": "Conv3",
+      "3": "CC",
+      "4": "PQ1",
+      "5": "PQ2",
+      "6": "SC",
+      "7": "PC1",
+      "8": "PC2"
+    },
+    "type": {
+      "0": {
+        "name": "CONVERTER",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "1": {
+        "name": "CONVERTER",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "2": {
+        "name": "CONVERTER",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "3": {
+        "name": "SERVER",
+        "value": 2,
+        "values": [
+          2
+        ]
+      },
+      "4": {
+        "name": "RTU",
+        "value": 3,
+        "values": [
+          3
+        ]
+      },
+      "5": {
+        "name": "RTU",
+        "value": 3,
+        "values": [
+          3
+        ]
+      },
+      "6": {
+        "name": "RTU",
+        "value": 3,
+        "values": [
+          3
+        ]
+      },
+      "7": {
+        "name": "RTU",
+        "value": 3,
+        "values": [
+          3
+        ]
+      },
+      "8": {
+        "name": "RTU",
+        "value": 3,
+        "values": [
+          3
+        ]
+      }
+    },
+    "in_service": {
+      "0": true,
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true,
+      "7": true,
+      "8": true
+    },
+    "uuid": {
+      "0": "7d7815fe-e617-4675-8b3c-54eb2c48e310",
+      "1": "5b113ab5-d1ba-4cb4-b2fb-0453777af0bf",
+      "2": "8b7ec190-5561-48d5-8c0e-73e06381ef7a",
+      "3": "6147e506-6b48-4720-962d-374b01b8218b",
+      "4": "00084f73-36f2-47e1-9b12-5a8e56db106d",
+      "5": "fda4cccf-d16b-4652-bbc0-e0445ad2bd06",
+      "6": "05d71776-2872-4767-8761-c7db5854ac2e",
+      "7": "89696062-6823-47a5-8fa4-f004c7801177",
+      "8": "cdfdf118-4194-4512-a318-67fc4d993cb0"
+    },
+    "mtbf_h": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null,
+      "8": null
+    },
+    "mttr_h": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null,
+      "8": null
+    },
+    "mtbf": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    "mttr": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    }
+  },
+  "app": {
+    "name": {
+      "0": "Conv1",
+      "1": "Conv2",
+      "2": "Conv3",
+      "3": "CC",
+      "4": "PQ1",
+      "5": "PQ2",
+      "6": "SC",
+      "7": "PC1",
+      "8": "PC2"
+    },
+    "type": {
+      "0": {
+        "name": "CONVERTER",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "1": {
+        "name": "CONVERTER",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "2": {
+        "name": "CONVERTER",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "3": {
+        "name": "WEBSERVER",
+        "value": 3,
+        "values": [
+          3
+        ]
+      },
+      "4": {
+        "name": "CLIENT",
+        "value": 5,
+        "values": [
+          5
+        ]
+      },
+      "5": {
+        "name": "CLIENT",
+        "value": 5,
+        "values": [
+          5
+        ]
+      },
+      "6": {
+        "name": "CLIENT",
+        "value": 5,
+        "values": [
+          5
+        ]
+      },
+      "7": {
+        "name": "CLIENT",
+        "value": 5,
+        "values": [
+          5
+        ]
+      },
+      "8": {
+        "name": "CLIENT",
+        "value": 5,
+        "values": [
+          5
+        ]
+      }
+    },
+    "in_service": {
+      "0": true,
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true,
+      "7": true,
+      "8": true
+    },
+    "uuid": {
+      "0": "c5e14854-4c69-49a5-b586-efb45728f2ac",
+      "1": "ad6a6521-7098-4ed6-9e6d-b841f71ef3bd",
+      "2": "a9afae56-8ca8-4c83-91aa-c049a94f5a0e",
+      "3": "d56e424d-e3c3-45b4-95a7-261b57e2176b",
+      "4": "c7db6713-8fb4-42fb-8ef6-ae4b16ef25e2",
+      "5": "3a7fcbbc-c3f0-440c-8444-f3c34add9627",
+      "6": "ec473686-5572-4e1d-bf0c-0f59a668a8fe",
+      "7": "8e233bf2-91b9-42c3-8fd6-2087cc3c2abc",
+      "8": "afd53832-e5c2-4cb5-9f9f-a0b7476797db"
+    },
+    "device": {
+      "0": 0,
+      "1": 1,
+      "2": 2,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+      "6": 6,
+      "7": 7,
+      "8": 8
+    },
+    "conversions": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null,
+      "8": null
+    }
+  },
+  "conn": {
+    "name": {
+      "0": "CC_Conv1",
+      "1": "Conv1_PC1",
+      "2": "CC_PQ1",
+      "3": "CC_Conv2",
+      "4": "Conv2_PC2",
+      "5": "CC_PQ2",
+      "6": "CC_Conv3",
+      "7": "Conv3_SC"
+    },
+    "in_service": {
+      "0": true,
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true,
+      "7": true
+    },
+    "uuid": {
+      "0": "1febd9a9-8700-4c9c-aff7-8c32a1cda9d4",
+      "1": "6045eef7-8bcf-40c0-a63b-b14eb4f0e726",
+      "2": "b3cfa0c2-9f27-4ef8-8568-b11ec8eebd7d",
+      "3": "11852d89-0f18-412a-b15e-a95449bfe6ea",
+      "4": "953641df-c343-48a7-89b5-ce7d882b61d3",
+      "5": "f2671d60-5ffc-47cd-8f1f-6bf0c91c1596",
+      "6": "bd3800f2-f859-4c8c-bfbe-bcd23fd8c76b",
+      "7": "6c963dbe-908c-4834-915a-080ba4636713"
+    },
+    "from": {
+      "0": 3,
+      "1": 0,
+      "2": 3,
+      "3": 3,
+      "4": 1,
+      "5": 3,
+      "6": 3,
+      "7": 2
+    },
+    "to": {
+      "0": 0,
+      "1": 7,
+      "2": 4,
+      "3": 1,
+      "4": 8,
+      "5": 5,
+      "6": 2,
+      "7": 6
+    },
+    "info_items": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null
+    },
+    "peers": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null
+    },
+    "producer": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null
+    },
+    "prod_freq_ms": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null
+    },
+    "protocol": {
+      "0": null,
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null
+    }
+  },
+  "std_type": {
+    "link": {
+      "Binary": {
+        "bandwidth_Mbps": 0.001,
+        "latency_ms": 1,
+        "wired": true,
+        "protocols": [
+          "Binary"
+        ],
+        "ber_per_km": 0.005,
+        "mtbf_h": 0,
+        "mttr_h": 0,
+        "uuid": "0a004f60-1df4-449c-94b5-08809ad686d1"
+      },
+      "RS485": {
+        "bandwidth_Mbps": 0.1,
+        "latency_ms": 100,
+        "wired": true,
+        "protocols": [
+          "MODBUS-SMA"
+        ],
+        "ber_per_km": 0.005,
+        "mtbf_h": 0,
+        "mttr_h": 0,
+        "uuid": "77fbef84-195f-40de-882b-3d8824c0d3a5"
+      },
+      "LAN1000": {
+        "bandwidth_Mbps": [
+          1000,
+          1000
+        ],
+        "latency_ms": 100,
+        "wired": true,
+        "protocols": [
+          "TCP",
+          "UDP",
+          "FTP",
+          "HTTP",
+          "HTTPS",
+          "MODBUS-TCP"
+        ],
+        "ber_per_km": 0.0005,
+        "mtbf_h": 1000,
+        "mttr_h": 1,
+        "uuid": "4d5b388f-ce1c-407e-81c6-5caa23f1832b"
+      },
+      "LTE50": {
+        "bandwidth_Mbps": [
+          50,
+          10
+        ],
+        "latency_ms": [
+          100,
+          200
+        ],
+        "wired": false,
+        "protocols": [
+          "TCP",
+          "UDP",
+          "FTP",
+          "HTTP",
+          "HTTPS",
+          "MODBUS-TCP"
+        ],
+        "ber_per_km": 0.0005,
+        "mtbf_h": 200,
+        "mttr_h": 1,
+        "uuid": "cd43d4c0-66d2-4723-886a-7c937e259c5a"
+      },
+      "UMTS": {
+        "bandwidth_Mbps": [
+          0.04,
+          0.04
+        ],
+        "latency_ms": [
+          300,
+          300
+        ],
+        "wired": false,
+        "protocols": [
+          "TCP",
+          "UDP",
+          "FTP",
+          "HTTP",
+          "HTTPS",
+          "MODBUS-TCP"
+        ],
+        "ber_per_km": 0.0005,
+        "mtbf_h": 100,
+        "mttr_h": 1,
+        "uuid": "ed41d4c0-64d2-452d-586a-7c937e259c5b"
+      },
+      "ADSL8": {
+        "bandwidth_Mbps": [
+          8,
+          1
+        ],
+        "latency_ms": [
+          200,
+          300
+        ],
+        "wired": true,
+        "protocols": [
+          "TCP",
+          "UDP",
+          "FTP",
+          "HTTP",
+          "HTTPS",
+          "MODBUS-TCP"
+        ],
+        "ber_per_km": 0.0005,
+        "mtbf_h": 100,
+        "mttr_h": 1,
+        "uuid": "6dd01923-0bce-4f07-8ef0-65a0f214d2cf"
+      },
+      "Fiber": {
+        "bandwidth_Mbps": [
+          1000,
+          1000
+        ],
+        "latency_ms": 100,
+        "wired": true,
+        "protocols": [
+          "TCP",
+          "UDP",
+          "FTP",
+          "HTTP",
+          "HTTPS",
+          "MODBUS-TCP"
+        ],
+        "ber_per_km": 0.0001,
+        "mtbf_h": 1000,
+        "mttr_h": 10,
+        "uuid": "eebc167b-b816-468f-bb9a-5e75c7ccd79b"
+      }
+    },
+    "protocol": {
+      "Binary": {
+        "base_package_size_byte": 1,
+        "info_items": [
+          {
+            "name": "VALUE",
+            "value": 2
+          }
+        ],
+        "uuid": "7d188465-eeae-4d42-b048-383f0a1bc6e9"
+      },
+      "TCP": {
+        "base_package_size_byte": 20,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          }
+        ],
+        "uuid": "fdb0612d-3791-437a-b570-139c49c9dea9"
+      },
+      "UDP": {
+        "base_package_size_byte": 8,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          }
+        ],
+        "uuid": "1eec8609-e112-4e7c-ae40-037fac9bdf81"
+      },
+      "HTTP": {
+        "base_package_size_byte": 4096,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          },
+          {
+            "name": "URL",
+            "value": 6
+          },
+          {
+            "name": "WEBPAGE",
+            "value": 9
+          },
+          {
+            "name": "STATUS",
+            "value": 5
+          }
+        ],
+        "payload_size_byte": [
+          256,
+          10240,
+          512,
+          61439,
+          128
+        ],
+        "uuid": "9bd957a0-1e02-4925-bef6-8cf04c5e9ead"
+      },
+      "HTTPS": {
+        "base_package_size_byte": 4096,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          },
+          {
+            "name": "URL",
+            "value": 6
+          },
+          {
+            "name": "WEBPAGE",
+            "value": 9
+          },
+          {
+            "name": "STATUS",
+            "value": 5
+          }
+        ],
+        "uuid": "1ab747c1-dd2c-44ca-9915-7f9ae06da7c2"
+      },
+      "FTP": {
+        "base_package_size_byte": 4096,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          },
+          {
+            "name": "TEXT",
+            "value": 8
+          },
+          {
+            "name": "FILE",
+            "value": 7
+          },
+          {
+            "name": "STATUS",
+            "value": 5
+          }
+        ],
+        "payload_size_byte": [
+          256,
+          256,
+          4096,
+          61493,
+          128
+        ],
+        "uuid": "30e8be5c-06d8-4914-b99b-31f015473599"
+      },
+      "MODBUS-TCP": {
+        "base_package_size_byte": 1024,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          },
+          {
+            "name": "STATUS",
+            "value": 5
+          }
+        ],
+        "uuid": "8adcb11a-e88f-4a36-bf25-a12f720ac728"
+      },
+      "MODBUS-SMA": {
+        "base_package_size_byte": 16,
+        "info_items": [
+          {
+            "name": "REQUEST",
+            "value": 3
+          },
+          {
+            "name": "RESPONSE",
+            "value": 4
+          },
+          {
+            "name": "STATUS",
+            "value": 5
+          }
+        ],
+        "uuid": "41e604ff-a139-452f-a424-6300584ecec3"
+      }
+    }
+  },
+  "iptables": {
+    "0": {}
+  }
+}
