@@ -86,13 +86,14 @@ def create_empty_network(name="", add_stdtypes=True):
 
     """    
     ict_net = pandaICTNet({
-        "name": name,
-        "connectors": [],
+        "name": name,       
         "node": __get_node_structure(),
         "link": __get_link_structure(),        
         "device": __get_device_structure(),  
         "app": __get_app_structure(),       
-        "conn": __get_conn_structure()
+        "conn": __get_conn_structure(),
+        "connectors": [], 
+        "iptables": [],
         })
 
     if add_stdtypes:

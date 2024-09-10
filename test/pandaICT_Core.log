@@ -643,3 +643,14 @@
 2024-09-10 13:52:32,706 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
 2024-09-10 13:52:32,710 INFO     ----------- INSPECTION PASSED -----------
 2024-09-10 13:52:32,710 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:04,147 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:59:04,329 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:59:04,329 INFO     -------------- pandaICT_Core startup ---------------
+2024-09-10 13:59:05,307 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:59:05,307 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 1' -----------
+2024-09-10 13:59:05,312 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:05,312 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:05,445 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:59:05,445 INFO     ----------- pandaICT inspection protocol for ict_net 'Test network 3' -----------
+2024-09-10 13:59:05,450 INFO     ----------- INSPECTION PASSED -----------
+2024-09-10 13:59:05,450 INFO     ----------- INSPECTION PASSED -----------
