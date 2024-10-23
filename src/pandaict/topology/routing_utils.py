@@ -174,7 +174,7 @@ def __get_possible_routes(ict_net, mdg, conn):
     directions = []
     if nxpaths_down is not None:
         for p in nxpaths_down:
-            if p in nxpaths_up or list(reversed(p)) in nxpaths_up:
+            if (nxpaths_up is not None) and (p in nxpaths_up or list(reversed(p)) in nxpaths_up):
                 d = "bidirectional"
             else:
                 d = "downstream"
