@@ -8,13 +8,12 @@ Created on 22.08.2024
 '''
 
 import pandas as pd
-from pandaict.utils.utils import uuid2elt, get_elt, get_elts_any, to_elt, get_values_for_links, get_links_at, get_neighbour_elts
+from pandaict.utils.utils import uuid2elt, get_elt, get_elts_any, to_elt, get_values_for_links, get_links_at, get_neighbour_elts, get_links_between
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.topology.ip_address import IP_address
 from pandaict.utils.enums import RoutingType, SortType, NodeType
 from pandaict.pilogger import pilogger
-from utils.utils import get_links_between
 
 pd.set_option("display.max_columns", 100)
 pd.set_option('display.expand_frame_repr', False)
