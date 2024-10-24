@@ -10,14 +10,12 @@ Created on 30.01.2024
 import networkx as nx
 from pandaict.utils.utils import is_bidirectional, get_supported_protocols, get_elt
 from pandaict.utils.enums import RoutingType
-
-import logging
-logger = logging.getLogger("pandaICT_Core")
+from pandaict.pilogger import pilogger
 
 def __get_nx_node_for_elt(mdg, elt):
     node = [n for n in range(0,mdg.number_of_nodes()) if mdg.nodes[n]['pielt']==elt]
     if len(node)>1:
-        logger.debug("__get_nx_node_for_elt found nodes "+str(node)+" sharing same pielt "+str(elt)+" - this shouldn't happen")
+        pilogger.debug("__get_nx_node_for_elt found nodes "+str(node)+" sharing same pielt "+str(elt)+" - this shouldn't happen")
     if node==[]:
         return None
     else:
@@ -25,7 +23,7 @@ def __get_nx_node_for_elt(mdg, elt):
 
 
 def __log_debug_and_return_false(debugstr):
-    logger.debug(debugstr)
+    pilogger.debug(debugstr)
     return False
 
 def __validate_multidigraph(ict_net, mdg, protocol=None):
@@ -53,7 +51,7 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))                    
         
     if not passed:        
-        if logger.level != logging.DEBUG:
+        if pilogger.level != logging.DEBUG:
             print("__validate_multidigraph FAILED, set loglevel to debug and check the log")
         else:
             print("__validate_multidigraph FAILED, check the log")
@@ -152,13 +150,13 @@ def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
         dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
         dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
     except:
-        logger.debug("Failed to obtain from or to device for conn "+str(conn['name']))        
+        pilogger.debug("Failed to obtain from or to device for conn "+str(conn['name']))        
             
     # Fetch nynodes representing the devices
     n1 = __get_nx_node_for_elt(mdg, dev1)
     n2 = __get_nx_node_for_elt(mdg, dev2)
     if (n1 is None or n2 is None):
-        logger.debug("__get_nx_node_for_elt failed for "+str(dev1) if n1 is None else str(dev2))
+        pilogger.debug("__get_nx_node_for_elt failed for "+str(dev1) if n1 is None else str(dev2))
         return None
     
     return n1,n2
@@ -174,7 +172,7 @@ def __get_possible_routes(ict_net, mdg, conn):
     directions = []
     if nxpaths_down is not None:
         for p in nxpaths_down:
-            if p in nxpaths_up or list(reversed(p)) in nxpaths_up:
+            if (nxpaths_up is not None) and (p in nxpaths_up or list(reversed(p)) in nxpaths_up):
                 d = "bidirectional"
             else:
                 d = "downstream"

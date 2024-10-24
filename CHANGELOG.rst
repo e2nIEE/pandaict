@@ -21,3 +21,7 @@ Change Log
 - [ADDED] Fetching of links for a connection, sorted by adjustable item (e.g. latency)
 - [ADDED] Support for IP networks, IP routing table calculation for nodes
 - [ADDED] Updated docs
+
+[1.1.1] - 2024-10-24
+-------------------------------
+- [FIXED] Compatibility to pp_pict_connector
