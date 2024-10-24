@@ -13,7 +13,7 @@ from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_f
 from pandaict.topology.lup_table import LUP_table
 from pandaict.topology.ip_address import IP_address
 from pandaict.utils.enums import RoutingType, SortType, NodeType
-from pilogger import pilogger
+from pandaict.pilogger import pilogger
 from utils.utils import get_links_between
 
 pd.set_option("display.max_columns", 100)
