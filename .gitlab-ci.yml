@@ -93,7 +93,7 @@ create_artifact_nexus:
    image: python:3.9   
    tags:
     - leitwarte_iee
-   stage: build
+   stage: deploy
    script:
      - echo "$PYPIRC_CFG_NEXUS" > ~/.pypirc
      - pip install virtualenv
