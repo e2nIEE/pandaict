@@ -58,13 +58,13 @@ class PandaICT_Test(unittest.TestCase):
         self.plot_tester.test_plot_dev(self)
     
     def test_plot_app(self):
-        self.plot_tester.test_plot_dev(self)
+        self.plot_tester.test_plot_app(self)
     
     def test_graph_dev(self):
-        self.plot_tester.test_plot_dev(self)
+        self.plot_tester.test_graph_dev(self)
     
     def test_graph_app(self):
-        self.plot_tester.test_plot_dev(self)
+        self.plot_tester.test_graph_app(self)
 
 if __name__ == '__main__':
     unittest.main()

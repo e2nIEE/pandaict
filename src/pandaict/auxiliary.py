@@ -176,7 +176,7 @@ class pandaICTNet(ADict):
                     par.append('   - %s (%i %s, %i %s)' % (
                         et, n_groups, "group" + __plural_s(n_groups), n_rows, "row" + __plural_s(n_rows)))
                 else:
-                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + __plural_s(n_rows)))
+                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + self.__plural_s(n_rows)))
         res_cost = [" and the following result values:",
                     "   - %s" % "res_cost"] if "res_cost" in self.keys() else []
         if not len(par) + len(res):
@@ -279,8 +279,8 @@ class pandaICTNet(ADict):
             alldict.update({tf: typedict})
         return alldict
         
-def __plural_s(number):
-    if number > 1:
-        return "s"
-    else:
-        return ""
+    def __plural_s(self, number):
+        if number > 1:
+            return "s"
+        else:
+            return ""

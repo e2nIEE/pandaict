@@ -8,6 +8,7 @@ Created on 10.09.2024
 '''
 
 from pandaict.utils.utils import get_elts_any
+from pandaict.pilogger import pilogger
 
 def __get_next_hop(ict_net, l, lni):
     if l['from'][0]=="device" or l['from']==lni:            
@@ -20,8 +21,8 @@ def __get_next_hop(ict_net, l, lni):
     return nn, nni 
 
 def __check_calc_route(ict_net, links, caller_string): # caller_strring: calc_ber_route, calc_MTBF_MTTR_route
-    if not isinstance(links, list) or len(links)<2: 
-        pilogger.warn(caller_string+" parameter must be list with at least 2 entries")
+    if not isinstance(links, list): 
+        pilogger.warn(caller_string+" links parameter must be list")
         return False
     for li in links:
         l = get_elts_any(ict_net, li)

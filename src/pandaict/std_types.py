@@ -75,9 +75,9 @@ def __controller_area_linktypes():
               "latency_ms": 1,
               "wired": True,
               "protocols": ['Binary'],
-              "ber_per_km": 0.005,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.00001,
+              "mtbf_h": 6000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"),
             },
         "RS485":
@@ -85,9 +85,9 @@ def __controller_area_linktypes():
               "latency_ms": 100,
               "wired": True,    
               "protocols": ['MODBUS-SMA'],    
-              "ber_per_km": 0.005,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.00001,
+              "mtbf_h": 6000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("77fbef84-195f-40de-882b-3d8824c0d3a5"),
             }
         }
@@ -99,9 +99,9 @@ def __local_area_linktypes():
               "latency_ms": 100,
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0005,
-              "mtbf_h": 1000,
-              "mttr_h": 1,
+              "ber_per_km": 0.00000002,
+              "mtbf_h": 8000,
+              "mttr_h": 2,
               "uuid": uuid.UUID("4d5b388f-ce1c-407e-81c6-5caa23f1832b"),
             }
         }
@@ -113,9 +113,9 @@ def __wide_area_linktypes():
               "latency_ms": (100,200),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0005,
-              "mtbf_h": 200,
-              "mttr_h": 1,
+              "ber_per_km": 0.00000001,
+              "mtbf_h": 5000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
             },
         "UMTS": 
@@ -123,9 +123,9 @@ def __wide_area_linktypes():
               "latency_ms": (300,300),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0005,
-              "mtbf_h": 100,
-              "mttr_h": 1,
+              "ber_per_km": 0.0000001,
+              "mtbf_h": 5000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("ed41d4c0-64d2-452d-586a-7c937e259c5b"),
             },                
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
@@ -134,8 +134,8 @@ def __wide_area_linktypes():
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0.0005,
-              "mtbf_h": 100,
-              "mttr_h": 1,
+              "mtbf_h": 12000,
+              "mttr_h": 10,
               "uuid": uuid.UUID("6dd01923-0bce-4f07-8ef0-65a0f214d2cf"),
             },
         "Fiber": # Glass fiber
@@ -143,9 +143,9 @@ def __wide_area_linktypes():
               "latency_ms": 100,
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0001,
-              "mtbf_h": 1000,
-              "mttr_h": 10,
+              "ber_per_km": 0.000000001,
+              "mtbf_h": 12000,
+              "mttr_h": 2,
               "uuid": uuid.UUID("eebc167b-b816-468f-bb9a-5e75c7ccd79b"),
             }
         }

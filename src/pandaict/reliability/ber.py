@@ -44,7 +44,7 @@ def calc_ber_route(ict_net, links):
         
         # get mtbfs, mttrs 
         ber_link = get_values_for_links(ict_net, links[li], 'ber')[0][0]
-        ber_node = nn['ber']
+        ber_node = nn.get('ber', None)
         
         if li==len(links)-1: # last link in the chain
             # add only link             

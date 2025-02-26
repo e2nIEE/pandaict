@@ -304,7 +304,7 @@ class Core_Test():
         
         # testing value fetching
         values, vtype = get_values_for_links(ict_net, [('link',3),('link',4),('link',5),('link',6),('link',10)], 'ber')
-        utest.assertEqual(values, [0.0001, 0.001, 0.001, 0.0015, 0.001])
+        utest.assertEqual(values, [1e-09, 2e-08, 2e-08, 0.0015, 2e-08])
         utest.assertEqual(vtype, 'bit_error_rate')
         values, vtype = get_values_for_links(ict_net, [('link',0),('link',2),('link',8),('link',9)], 'bandwidth')
         utest.assertEqual(values, [(1000, 1000), (1000, 1000), (8, 1), (1000, 1000)])
@@ -388,17 +388,17 @@ class Core_Test():
             ber_d += [calc_ber_route(ict_net, links_d)]
             ber_u += [calc_ber_route(ict_net, links_u)]
             
-        expected_ber_d = [0.005091, 0.007582, 0.013137, 0.007633]
-        expected_ber_u = [0.005091, 0.007581, 0.009665, 0.007633]
+        expected_ber_d = [0.004494, 0.005992, 0.011951, 0.006988]
+        expected_ber_u = [0.004494, 0.005992, 0.008476, 0.006988]
         utest.assertEqual(len(expected_ber_d), len(ber_d))
         for i in range(0, len(expected_ber_d)):
             utest.assertAlmostEqual(expected_ber_d[i], ber_d[i], delta=0.00001)
             utest.assertAlmostEqual(expected_ber_u[i], ber_u[i], delta=0.00001)
                  
         # connection level testing
-        expected_MTBF = [74.074, 119.048, 53.860, 78.534]
-        expected_MTTR = [1.704, 2.095, 2.061, 1.775]
-        expected_ber = [0.005091, 0.007582, 0.013137, 0.007633]
+        expected_MTBF = [558.140, 552.995, 495.868, 875.912]
+        expected_MTTR = [1.814, 1.171, 2.248, 1.854]
+        expected_ber = [0.004494, 0.005992, 0.011951, 0.006988]
         calculated_MTBF = []
         calculated_MTTR = []
         calculated_ber = []

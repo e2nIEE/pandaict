@@ -268,7 +268,7 @@ def __create_device_check(ict_net, device_type, uid):
     __check_uuid(ict_net, uid)
 
 def create_ict_device(ict_net, name=None, device_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
-                      mtbf=0, mttr=0 ):
+                      mtbf_h=0, mttr_h=0 ):
     
     """
     Adds one device in table ict_net["device"].
@@ -313,7 +313,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
     dtypes = ict_net.device.dtypes        
     ruuid = __create_ruuid(uid, use_uuid)
         
-    ict_net.device.loc[index, ["name", "type", "in_service", "mtbf", "mttr", "uuid" ]] = [name, device_type, in_service, mtbf, mttr, ruuid]
+    ict_net.device.loc[index, ["name", "type", "in_service", "mtbf_h", "mttr_h", "uuid" ]] = [name, device_type, in_service, mtbf_h, mttr_h, ruuid]
 
     __preserve_dtypes(ict_net.device, dtypes)
 
@@ -402,7 +402,7 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
     return ruuid if use_uuid else ('app', index)
 
 def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_service=True, use_uuid=False,            
-                      conversions=None, mtbf=0, mttr=0 ):
+                      conversions=None, mtbf_h=0, mttr_h=0 ):
     
     """
     Adds one device in table ict_net["device"] and one app in table ict_net["app"]. The app is set to run on the device.
@@ -439,7 +439,7 @@ def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_se
         create_ict_app(net, name = "PowerMeterApp1", device=0)
     """
     
-    dev = create_ict_device(ict_net, name=name, device_type=device_type, in_service=in_service, use_uuid=use_uuid, mtbf=mtbf, mttr=mttr)    
+    dev = create_ict_device(ict_net, name=name, device_type=device_type, in_service=in_service, use_uuid=use_uuid, mtbf_h=mtbf_h, mttr_h=mttr_h)    
     app = create_ict_app(ict_net, name=name, app_type=app_type, in_service=in_service, use_uuid=use_uuid, conversions=conversions, device=dev)
     return (dev, app)
 
