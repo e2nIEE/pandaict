@@ -48,15 +48,11 @@ sonarqube-check:
     - sonar-scanner
   allow_failure: true
   only:
-    - merge_requests
-    - master
-    - main
     - develop
 
 unit-test:
-    image: python:3.9
+    image: python:3.12.2
     stage: test
-    image: python:3.12.2    
     script:
      - pip install -r requirements.txt
      - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
@@ -106,7 +102,7 @@ create_artifact_gitlab_nexus:
     - pip install build
     - python -m build --wheel
     - export CURL_CA_BUNDLE=""
-#    - #twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose
+    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose
     - echo "$PYPIRC_CFG_NEXUS" > ~/.pypirc 
     - twine upload --config-file ~/.pypirc -r nexus dist/*
   artifacts:
