@@ -27,10 +27,10 @@ semgrep-sast:
     - leitwarte_iee
 
 stages:
+  - sonarqube-check
   - test
   - pages
   - deploy
-  - sonarqube-check
 
 sonarqube-check:
   stage: sonarqube-check
