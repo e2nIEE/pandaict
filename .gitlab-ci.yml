@@ -27,14 +27,32 @@ semgrep-sast:
     - leitwarte_iee
 
 stages:
+  - sonarqube-check
   - test
   - pages
   - deploy
 
+sonarqube-check:
+  stage: sonarqube-check
+  image:
+    name: sonarsource/sonar-scanner-cli:5.0
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - sonar-scanner
+  allow_failure: true
+  only:
+    - develop
+
 unit-test:
-    image: python:3.9
-    stage: test
-    image: python:3.12.2    
+    image: python:3.12.2
+    stage: test       
     script:
      - pip install -r requirements.txt
      - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
@@ -70,13 +88,12 @@ pages:
     - public
 
 
-create_artifact_gitlab:
+create_artifact_gitlab_nexus::
   image: python:3.9
   tags: 
    - leitwarte_iee
   stage: deploy
-  script:
-    - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
+  script:    
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
@@ -84,7 +101,9 @@ create_artifact_gitlab:
     - pip install build
     - python -m build --wheel
     - export CURL_CA_BUNDLE=""
-    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose  
+    - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
+    - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose    
+    - twine upload --config-file ~/.pypirc -r nexus dist/*
   artifacts:
     paths:
       - dist/*.whl
