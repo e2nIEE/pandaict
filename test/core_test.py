@@ -12,7 +12,7 @@ from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links, get
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
-from   pandaict.reliability.mtbr_mttf import calc_MTBF_route, calc_MTBF_MTTR_route, calc_MTBF_MTTR_by_lup
+from   pandaict.reliability.mtbr_mttf import calc_mtbf_route, calc_mtbf_mttr_route, calc_mtbf_mttr_by_lup
 from   pandaict.reliability.ber import calc_ber_route, calc_ber_by_lup
 from   pandaict.std_types import create_std_type
 import pandas as pd
@@ -271,8 +271,8 @@ class Core_Test():
     
     def test_inspect_ict_net(self, utest):        
         
-        ict_net = self.create_testnet1()                       
-        utest.assertTrue(pi.inspect(ict_net))   
+        ict_net = self.create_testnet1()           
+        utest.assertTrue(pi.inspect(ict_net, verbose=False))   
         return 
     
     def test_user_input_checks(self, utest):        
@@ -371,12 +371,12 @@ class Core_Test():
             
             # downstream direction
             links_d = [('link', l['link']) for l in lup_table.get_route(0)['links']]
-            (MTBF_d, MTTR_d) = calc_MTBF_MTTR_route(ict_net, links_d)
-            MTBF_d2 = calc_MTBF_route(ict_net, links_d)                
+            (MTBF_d, MTTR_d) = calc_mtbf_mttr_route(ict_net, links_d)
+            MTBF_d2 = calc_mtbf_route(ict_net, links_d)                
             # upstream direction
             links_u = [('link', l['link']) for l in lup_table.get_route(1)['links']]
-            (MTBF_u, MTTR_u) = calc_MTBF_MTTR_route(ict_net, links_u)
-            MTBF_u2 = calc_MTBF_route(ict_net, links_u)                                        
+            (MTBF_u, MTTR_u) = calc_mtbf_mttr_route(ict_net, links_u)
+            MTBF_u2 = calc_mtbf_route(ict_net, links_u)                                        
             
             utest.assertAlmostEqual(MTBF_d, MTBF_d2, delta=0.00001) # MTBF calculated by different methods must be equal
             utest.assertAlmostEqual(MTBF_u, MTBF_u2, delta=0.00001)
@@ -404,7 +404,7 @@ class Core_Test():
         calculated_ber = []
         for i, _ in ict_net['conn'].iterrows():
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY) 
-            (MTBF_conn, MTTR_conn) = calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True)
+            (MTBF_conn, MTTR_conn) = calc_mtbf_mttr_by_lup(ict_net, lup_table, downstream=True)
             ber_conn = calc_ber_by_lup(ict_net, lup_table, downstream=True)                        
             calculated_MTBF += [MTBF_conn]
             calculated_MTTR += [MTTR_conn]

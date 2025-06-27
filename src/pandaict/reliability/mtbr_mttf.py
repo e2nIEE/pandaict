@@ -25,7 +25,7 @@ def __all_nonzero_float(values):
             return False
     return True
 
-def __calc_MTBF_MTTR_serial2(mtbf_mttr1, mtbf_mttr2):    
+def __calc_mtbf_mttr_serial2(mtbf_mttr1, mtbf_mttr2):    
     """
         Calculates MTBF and MTTR for a serial system with 2 subsystems 
         
@@ -40,7 +40,7 @@ def __calc_MTBF_MTTR_serial2(mtbf_mttr1, mtbf_mttr2):
     mttr2 = mtbf_mttr2[1]
         
     if mtbf1 == 0 and mtbf2 == 0:
-        # can not calculate MTTR_total neither MTTR_total
+        # can not calculate mttr_total neither mttr_total
         return (0,0)
     else:
         if mtbf1 == 0:
@@ -48,14 +48,14 @@ def __calc_MTBF_MTTR_serial2(mtbf_mttr1, mtbf_mttr2):
         elif mtbf2 == 0:
             return (mtbf1, mttr1)
         else:
-            MTBF_total = (mtbf1 * mtbf2) / (mtbf1 + mtbf2)
+            mtbf_total = (mtbf1 * mtbf2) / (mtbf1 + mtbf2)
             if mttr1==0 or mttr2==0:
-                MTTR_total = 0
+                mttr_total = 0
             else:
-                MTTR_total =  (mtbf1 * mttr2 + mtbf2 * mttr1) / (mtbf1 + mtbf2)        
-            return (MTBF_total, MTTR_total)        
+                mttr_total =  (mtbf1 * mttr2 + mtbf2 * mttr1) / (mtbf1 + mtbf2)        
+            return (mtbf_total, mttr_total)        
 
-def calc_MTBF_route(ict_net, links, include_end_app=False):
+def calc_mtbf_route(ict_net, links, include_end_app=False):
     """
     Calculate MTBF along a route given by a list of links.    
     Links and nodes along the route are handled as a serial system and total MTBF is calculated accordingly.  
@@ -67,15 +67,15 @@ def calc_MTBF_route(ict_net, links, include_end_app=False):
         **links** (list of tuple) - list of links that define the route, in pandaICT element notation            
                             
     :OUTPUT:
-        **MTBF_total** (float) - MTBF of serial system consisting of links and nodes along the route 
+        **mtbf_total** (float) - MTBF of serial system consisting of links and nodes along the route 
 
     :EXAMPLE:
-        calc_MTBF_route(ict_net, [('link',1),('link',8),('link',0)])
+        calc_mtbf_route(ict_net, [('link',1),('link',8),('link',0)])
     """
-    if not __check_calc_route(ict_net, links, "calc_MTBF_route"):
+    if not __check_calc_route(ict_net, links, "calc_mtbf_route"):
         return None
            
-    MTBF_route = 0   
+    mtbf_route = 0   
     lni  = None # last node index
     
     for li in range(0,len(links)):
@@ -88,21 +88,40 @@ def calc_MTBF_route(ict_net, links, include_end_app=False):
         mtbf_node = nn['mtbf_h']
         
         if mtbf_link is not None and mtbf_link != 0:
-            MTBF_route += 1/mtbf_link
+            mtbf_route += 1/mtbf_link
         if li==len(links)-1: # last link in the chain -> don't add node                        
             if include_end_app and __all_nonzero_float(mtbf_node):
-                MTBF_route += 1/mtbf_node                
+                mtbf_route += 1/mtbf_node                
             break
         else: # update total  MTBF and MTTR, also add node        
             if __all_nonzero_float(mtbf_node):
-                MTBF_route += 1/mtbf_node        
+                mtbf_route += 1/mtbf_node        
         lni = nni
     
     # finally inverse 
-    MTBF_route = 1/MTBF_route
-    return MTBF_route
+    mtbf_route = 1/mtbf_route
+    return mtbf_route
 
-def calc_MTBF_MTTR_route(ict_net, links, include_end_app=False):
+def _finalize_mtbf_mttr(li, mtbf_link, mttr_link, mtbf_node, mttr_node, mtbf_route, mttr_route, include_end_app):
+    if li==0: # only one link in chain
+        (mtbf_route, mttr_route) = (mtbf_link, mttr_link)            
+    else: # add link
+        (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_link, mttr_link))
+    if (include_end_app) and __all_nonzero_float(mtbf_node) and __all_nonzero_float(mttr_node):                
+        (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_node, mttr_node))
+    return mtbf_route, mttr_route
+
+def _update_mtbf_mttr(li, mtbf_link, mttr_link, mtbf_node, mttr_node, mtbf_route, mttr_route):
+    if li==0:
+        # initialize
+        (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_link, mttr_link), (mtbf_node, mttr_node))
+    else:
+        # add link and node subsequentially
+        (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_link, mttr_link))
+        (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_node, mttr_node))
+    return mtbf_route, mttr_route
+
+def calc_mtbf_mttr_route(ict_net, links, include_end_app=False):
     """
     Calculate MTBF and MTTR along a route given by a list of links.    
     Links and nodes along the route are handled as a serial system and total MTBF and MTTR are calculated accordingly.  
@@ -114,17 +133,17 @@ def calc_MTBF_MTTR_route(ict_net, links, include_end_app=False):
         **links** (list of tuple) - list of links that define the route, in pandaICT element notation            
                             
     :OUTPUT:
-        **(MTBF_total, MTTR_total)** (tuple of float) - MTBF and MTBR of serial system consisting of links and nodes along the route 
+        **(mtbf_total, mttr_total)** (tuple of float) - MTBF and MTBR of serial system consisting of links and nodes along the route 
 
     :EXAMPLE:
-        calc_MTBF_MTTR_route(ict_net, [('link',1),('link',8),('link',0)])
+        calc_mtbf_mttr_route(ict_net, [('link',1),('link',8),('link',0)])
     """    
     
-    if not __check_calc_route(ict_net, links, "calc_MTBF_MTTR_route"):
+    if not __check_calc_route(ict_net, links, "calc_mtbf_mttr_route"):
         return None
            
-    MTBF_route = None
-    MTTR_route = None
+    mtbf_route = None
+    mttr_route = None
     lni  = None # last node index
     
     for li in range(0,len(links)):
@@ -134,32 +153,22 @@ def calc_MTBF_MTTR_route(ict_net, links, include_end_app=False):
         # get mtbfs, mttrs 
         mtbf_link = get_values_for_links(ict_net, links[li], 'mtbf')[0][0]
         mttr_link = get_values_for_links(ict_net, links[li], 'mttr')[0][0]            
-        # nn = get_elts_any(ict_net, nni)
         mtbf_node = nn['mtbf_h']
         mttr_node = nn['mttr_h']
             
         if li==len(links)-1: # last link in the chain
-            if li==0: # only one link in chain
-                (MTBF_route, MTTR_route) = (mtbf_link, mttr_link)            
-            else: # add link
-                (MTBF_route, MTTR_route) = __calc_MTBF_MTTR_serial2((MTBF_route, MTTR_route), (mtbf_link, mttr_link))
-            if (include_end_app) and __all_nonzero_float(mtbf_node) and __all_nonzero_float(mttr_node):                
-                (MTBF_route, MTTR_route) = __calc_MTBF_MTTR_serial2((MTBF_route, MTTR_route), (mtbf_node, mttr_node))
+            (mtbf_route, mttr_route) = _finalize_mtbf_mttr(li, mtbf_link, mttr_link, mtbf_node, mttr_node, 
+                                                                mtbf_route, mttr_route, include_end_app)
+           
             break
         else: # update total  MTBF and MTTR                                                        
-            if li==0:
-                # initialize
-                (MTBF_route, MTTR_route) = __calc_MTBF_MTTR_serial2((mtbf_link, mttr_link), (mtbf_node, mttr_node))
-            else:
-                # add link and node subsequentially
-                (MTBF_route, MTTR_route) = __calc_MTBF_MTTR_serial2((MTBF_route, MTTR_route), (mtbf_link, mttr_link))
-                (MTBF_route, MTTR_route) = __calc_MTBF_MTTR_serial2((MTBF_route, MTTR_route), (mtbf_node, mttr_node))
+            (mtbf_route, mttr_route) = _update_mtbf_mttr(li, mtbf_link, mttr_link, mtbf_node, mttr_node, mtbf_route, mttr_route)            
                     
         lni = nni
     
-    return (MTBF_route, MTTR_route)
+    return (mtbf_route, mttr_route)
 
-def calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True, include_end_app=False):
+def calc_mtbf_mttr_by_lup(ict_net, lup_table, downstream=True, include_end_app=False):
     """
     Calculate MTBF and MTTR for a lup table, which represents a routing scheme for a connection.    
     Links and nodes along the route are handled as a serial system and total MTBF and MTTR are calculated accordingly.
@@ -174,17 +183,17 @@ def calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True, include_end_app=F
         **downstream** (boolean) - output is calculated for the downstream direction on connection level if True, upstream if False            
                             
     :OUTPUT:
-        **(MTBF_conn_total, MTTR_conn_total)** (tuple of float) - total MTBF and MTBR  
+        **(mtbf_conn_total, mttr_conn_total)** (tuple of float) - total MTBF and MTBR  
 
     :EXAMPLE:
         Note: this calculates the total MTBF and MTTR for connection id 1 in the upstream direction.
         
         lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
-        calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=False)
+        calc_mtbf_mttr_by_lup(ict_net, lup_table, downstream=False)
     """
     
-    MTBF_conn_total = 0
-    MTTR_conn_total = 0
+    mtbf_conn_total = 0
+    mttr_conn_total = 0
     
     # Check requirement: lup probabilities must not add up to more than 1.0
     if not __check_lup_prob_sum_lt_one(lup_table, downstream):
@@ -194,10 +203,10 @@ def calc_MTBF_MTTR_by_lup(ict_net, lup_table, downstream=True, include_end_app=F
         if r['downstream']!=downstream:
             continue 
         links = [('link', l['link']) for l in r['links']] 
-        (MTBF_route, MTTR_route) = calc_MTBF_MTTR_route(ict_net, links, include_end_app=include_end_app)
+        (mtbf_route, mttr_route) = calc_mtbf_mttr_route(ict_net, links, include_end_app=include_end_app)
         
-        MTBF_conn_total += r['probability'] * MTBF_route
-        MTTR_conn_total += r['probability'] * MTTR_route
+        mtbf_conn_total += r['probability'] * mtbf_route
+        mttr_conn_total += r['probability'] * mttr_route
         
-    return (MTBF_conn_total, MTTR_conn_total)
+    return (mtbf_conn_total, mttr_conn_total)
     

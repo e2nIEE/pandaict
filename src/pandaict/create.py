@@ -244,6 +244,9 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
     dtypes = ict_net.link.dtypes        
     ruuid = __create_ruuid(uid, use_uuid)
     
+    if not isinstance(to_elt, list):
+        to_elt = [to_elt]
+    
     if (use_uuid):                 
         from_elt = get_elts_any(ict_net, from_elt, expected=['device','node'])        
         to_elt = get_elts_any(ict_net, to_elt, expected=['device','node'])                          
