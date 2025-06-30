@@ -188,15 +188,12 @@ def assign_ipaddr_to_elts(ict_net, eltlist, start_ip=None, end_ip=None, netmask=
         if end_ip is not None: 
             last_ip  = IP_address(end_ip)
         elif cur_ip.netmask is None:
-            raise UserWarning("since end_ip is not used, start_ip must contain mask, using cidr notation") 
-            return (False,None)           
+            raise UserWarning("since end_ip is not used, start_ip must contain mask, using cidr notation")                 
     elif ip_range is not None: 
         cur_ip = IP_address(ip_range)
         last_ip = None  
         if cur_ip.netmask is None:
-            raise UserWarning("ip_range must contain mask, using cidr notation")
-            return (False,None)
-
+            raise UserWarning("ip_range must contain mask, using cidr notation")        
     for e in eltlist:
         if not __check_elt_to_assign(ict_net, e):             
             continue        
@@ -230,7 +227,6 @@ def __get_ip_addresses_from(ips: list, netmasks: list):
         netmasks = [netmasks]
     if len(ips)!=len(netmasks): 
         raise UserWarning("Input ips and netmasks lists must have equal length")
-        return None
     ip_addresses = []
     for i in range(0,len(ips)):
         ip_addresses += [IP_address(ips[i], netmasks[i])]
@@ -296,8 +292,7 @@ def update_iptables(ict_net, lup_table):
     
     for i,r in enumerate(lup_table):
         if 'hops' not in r.keys():
-            raise UserWarning("LUP table must include hops for updating ip tables, please use include_hops=True when calling routing.calc_lup_table")
-            break
+            raise UserWarning("LUP table must include hops for updating ip tables, please use include_hops=True when calling routing.calc_lup_table")            
         if not r['delivering']:
             continue
         metric = 100-r['probability']*100

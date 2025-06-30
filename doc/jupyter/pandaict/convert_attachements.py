@@ -4,16 +4,17 @@ import os
 
 
 def _convert_images_in_attachments(cell, attachments):
-    for mime, data in attachment_content.items(): 
-        cs = cell.source
-        if mime.startswith('image'):
-            # Decodiere das Bild und speichere es als Datei
-            img_data = base64.b64decode(data)
-            img_filename = os.path.join(output_dir, attachment_name)
-            with open(img_filename, 'wb') as img_file:
-                img_file.write(img_data)
-            # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                                          
-            cs = cell.source.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
+    for attachment_name, attachment_content in attachments.items():
+        for mime, data in attachment_content.items(): 
+            cs = cell.source
+            if mime.startswith('image'):
+                # Decodiere das Bild und speichere es als Datei
+                img_data = base64.b64decode(data)
+                img_filename = os.path.join(output_dir, attachment_name)
+                with open(img_filename, 'wb') as img_file:
+                    img_file.write(img_data)
+                # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                                          
+                cs = cell.source.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
         return cs
 
 def convert_attachments_to_files(notebook_path, output_dir):
@@ -27,9 +28,8 @@ def convert_attachments_to_files(notebook_path, output_dir):
     # Durchsuche alle Zellen im Notebook
     for cell in nb.cells:
         if cell.cell_type == 'markdown' and 'attachments' in cell:
-            attachments = cell['attachments']
-            for attachment_name, attachment_content in attachments.items():
-                cell.source = _convert_images_in_attachments(cell, attachments)
+            attachments = cell['attachments']            
+            cell.source = _convert_images_in_attachments(cell, attachments)
                         		
     
     # Speichere das angepasste Notebook

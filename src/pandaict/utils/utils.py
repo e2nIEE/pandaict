@@ -33,7 +33,7 @@ def uuid2elt(ict_net, uid):
     elt_types = ["node","link","device","app","conn"]    
     for et in elt_types:
         try:
-            idx = np.where(ict_net[et]['uuid']==uid)[0][0]
+            idx = np.nonzero(ict_net[et]['uuid']==uid)[0][0]
             return (et, idx)
         except:
             pass            
@@ -80,7 +80,7 @@ def to_elt(ict_net, any_id):
         to_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """ 
     if isinstance(any_id, uuid.UUID): 
-        return uuid2elt(any_id)
+        return uuid2elt(ict_net, any_id)
     else:
         return any_id
     
@@ -265,7 +265,6 @@ def get_links_between(ict_net, elt1, elt2, respect_direction=False):
     """
     if not((elt1[0]=="device" or elt1[0]=="node") and (elt2[0]=="device" or elt2[0]=="node")):
         raise UserWarning("Both elt parameters must be device or node-type elements")
-        return []
     linklist = []
     for i, l in ict_net.link.iterrows():
         lfrom = l['from']
