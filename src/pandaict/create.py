@@ -50,8 +50,8 @@ def __check_uuid(ict_net, uid):
             raise UserWarning("uid must be None, uuid4 or string")
         try:
             uelt = uuid2elt(ict_net, uuid.UUID(str(uid)))
-        except:
-            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")
+        except ValueError:
+            raise UserWarning("uid '" + str(uid) + "' can not be converted to UUID object")       
         if uelt is not None:
             raise UserWarning("uid already in use for " + str(uuid2elt(ict_net, uuid.UUID(str(uid)))))
         
@@ -322,6 +322,18 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
 
     return ruuid if use_uuid else ('device', index)
      
+def __create_app_check_conversion(ict_net, cn, name):
+    if not isinstance(cn, tuple):
+        raise UserWarning("conversions list items for app '" + str(name) + "' must be tuples (String, String, Float, Float)")
+    if len(cn) < 2:
+        raise UserWarning("conversions list items for app '" + str(name) + "' must have at least two entries")
+    if cn[0] == cn[1]:
+        raise UserWarning("conversion for app  '" + str(name) + "' must not convert between same protocols")
+    if cn[0] not in ict_net.std_types['protocol'].keys():
+        raise UserWarning("conversion protocol '" + str(cn[0]) + "' for app  '" + str(name) + "' not found in std_types")
+    if cn[1] not in ict_net.std_types['protocol'].keys():
+        raise UserWarning("conversion protocol '" + str(cn[1]) + "' for app  '" + str(name) + "' not found in std_types")
+
 def __create_app_check(ict_net, name, app_type, uid, conversions, device):
     
     if app_type is not None and not isinstance(app_type, AppType):
@@ -333,16 +345,7 @@ def __create_app_check(ict_net, name, app_type, uid, conversions, device):
         if not isinstance(conversions, list):
             raise UserWarning("conversions must be given as list")
         for cn in conversions:
-            if not isinstance(cn, tuple):
-                raise UserWarning("conversions list items for app '" + str(name) + "' must be tuples (String, String, Float, Float)")
-            if len(cn) < 2:
-                raise UserWarning("conversions list items for app '" + str(name) + "' must have at least two entries")
-            if cn[0] == cn[1]:
-                raise UserWarning("conversion for app  '" + str(name) + "' must not convert between same protocols")
-            if cn[0] not in ict_net.std_types['protocol'].keys():
-                raise UserWarning("conversion protocol '" + str(cn[0]) + "' for app  '" + str(name) + "' not found in std_types")
-            if cn[1] not in ict_net.std_types['protocol'].keys():
-                raise UserWarning("conversion protocol '" + str(cn[1]) + "' for app  '" + str(name) + "' not found in std_types")
+            __create_app_check_conversion(ict_net, cn, name)
         
 def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=True, use_uuid=False, uid=None,                      
                       conversions=None, device=None ):
