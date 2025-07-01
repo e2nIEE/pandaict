@@ -412,15 +412,14 @@ def set_static_iptable_entry(ict_net, node_elt, destination, gateway, netmask = 
         if ltype is not None: 
             try:
                 link_idx = ict_net.node.iloc[node_elt[1]].link_types.index(ltype)
-            except [IndexError, KeyError, AttributeError, ValueError, TypeError]:
+            except (IndexError, KeyError, AttributeError, ValueError, TypeError):
                 link_idx = None        
     try:
         if netmask is None: 
             netmask = ict_net.node.iloc[node_elt[1]]['netmask'][link_idx]
-    except [IndexError, KeyError, AttributeError, ValueError, TypeError]:
+    except (IndexError, KeyError, AttributeError, ValueError, TypeError):
         netmask=None
         
     ientry = {"node_idx": node_elt[1], "entry": entrycount, "destination": destination, "netmask": netmask, "gateway": gateway, 
               "link_idx": link_idx, "type": "static", "metric": metric}    
     ict_net.iptables.loc[len(ict_net.iptables.index)] = ientry
-      

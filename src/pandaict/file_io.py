@@ -155,7 +155,7 @@ def to_json(ict_net, filename, save_std_types=False):
                         "std_type":   json.loads(jstdt),
                         "iptables":   json.loads(jipta),
                         }, pifile, indent=2)                            
-        except [TypeError, IndexError, ValueError, NameError] as e:
+        except (TypeError, IndexError, ValueError, NameError) as e:
             pilogger.error("Error while writing net to "+filename+" - "+str(e))  
             
 def __remove_nans_from_std_types(std_type_dict):
@@ -183,7 +183,7 @@ def from_json(filename):
     with open(filename, 'r') as pifile: 
         try:
             jall = json.load(pifile)
-        except [ValueError, JSONDecodeError, TypeError, FileNotFoundError, IOError, OSError] as e:
+        except (ValueError, JSONDecodeError, TypeError, FileNotFoundError, IOError, OSError) as e:
             pilogger.error("Not a valid pandaICT file: "+filename+" - "+str(e))
             return
     

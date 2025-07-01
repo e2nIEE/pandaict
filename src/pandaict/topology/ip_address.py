@@ -82,7 +82,7 @@ class IP_address:
                 for b in addr.split('.'):
                     if int(b)>255 or int(b)<0: 
                         return False
-        except [AttributeError, ValueError, IndexError, TypeError]:
+        except (AttributeError, ValueError, IndexError, TypeError):
             return False 
         
         return True    
