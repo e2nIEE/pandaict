@@ -12,6 +12,7 @@ from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
 from pandaict.topology.lup_table import LUP_table
 from pandaict.utils.enums import RoutingType, SortType
+from pandaict.pilogger import pilogger
 
 class IP_address: 
     """
@@ -52,10 +53,10 @@ class IP_address:
                     
         """ 
         if not(self.__validate_ip(ip_string)):
-            print("Invalid IP string: "+ip_string)
+            pilogger.error("Invalid IP string: "+ip_string)
         if ':' in ip_string: 
             # assume IPv6
-            print("IPv6 not supported yet")
+            pilogger.error("IPv6 not supported yet")
         if '/' in ip_string: 
             (addr, prefix) = ip_string.split('/')
             self.ip = addr
@@ -81,7 +82,7 @@ class IP_address:
                 for b in addr.split('.'):
                     if int(b)>255 or int(b)<0: 
                         return False
-        except:
+        except [AttributeError, ValueError, IndexError, TypeError]:
             return False 
         
         return True    
@@ -105,14 +106,6 @@ class IP_address:
     
     def __int_to_ipv4(self, i):
         return str((i >> 24 & 255, i >> 16 & 255, i >> 8 & 255, i & 255)).replace('(','').replace(', ','.').replace(')','')    
-    
-    def __split_cidr(self, cidr_ip):    
-        if "." in cidr_ip: # IPv4
-            ip, prefix = cidr_ip.split("/")        
-            if prefix is not None:            
-                if prefix <= 32:                    
-                    mask = self.__int_to_ipv4(int(~((1 << (32-prefix)) - 1)))
-            return ip, mask
         
     def inc(self, own_network_only = False):
         """
@@ -127,28 +120,31 @@ class IP_address:
             **success** (boolean) - True if IP was successfully increased, False if increasing was not possible
                         
         """ 
-        if self.is_IPV4:            
-            ip_int = self.__ipv4_to_int(self.ip)            
-            
-            if own_network_only and self.netmask is not None:                
-                mask_int = self.__ipv4_to_int(self.netmask)
-                host_ip = (ip_int & ~mask_int) + 1
-                if (host_ip & 255) == 0:
-                    host_ip += 1
-                if (host_ip & 255) == 255:
-                    host_ip += 2
-                if host_ip > (~mask_int) & ((1 << 32) - 1):
-                    return False
-                else:
-                    ip_int = (ip_int & mask_int) + host_ip                                        
-            else: 
-                ip_int += 1            
-                if (ip_int & 255) == 0:
-                    ip_int += 1
-                if (ip_int & 255) == 255:
-                    ip_int += 2
-            self.ip = self.__int_to_ipv4(ip_int)
-            return True
+        if not self.is_IPV4():
+            pilogger.error("Only IPV4 supported")
+            return False
+        
+        ip_int = self.__ipv4_to_int(self.ip)            
+        
+        if own_network_only and self.netmask is not None:                
+            mask_int = self.__ipv4_to_int(self.netmask)
+            host_ip = (ip_int & ~mask_int) + 1
+            if (host_ip & 255) == 0:
+                host_ip += 1
+            if (host_ip & 255) == 255:
+                host_ip += 2
+            if host_ip > (~mask_int) & ((1 << 32) - 1):
+                return False
+            else:
+                ip_int = (ip_int & mask_int) + host_ip                                        
+        else: 
+            ip_int += 1            
+            if (ip_int & 255) == 0:
+                ip_int += 1
+            if (ip_int & 255) == 255:
+                ip_int += 2
+        self.ip = self.__int_to_ipv4(ip_int)
+        return True
         
     def last_hostIP_in_network(self):
         """
@@ -158,20 +154,23 @@ class IP_address:
             **last_ip** (IP_address) - IP_address object representing the highest host IP in the network 
                                     
         """ 
-        if self.is_IPV4:
-            if self.netmask is None:
-                return IP_address("255.255.255.254")
-            else: 
-                ip_int = self.__ipv4_to_int(self.ip) 
-                mask_int = self.__ipv4_to_int(self.netmask)          
-                n = bin(mask_int).count('1')
-                lip = (ip_int & mask_int) + (1 << (32-n)) - 1
-                if lip & 255 == 255: 
-                    lip -= 1
-                last_ip = IP_address(self.__int_to_ipv4(lip))
-                last_ip.netmask = self.netmask
-                return last_ip
-    
+        if not self.is_IPV4():
+            pilogger.error("Only IPV4 supported")
+            return False
+        
+        if self.netmask is None:
+            return IP_address("255.255.255.254")
+        else: 
+            ip_int = self.__ipv4_to_int(self.ip) 
+            mask_int = self.__ipv4_to_int(self.netmask)          
+            n = bin(mask_int).count('1')
+            lip = (ip_int & mask_int) + (1 << (32-n)) - 1
+            if lip & 255 == 255: 
+                lip -= 1
+            last_ip = IP_address(self.__int_to_ipv4(lip))
+            last_ip.netmask = self.netmask
+            return last_ip
+
     def greater_than(self, other):
         """
         Determines if current IP is greater than another one 

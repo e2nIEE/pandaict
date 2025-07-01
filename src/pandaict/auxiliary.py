@@ -192,6 +192,17 @@ class pandaICTNet(ADict):
             par + res + res_cost
         return "\n".join(lines)
     
+    def _remove_uuids_from_std_types(self, std_type_dict):
+        dict_nouuids = copy.deepcopy(std_type_dict)
+        for k in dict_nouuids.keys():
+            try:
+                for kk in dict_nouuids[k].keys():
+                    if 'uuid' in dict_nouuids[k][kk].keys():
+                        dict_nouuids[k][kk].pop('uuid')
+            except:
+                print("A")
+        return dict_nouuids
+    
     def equals_excluding_uuids(self, other, include_std_types=False):
         """
         Compares this network to another one
@@ -199,6 +210,9 @@ class pandaICTNet(ADict):
         :INPUT:
             **other** (pandaICTNet) - pandaict network to compare to.           
             
+        :OPTIONAL:
+            **include_std_types** (default=False) - If true, std_types are saved too. If False, they're not. 
+        
         :OUTPUT:
             **equals** (boolean) - True if networks are equal excluding uuids and standard types, False else.  
         
@@ -206,15 +220,23 @@ class pandaICTNet(ADict):
         keys = list(self.keys())
         if 'name' in keys:
             keys.remove('name')
-        if 'std_types' in keys: 
+        if 'std_types' in keys and not include_std_types: 
             keys.remove('std_types')
+        retval = True
         for k in keys:            
-            cols = list(self[k].columns)
-            if 'uuid' in cols: 
-                cols.remove('uuid')                        
-            if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
-                return False                
-        return True
+            if isinstance(self[k], dict):
+                self_nouuids = self._remove_uuids_from_std_types(self[k])
+                other_nouuids = self._remove_uuids_from_std_types(other[k]) 
+                retval = (self_nouuids==other_nouuids)
+            else:                
+                cols = list(self[k].columns)                            
+                if 'uuid' in cols: 
+                    cols.remove('uuid')                        
+                if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
+                    retval=False
+                    break
+                                
+        return retval
     
     def get_elts_by_name_dict(self, typefilter=None):
         """

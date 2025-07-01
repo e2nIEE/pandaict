@@ -32,5 +32,6 @@ Change Log
 - [ADDED] Verbose mode for diagnosis.inspect()
 - [CHANGED] reliability: calc_MTBF_route, calc_MTBF_MTTR_route and calc_MTBF_MTTR_by_lup 
             renamed to calc_mtbf_route, calc_mtbf_mttr_route and calc_mtbf_mttr_by_lup
+- [FIXED] Saving of nets with std_type
    
 

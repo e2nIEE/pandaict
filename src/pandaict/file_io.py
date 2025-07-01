@@ -13,10 +13,12 @@ import pandas as pd
 import json
 import copy
 import uuid
+from math import isnan
 from pandaict import create_empty_network
 from pandaict import __version__
 from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem
 from pandaict.pilogger import pilogger
+from json import JSONDecodeError
 
 def __df_to_json(df):
     dfc = copy.deepcopy(df)
@@ -77,14 +79,24 @@ def __convert_geodata(df):
                 df.at[i,"geodata"] = tuple(s)
     return df
 
+def __list_to_tuple(d, k):
+    if not isinstance(d, dict):
+        return d
+    v = d[k]
+    if isinstance(v, list):
+        d.update({k: tuple(v)})
+    return d
+    
 def __convert_std_types(df):
-    for pr in df['protocol'].keys():
+    for pr in df['protocol'].keys():        
         if isinstance(df['protocol'][pr], dict):
             df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
             df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
-    for li in df['link'].keys():
+    for li in df['link'].keys():        
         if isinstance(df['link'][li], dict):          
             df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
+            __list_to_tuple(df['link'][li], 'bandwidth_Mbps')
+            __list_to_tuple(df['link'][li], 'latency_ms')                                       
     return df
                 
 def __json_to_df(df, elt_type):
@@ -143,8 +155,15 @@ def to_json(ict_net, filename, save_std_types=False):
                         "std_type":   json.loads(jstdt),
                         "iptables":   json.loads(jipta),
                         }, pifile, indent=2)                            
-        except:
-            pilogger.error("Error while writing net to "+filename)  
+        except [TypeError, IndexError, ValueError, NameError] as e:
+            pilogger.error("Error while writing net to "+filename+" - "+str(e))  
+            
+def __remove_nans_from_std_types(std_type_dict):
+    std_type_nonans = {'link': {}, 'protocol': {}}
+    std_type_nonans['link'].update({k: v for k, v in std_type_dict['link'].items() if not (isinstance(v, float) and isnan(v))})
+    std_type_nonans['protocol'].update({k: v for k, v in std_type_dict['protocol'].items() if not (isinstance(v, float) and isnan(v))})
+    return std_type_nonans    
+    
 
 def from_json(filename):
     """
@@ -164,8 +183,8 @@ def from_json(filename):
     with open(filename, 'r') as pifile: 
         try:
             jall = json.load(pifile)
-        except:
-            pilogger.error("Not a valid pandaICT file: "+filename)
+        except [ValueError, JSONDecodeError, TypeError, FileNotFoundError, IOError, OSError] as e:
+            pilogger.error("Not a valid pandaICT file: "+filename+" - "+str(e))
             return
     
     if "pandaICT net file" not in jall['info']: 
@@ -185,8 +204,11 @@ def from_json(filename):
     ict_net.device     = __json_to_df(pd.DataFrame(jall["device"]),"device")
     ict_net.app        = __json_to_df(pd.DataFrame(jall["app"]),"app")
     ict_net.conn       = __json_to_df(pd.DataFrame(jall["conn"]),"conn")
-    ict_net.std_types  = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
-    ict_net.iptables   = __json_to_df(pd.DataFrame(jall["iptables"]),"iptables")
+    if not pd.DataFrame(jall["std_type"]).empty:
+        ict_net.std_types  = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
+        ict_net.std_types  = __remove_nans_from_std_types(ict_net.std_types)
+    if not pd.DataFrame(jall["iptables"]).empty:
+        ict_net.iptables   = __json_to_df(pd.DataFrame(jall["iptables"]),"iptables")
 
     return ict_net
 

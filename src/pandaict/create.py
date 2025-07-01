@@ -57,27 +57,31 @@ def __check_uuid(ict_net, uid):
         
 def __check_list_items(clist, allowed_length=None, allowed_types=None, allowed_values=None):    
     
-    if clist is not None:
-        if not isinstance(clist, list):
-            raise UserWarning("parameter must be a list")
-        if allowed_length is not None and len(clist)!=allowed_length:
-            raise UserWarning("parameter must be a list with length "+str(allowed_length))
-        for cl in clist:
-            if allowed_types is not None and not isinstance(cl, allowed_types):
-                raise UserWarning("parameter list must only contain elements of types "+str(allowed_types))
-            if allowed_values is not None and not cl in allowed_values:
-                raise UserWarning("parameter list elements must only have values "+str(allowed_values))
+    if clist is None:
+        return 
+    if not isinstance(clist, list):
+        raise UserWarning("parameter must be a list")
+    if allowed_length is not None and len(clist)!=allowed_length:
+        raise UserWarning("parameter must be a list with length "+str(allowed_length))
+    for cl in clist:
+        if allowed_types is not None and not isinstance(cl, allowed_types):
+            raise UserWarning("parameter list must only contain elements of types "+str(allowed_types))
+        if allowed_values is not None and cl not in allowed_values:
+            raise UserWarning("parameter list elements must only have values "+str(allowed_values))
+
+def __check_elt_list_and_get_index(pi_elts, paramname, expected_types):
+    for pe in pi_elts:
+        if not isinstance(pe, tuple) or not isinstance(pe[0],str) or not isinstance(pe[1], numbers.Integral):
+            raise UserWarning("all items in "+paramname+" must be (str, int) tuples") 
+        if expected_types is not None and pe[0] not in expected_types:
+            raise UserWarning("an item in "+paramname+" is "+str(pe[0])+", must be one of "+str(expected_types))
+    return pi_elts[0][1] 
 
 def __check_elts_and_get_index(pi_elts, paramname, expected_types=None, allow_list=True):
     if pi_elts is None:
         raise UserWarning(str(expected_types)+" not found") 
     elif isinstance(pi_elts, list) and allow_list:             
-        for pe in pi_elts:
-            if not isinstance(pe, tuple) or not isinstance(pe[0],str) or not isinstance(pe[1], numbers.Integral):
-                raise UserWarning("all items in "+paramname+" must be (str, int) tuples") 
-            if expected_types is not None and not (pe[0] in expected_types):
-                raise UserWarning("an item in "+paramname+" is "+str(pe[0])+", must be one of "+str(expected_types))
-        return pi_elts[0][1]                          
+        return __check_elt_list_and_get_index(pi_elts, paramname, expected_types)         
     elif isinstance(pi_elts, tuple):                
         if pi_elts[0] not in expected_types: 
             raise UserWarning(str(paramname)+" parameter is "+str(pi_elts[0])+", must be one of "+str(expected_types))
@@ -177,19 +181,7 @@ def __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid):
 def __create_ict_link_check_nouuid(from_elt, to_elt):
         
     __check_elts_and_get_index(from_elt, 'from_elt', ['device','node'])  
-    __check_elts_and_get_index(to_elt, 'to_elt', ['device','node'])
-    
-    # if (not isinstance(to_elt, tuple) and not isinstance(to_elt, list)):
-    #     raise UserWarning("to_elt must be (str, int) tuple or list of such tuples")  
-    # if isinstance(to_elt, tuple):
-    #     if not (to_elt[0]=='device' or to_elt[0]=='node'):
-    #         raise UserWarning("to_elt is "+str(to_elt[0])+", must be dev or node") 
-    # else:            
-    #     for i in range(0, len(to_elt)):
-    #         if not isinstance(to_elt[i], tuple):
-    #             raise UserWarning("to_elt must be (str, int) tuple or list of such tuples") 
-    #         if not (to_elt[i][0]=='device' or to_elt[i][0]=='node'):
-    #             raise UserWarning("to_elt["+str(i)+"] is "+str(to_elt[i][0])+", must be dev or node")  
+    __check_elts_and_get_index(to_elt, 'to_elt', ['device','node'])    
 
 def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=None, in_service=True, use_uuid=False, uid=None,
                     length_km=0 ):
@@ -571,10 +563,7 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
         to_app   = to_app[1]
     else:
         from_app = from_app[1] 
-        try:
-            to_app   = to_app[1]
-        except:
-            print("A")   
+        to_app   = to_app[1]
         
     if from_app==to_app: 
         raise UserWarning("from_app and to_app must not be equal") 
