@@ -195,12 +195,9 @@ class pandaICTNet(ADict):
     def _remove_uuids_from_std_types(self, std_type_dict):
         dict_nouuids = copy.deepcopy(std_type_dict)
         for k in dict_nouuids.keys():
-            try:
-                for kk in dict_nouuids[k].keys():
-                    if 'uuid' in dict_nouuids[k][kk].keys():
-                        dict_nouuids[k][kk].pop('uuid')
-            except:
-                print("A")
+            for kk in dict_nouuids[k].keys():
+                if 'uuid' in dict_nouuids[k][kk].keys():
+                    dict_nouuids[k][kk].pop('uuid')            
         return dict_nouuids
     
     def equals_excluding_uuids(self, other, include_std_types=False):

@@ -20,12 +20,11 @@ from pandaict.pilogger import pilogger
 def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):    
     if "iptables" not in ict_net.keys() or ict_net.iptables.empty:
         return mdg
-    # We need sender and destination IPs
-    from_ip = ict_net.device.iloc[from_dev[1]].ip_addr 
+    # We need the destination IP
     to_ip = ict_net.device.iloc[to_dev[1]].ip_addr
      
     for _, iptable_entry in ict_net.iptables[ict_net.iptables.destination==to_ip].iterrows():
-        if not iptable_entry.type=="static":
+        if iptable_entry.type!="static":
             continue
         my_nxnode = __get_nx_node_for_elt(mdg, ('node', iptable_entry.node_idx))
         # get gateway node 
@@ -37,7 +36,7 @@ def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):
             continue 
         edges_to_remove = []
         for e in mdg.out_edges(my_nxnode):
-            if not e==(my_nxnode, gw_nxnode):
+            if e!=(my_nxnode, gw_nxnode):
                 edges_to_remove += [e]
         mdg.remove_edges_from(edges_to_remove)        
     
@@ -204,7 +203,7 @@ def calc_app_vol_MB(ict_net, app_elt, time_delta):
         calc_conn_vol_MB(ict_net, ('app', 2), 86400)
     """
     # call out conn from utils
-    conns, conn_apps = get_conn_by_app(ict_net, app_elt)
+    conns, _ = get_conn_by_app(ict_net, app_elt)
     res_dict = dict()
     dv_down = []
     dv_up = []
@@ -364,7 +363,6 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
     """
     down_links = []
     up_links = []
-    conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
     # Example entry: {"route": 0, "probability": 1, "links": [{'link': 1, 'downstream": True}, {'link': 4, 'downstream": False}], "values": [100,300]}    
     
     lup_table = calc_lup_table(ict_net, conn_elt, routing_type, respect_iptables=False)

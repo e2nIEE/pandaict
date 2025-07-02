@@ -81,6 +81,14 @@ def __mdg_add_elts(ict_net, mdg, elt_type, in_service_only, idx):
             idx+=1
     return idx
     
+def __add_edges_to_multidigraph(mdg, nxn1, nxn2, weight, bidir, pielt):
+    for n2 in nxn2:
+        if n2 is None: 
+            continue     
+        mdg.add_edge(nxn1, n2, pielt = pielt, weight = weight[0] if weight is not None else None)            
+        if bidir:
+            mdg.add_edge(n2, nxn1, pielt = pielt, weight = weight[1] if weight is not None else None)    
+        
 def create_multidigraph(ict_net, protocol, in_service_only = True, weights = None, validate = False):
     
     mdg = nx.MultiDiGraph()
@@ -106,12 +114,7 @@ def create_multidigraph(ict_net, protocol, in_service_only = True, weights = Non
         if nxn1 is None: 
             continue
         nxn2 = [__get_nx_node_for_elt(mdg, e) for e in to_elt]                 
-        for n2 in nxn2:
-            if n2 is None: 
-                continue     
-            mdg.add_edge(nxn1, n2, pielt = ("link", i), weight = weight[0] if weight is not None else None)            
-            if is_bidirectional(ict_net, ("link", i)):
-                mdg.add_edge(n2, nxn1, pielt = ("link", i), weight = weight[1] if weight is not None else None)    
+        __add_edges_to_multidigraph(mdg, nxn1, nxn2, weight, bidir=is_bidirectional(ict_net, ("link", i)), pielt=("link", i))
                 
     if validate:
         __validate_multidigraph(ict_net, mdg, protocol)        
@@ -149,7 +152,7 @@ def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
     try:
         dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
         dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
-    except:
+    except (KeyError, IndexError, TypeError, AttributeError):
         pilogger.debug("Failed to obtain from or to device for conn "+str(conn['name']))        
             
     # Fetch nynodes representing the devices

@@ -183,7 +183,7 @@ def from_json(filename):
     with open(filename, 'r') as pifile: 
         try:
             jall = json.load(pifile)
-        except (ValueError, JSONDecodeError, TypeError, FileNotFoundError, IOError, OSError) as e:
+        except (ValueError, TypeError, IOError, OSError) as e:
             pilogger.error("Not a valid pandaICT file: "+filename+" - "+str(e))
             return
     

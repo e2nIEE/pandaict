@@ -306,7 +306,7 @@ def update_iptables(ict_net, lup_table):
     Note: there is no output to this, but **ict_net.iptable** is modified.
     """ 
     
-    for i,r in enumerate(lup_table):
+    for _,r in enumerate(lup_table):
         if 'hops' not in r.keys():
             raise UserWarning("LUP table must include hops for updating ip tables, please use include_hops=True when calling routing.calc_lup_table")            
         if not r['delivering']:
@@ -326,7 +326,7 @@ def update_iptables(ict_net, lup_table):
             (reachable_ips, ports) = __get_neighbour_ips_respecting_ports(ict_net, e)
             gateway_ips_all = __get_ipaddr_by_element(ict_net, r['hops'][i+1])
             gateway_ip = [ip for ip in gateway_ips_all if ip in reachable_ips]            
-            if gateway_ip == None:
+            if gateway_ip is None:
                 pilogger.warning("Nodes "+str(e)+" and "+str(r['hops'][i+1])+" are supposed to be connected but don't seem to share an IP network. Did you specify IP addresses and netmasks correctly?")
                 continue
             else:
@@ -368,6 +368,20 @@ def get_iptable(ict_net, node_elt):
     iptable.set_index("entry")
     return iptable
 
+def __get_link_type_to_destination(ict_net, node_elt, gateway, destination):
+    # TODO: review this, maybe needs checking if the link connects node and gateway within same network (if changed, adapt Sphinx).
+    ltype = None
+    for l_idx in get_links_at(ict_net, node_elt):
+        # Check if link connects our node with the gateway ip
+        l = ict_net.link.iloc[l_idx] 
+        to_ips = [__get_ipaddr_by_element(ict_net, n) for n in l['to']]
+        to_ips = [i for sub in to_ips for i in sub] # flatten 2D list
+        if (node_elt in l['to'] and __get_ipaddr_by_element(ict_net, l['from'])==gateway) or \
+            (node_elt==l['from'] and gateway in to_ips) or \
+            (destination==l['from'] or destination in to_ips): # Link directly connects our node to the destination
+            ltype = l['type']
+    return ltype 
+
 def set_static_iptable_entry(ict_net, node_elt, destination, gateway, netmask = None, link_idx = None, metric = 0):    
     """
     Set static IP routing table entry for a node.
@@ -395,18 +409,7 @@ def set_static_iptable_entry(ict_net, node_elt, destination, gateway, netmask = 
     entrycount = len(ict_net.iptables[ict_net.iptables["node_idx"]==node_elt[1]])
     if link_idx is None:             
         # try to find link to destination and remember its type 
-        # TODO: revise this, maybe needs checking if the link connects node and gateway within same network (if changed, adapt Sphinx).
-        ltype = None
-        for l_idx in get_links_at(ict_net, node_elt):
-            # Check if link connects our node with the gateway ip
-            l = ict_net.link.iloc[l_idx] 
-            to_ips = [__get_ipaddr_by_element(ict_net, n) for n in l['to']]
-            to_ips = [i for sub in to_ips for i in sub] # flatten 2D list
-            if (node_elt in l['to'] and __get_ipaddr_by_element(ict_net, l['from'])==gateway) or \
-                (node_elt==l['from'] and gateway in to_ips) or \
-                (destination==l['from'] or destination in to_ips): # Link directly connects our node to the destination
-                ltype = l['type']
-            
+        ltype = __get_link_type_to_destination(ict_net, node_elt, gateway, destination)            
             
         # try to find interface / link index by its type
         if ltype is not None: 
