@@ -155,7 +155,7 @@ def __get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
     for i in range(0,len(conn.info_items)): 
         if downstream and conn.producer[i]==1 or not downstream and conn.producer[i]==0: 
             continue
-        if conn.prod_freq_ms[i] is None or conn.prod_freq_ms[i]<0:
+        if conn.prod_freq_ms[i] is None or conn.prod_freq_ms[i]<=0:
             continue
         ii = conn.info_items[i]
         iibw = (__get_info_item_package_size_byte(ict_net, ii, conn.protocol)*8/1E6) / (conn.prod_freq_ms[i]/1000)
