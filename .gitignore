@@ -13,6 +13,7 @@ src/pandaict/__pycache__/
 src/pandaict/plotting/__pycache__/
 src/pandaict/topology/__pycache__/
 src/pandaict/datamodel/__pycache__/
+src/pandaict/reliability/__pycache__/
 
 .idea/
 public/jupyter/_build/

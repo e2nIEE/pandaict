@@ -420,7 +420,7 @@ def get_elt_id_by_name(ict_net, elt_name, expected=None):
         **elt_id** ((string, int) tuple) - The pandaict element id. 
 
     :EXAMPLE:
-        get_elt_id_by_name(ict_net, "A2", expected=app")
+        get_elt_id_by_name(ict_net, "A2", expected="app")
     """
     if expected is not None:
         if expected not in ['node', 'device', 'link', 'conn', 'app']:
