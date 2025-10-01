@@ -9,14 +9,14 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("ThreeNodeExample");
 
-// Globale Paket-Zähler für jeden Link um Routing zu prüfen
+// global packet-counters to check routing
 float count01 = 0;
 float count12 = 0;
 float count23 = 0;
 float count03 = 0;
 float count02 = 0;
 
-// Callback Funktionen
+// declare callback functions
 static void TxTrace01(Ptr<const Packet> packet) {
     count01++;
 }
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
     // print used bandwidth
     std::cout << "Used Bandwidth: " << used_Bandwidth << " Mbps" << std::endl;
 
-    // print packet count along the 3 routes
+    // print packet count along the routes
     std::cout << "\n------ Link Packet Counts ------\n";
     std::cout << "Link n0 <-> n1: " << count01 << " packets \n";
     std::cout << "Link n1 <-> n2: " << count12 << " packets \n";
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
     std::cout << "Link n0 <-> n3: " << count03 << " packets \n";
     std::cout << "Link n0 <-> n2: " << count02 << " packets \n";
 
-    // print packet count along the 3 routes
+    // print datavolume on links
     std::cout << "\n------ Link Datavolume ------\n";
     std::cout << "Link n0 <-> n1: " << count01 * PacketSize << " Byte \n";
     std::cout << "Link n1 <-> n2: " << count12 * PacketSize << " Byte \n";
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     std::cout << "Link n0 <-> n3: " << count03 * PacketSize << " Byte \n";
     std::cout << "Link n0 <-> n2: " << count02 * PacketSize << " Byte \n";
 
-    // print packet count along the 3 routes
+    // print used bandwidth on links
     std::cout << "\n------ Link Bandwidth ------\n";
     std::cout << "Link n0 <-> n1: " << count01 * PacketSize * 8 / (delta_t*1000000) << " Mbps \n";
     std::cout << "Link n1 <-> n2: " << count12 * PacketSize * 8 / (delta_t*1000000) << " Mbps \n";
