@@ -1,11 +1,9 @@
 import pandaict as pi
 import pandaict.diagnosis
-from pandaict.plot import create_plot
 from pandaict.topology.routing import *
 from pandaict.utils.enums import *
 from pandaict.reliability.mtbr_mttf import *
 from pandaict.reliability.ber import *
-import numpy as np
 
 # // *********************************
 # //        Network Topology

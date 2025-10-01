@@ -1,6 +1,5 @@
 import pandaict as pi
 import pandaict.diagnosis
-from pandaict.plot import create_plot
 from pandaict.topology.routing import *
 from pandaict.utils.enums import *
 
@@ -30,7 +29,6 @@ link_type_03 = 'Fiber'
 
 protocol = 'TCP'        # 20 Byte Packet Size
 frequency = 1           # ms
-
 
 # declare network
 net = pi.create_empty_network("4Net_1")

@@ -1,6 +1,5 @@
 import pandaict as pi
 import pandaict.diagnosis
-from pandaict.plot import create_plot
 from pandaict.topology.routing import *
 from pandaict.utils.enums import *
 
@@ -31,7 +30,6 @@ link_type_23 = 'UMTS'
 protocol = 'TCP'        # 20 Byte Packet Size
 frequency = 1           # ms
 
-
 # declare network
 net = pi.create_empty_network("4n-Net")
 
@@ -41,25 +39,26 @@ n1 = pi.create_ict_node(net, name="n1", node_type=NodeType.ROUTER, link_types=[l
 n2 = pi.create_ict_node(net, name="n2", node_type=NodeType.ROUTER, link_types=[link_type_01, link_type_12, link_type_13, link_type_23, link_type_03])
 n3 = pi.create_ict_node(net, name="n3", node_type=NodeType.ROUTER, link_types=[link_type_01, link_type_12, link_type_13, link_type_23, link_type_03])
 
-#
+# declare devices
 d0 = pi.create_ict_device(net, name='d0', device_type=DeviceType.SERVER)
 d2 = pi.create_ict_device(net, name='d1', device_type=DeviceType.SERVER)
 
-# Connect Devices to their respective nodes
+# connect devices to their respective nodes
 link0 = pi.create_ict_link(net, name='link0', link_type='LAN1000', from_elt=d0, to_elt=[n0])
 link2 = pi.create_ict_link(net, name='link1', link_type='LAN1000', from_elt=n2, to_elt=[d2])
 
-# Connect Nodes
+# connect nodes
 link01 = pi.create_ict_link(net, name='link02', link_type=link_type_01, from_elt=n0, to_elt=[n1])
 link12 = pi.create_ict_link(net, name='link12', link_type=link_type_12, from_elt=n1, to_elt=[n2])
 link23 = pi.create_ict_link(net, name='link23', link_type=link_type_23, from_elt=n2, to_elt=[n3])
 link03 = pi.create_ict_link(net, name='link23', link_type=link_type_23, from_elt=n3, to_elt=[n0])
 link13 = pi.create_ict_link(net, name='link12', link_type=link_type_13, from_elt=n1, to_elt=[n3])
 
-
+# install apps
 app0 = pi.create_ict_app(net, name='appA', app_type=AppType.CLIENT, device=d0)
 app2 = pi.create_ict_app(net, name='appB', app_type=AppType.WEBSERVER, device=d2)
 
+# set up connection
 Connection_AB = pi.create_ict_connection(
     net,
     name='Connection_AB',
