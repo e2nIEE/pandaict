@@ -64,6 +64,7 @@ def __get_conn_structure():
         ("uuid", dtype(object)), 
         ("from", "u4"), 
         ("to", "u4"), 
+        ("protocol", dtype(object)),
         ("info_items", dtype(object)), 
         ("peers", dtype(object)), 
         ("producer", dtype(object)), 

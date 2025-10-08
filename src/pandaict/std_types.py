@@ -179,7 +179,7 @@ def __transmission_protocoltypes():
             "uuid": uuid.UUID("fdb0612d-3791-437a-b570-139c49c9dea9"),   
             },
         "UDP": {        
-            "base_package_size_byte": 8,
+            "base_package_size_byte": 12, # UDP Header has at least 12 byte
             "info_items":
                 [ InfoItem.REQUEST,
                   InfoItem.RESPONSE,                   

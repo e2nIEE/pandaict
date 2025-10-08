@@ -10,6 +10,7 @@ Created on 30.01.2024
 from aenum import Enum
 
 # Definitions for info items
+# NOTE: Values of 1000 or larger are reserved for custom enums
 class InfoItem(Enum):
     ACK         = 1
     VALUE       = 2
@@ -23,17 +24,21 @@ class InfoItem(Enum):
     TIME        = 10
     CERTIFICATE = 11
     AUDIOSTREAM = 12
-    VIDEOSTREAM = 13
+    VIDEOSTREAM = 13    
     
+# NOTE: Values of 1000 or larger are reserved for custom enums
 class NodeType(Enum):        
     SWITCH    = 1
     ROUTER    = 2
 
+# NOTE: Values of 1000 or larger are reserved for custom enums
 class DeviceType(Enum):        
     CONVERTER      = 1 # Hosts Converter type app
     SERVER         = 2
     RTU            = 3
+    maxvalue       = 3 # Increase this when adding hard-coded items
     
+# NOTE: Values of 1000 or larger are reserved for custom enums
 class AppType(Enum):  
     CONVERTER      = 1 # Converts between different protocolss          
     WEBSERVER      = 3
