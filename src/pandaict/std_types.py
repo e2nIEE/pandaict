@@ -8,7 +8,7 @@ Created on 2.02.2024
 '''
 
 import uuid
-from   pandaict.utils.enums import InfoItem
+from pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
 
 

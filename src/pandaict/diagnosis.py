@@ -43,11 +43,16 @@ def __inspect_link(ict_net, passed, verbose):
         # check for double linkage (excluding multicasts)
         from_elt = l["from"]
         to_elt   = l["to"][0]
-        linklist = get_links_between(ict_net, from_elt, to_elt)
-        if len(linklist) > 1: 
-            linklist.remove(i)
-            passed = __log_info_and_return_false(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")", verbose)            
-        
+        try:
+            linklist = get_links_between(ict_net, from_elt, to_elt)
+            if len(linklist) > 1: 
+                linklist.remove(i)
+                passed = __log_info_and_return_false(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")", verbose)            
+        except UserWarning as uw:
+            if verbose:
+                __log_info_and_return_false(" link '"+str(l['name'])+"' (index "+str(i)+"): problem getting links between "+str(from_elt)+" and "+str(to_elt), verbose)
+            raise uw 
+            
     # check std linktypes
     for linktype in ict_net.std_types['link'].keys():
         protocols = ict_net.std_types['link'][linktype]['protocols']
@@ -86,7 +91,9 @@ def __inspect_app(ict_net, passed, verbose):
         # check if Apps with conversions run on converter type devices
         if a['type'] == AppType.CONVERTER:
             d = a.device 
-            if ict_net.device.iloc[d]['type'] != DeviceType.CONVERTER:
+            if not isinstance(d, int):
+                passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' has non-int device index '"+str(d)+"'", verbose)
+            elif ict_net.device.iloc[d]['type'] != DeviceType.CONVERTER:
                 passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.iloc[d]['name'])+"'", verbose)                            
     
     return passed
