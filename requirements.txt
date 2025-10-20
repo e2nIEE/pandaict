@@ -8,3 +8,4 @@ aenum
 pillow
 matplotlib
 regex
+openpyxl
