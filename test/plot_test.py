@@ -6,6 +6,7 @@ Created on Tue May 21 15:21:35 2024
 """
 
 from core_test import *
+from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3
 from plot import create_plot, __create_g__
 import PIL
 from PIL import Image, ImageChops
@@ -21,9 +22,8 @@ class Plot_Test():
     
     # NOTE: all function names to be executed by unittest MUST START with "test" !     
         
-    def test_plot_dev(self, utest):
-        C = Core_Test()
-        net1 = C.create_testnet1()
+    def test_plot_dev(self, utest):        
+        net1 = create_testnet1()
         plt = create_plot(net1, draw_type='dev')
 
         
@@ -43,9 +43,8 @@ class Plot_Test():
             utest.assertTrue(diff.getbbox() is None)
         
            
-    def test_plot_app(self, utest):
-        C = Core_Test()
-        net1 = C.create_testnet1()
+    def test_plot_app(self, utest):        
+        net1 = create_testnet1()
         plt = create_plot(net1, draw_type='app')
 
         # plt.savefig(r'C:\Users\gbanerjee\GIt_Hub_Lab\pandaict\test\plt_app.png')
@@ -64,9 +63,8 @@ class Plot_Test():
             utest.assertTrue(diff.getbbox() is None)
 
     
-    def test_graph_dev(self, utest):
-        C = Core_Test()
-        net1 = C.create_testnet1()
+    def test_graph_dev(self, utest):        
+        net1 = create_testnet1()
         G, edge_labels = __create_g__(None, 'dev', net1)
         
         # Iterate through nodes
@@ -80,9 +78,8 @@ class Plot_Test():
            utest.assertTrue(edge == edge_compare)
            
     
-    def test_graph_app(self, utest):
-        C = Core_Test()
-        net1 = C.create_testnet1()
+    def test_graph_app(self, utest):        
+        net1 = create_testnet1()
         G, edge_labels = __create_g__(None, 'app', net1)
         
         # Iterate through nodes

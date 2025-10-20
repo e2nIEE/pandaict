@@ -229,9 +229,12 @@ class pandaICTNet(ADict):
                 cols = list(self[k].columns)                            
                 if 'uuid' in cols: 
                     cols.remove('uuid')                        
-                if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
-                    retval=False
-                    break
+                try:
+                    if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
+                        retval=False
+                        break
+                except:
+                    print("A")
                                 
         return retval
     

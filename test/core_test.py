@@ -12,7 +12,7 @@ from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links, get
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
-from   pandaict.reliability.mtbr_mttf import calc_mtbf_route, calc_mtbf_mttr_route, calc_mtbf_mttr_by_lup
+from   pandaict.reliability.mtbf_mttr import calc_mtbf_route, calc_mtbf_mttr_route, calc_mtbf_mttr_by_lup
 from   pandaict.reliability.ber import calc_ber_route, calc_ber_by_lup
 from   pandaict.std_types import create_std_type
 import pandas as pd
@@ -23,6 +23,7 @@ from pandaict.create import create_ict_app
 from pandaict.topology.ip_address import IP_address
 from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
 from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3
+from pandaict.toolbox.exceltools import ict_net_from_excel, ict_net_to_excel 
 
 class Core_Test():
     
@@ -207,6 +208,7 @@ class Core_Test():
     def test_sorted_link_calc(self, utest):
     
         ict_net = create_testnet3()
+        self.extend_testnet3(ict_net)
         link_bw = {}
         
         # testing value fetching
@@ -250,14 +252,15 @@ class Core_Test():
 
     def test_calc_app_vol_MB(self, utest):
         ict_net = create_testnet3()
-        app_elt = get_elt_id_by_name(ict_net, "D2", expected="app")
+        self.extend_testnet3(ict_net)
+        app_elt = get_elt_id_by_name(ict_net, "DA2", expected="app")
         res_exp = calc_app_vol_MB(ict_net, app_elt, 86400)
         expected_res = {"('conn', 0)": {'down': 9437.04, 'up': 6.63552},
                         "('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                         "total": {'down':  9562.377600000002, 'up': 123869.67551999999}} 
         utest.assertEqual(res_exp, expected_res)
         
-        app_elt = get_elt_id_by_name(ict_net, "D4", expected="app")
+        app_elt = get_elt_id_by_name(ict_net, "DA4", expected="app")
         res_cal = calc_app_vol_MB(ict_net, app_elt, 86400)
         calculated_res = {"('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                           "('conn', 2)": {'down': 125.33760000000001, 'up': 30965.76},
@@ -269,7 +272,7 @@ class Core_Test():
         
     def test_mtbf_mttr_ber_calc(self, utest):  
         ict_net = create_testnet3()
-        
+        self.extend_testnet3(ict_net)
         # single route testing
         ber_d = []
         ber_u = []
@@ -353,7 +356,7 @@ class Core_Test():
     def __create_testnet3mod_with_custom_types(self):
         
         ict_net = create_testnet3()
-        
+        self.extend_testnet3(ict_net)
         custom_link, custom_protocol = self.__get_custom_link_protocol_types()
         create_std_type(ict_net, custom_link, "10BASE2_oneway", element="link")
         create_std_type(ict_net, custom_protocol, "SFTP", element="protocol")
@@ -412,6 +415,7 @@ class Core_Test():
         # TODO: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
                             
         ict_net = create_testnet3()
+        self.extend_testnet3(ict_net)
         init_extend_network(ict_net)
         assign_ipaddr_to_elt(ict_net, ('device',0), ip="192.168.1.1/24")
         assign_ipaddr_to_elt(ict_net, ('device',1), ip="192.168.2.1/24")
@@ -455,6 +459,15 @@ class Core_Test():
         self.test_save_load(utest, ict_net)
         utest.assertTrue(pi.inspect(ict_net))
         return 
+    
+    def test_exceltools(self, utest):
+        net = ict_net_from_excel('example_net.xlsx')
+        ict_net_to_excel(net,'example_net_rewritten.xlsx')
+        net2 = ict_net_from_excel('example_net_rewritten.xlsx')
+        utest.assertTrue(net.equals_excluding_uuids(net2))
+        pi.to_json(net, 'dummy.json', save_std_types=True)
+        net3 = pi.from_json('dummy.json')
+        assert(net.equals_excluding_uuids(net3))
 
 if __name__ == '__main__':
         

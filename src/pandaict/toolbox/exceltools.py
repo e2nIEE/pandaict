@@ -10,9 +10,10 @@ Created on 21.07.2025
 from openpyxl import __version__ as openpyxl_version 
 from openpyxl import load_workbook
 from openpyxl.cell import MergedCell
-from aenum import extend_enum
+import os
 import uuid
-from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
+import numpy as np
+from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType, addCustomEnum
 from pandaict.pilogger import pilogger
 from pandaict.create_empty_net import create_empty_network
 from pandaict.create import create_ict_node, create_ict_link, create_ict_app, create_ict_connection
@@ -31,11 +32,30 @@ def _get_metadata(wb):
         if row[0].value in ['name', 'connectors', 'pandaict_version', 'openpyxl_version']:
             md.update({row[0].value: row[1].value}) 
     return md
+
+def _get_connector_extensions(elt_type):
+    connector_extensions = {'pp_pict_connector': {'node': {'map_to': tuple},
+                                                  'link': {'map_to': tuple},
+                                                  'app':  {'map_to': tuple, 'measures': list, 'meas_accur': list, 'controls': list}}
+                            }    
+    exts = {}
+    for c in connectors_installed:
+        if c in connector_extensions.keys() and elt_type in connector_extensions[c].keys(): 
+            exts.update(connector_extensions[c][elt_type])
+    return exts
+
+def _bulk_extend_net(net):
+    for elt_type in ['node','device','link','app','conn']:
+        if elt_type not in net.keys():
+            continue 
+        exts = _get_connector_extensions(elt_type)
+        for e in exts.keys():
+            net[elt_type][e] = None
+    return net                
         
-def _get_default_values(sheetname):    
-    
-    conv_values = {'Nodes': ["", NodeType.ROUTER, True, None, None, "all", None, None, None],
-                   'Devices': ["",DeviceType.RTU, True, None, None, None],
+def _get_default_values(sheetname):        
+    conv_values = {'Nodes': ["", NodeType.ROUTER,True,None,None,"all",None,None,None],
+                   'Devices': ["",DeviceType.RTU,True,None,None,None],
                    'Links': ["",None,True,None,None,None,0],
                    'Connections': ["",True,None,None,None,"",[],None,[],[]],
                    'Apps': ["",AppType.CLIENT,True,None,None,None]}    
@@ -85,9 +105,9 @@ def _get_converted_value(rvalue, ctype, cname):
             x = float(rvalue.split(',')[0].strip())
             y = float(rvalue.split(',')[1].strip())
             rconv = (x,y)
-        elif cname in ["link_types", "protocols"]:
+        elif cname in ["link_types", "protocols", "measures", "controls"]:            
             rconv = [lt.strip() for lt in rvalue.split(",")]
-        elif cname in ["from"]:
+        elif cname in ["from","map_to"]:
             if ctype==tuple: 
                 elt = rvalue.split(',')[0].strip()
                 idx = int(rvalue.split(',')[1].strip())
@@ -112,7 +132,10 @@ def _get_converted_value(rvalue, ctype, cname):
             else:
                 rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])                  
         elif cname in ["peers"]:
-            rconv = (int(rvalue.strip().split(",")[0]), int(rvalue.strip().split(",")[1]))
+            speer1 = rvalue.split(";")[0].strip()
+            speer2 = rvalue.split(";")[1].strip()
+            rconv = ((speer1.split(",")[0].strip(), int(speer1.split(",")[1].strip())), 
+                     (speer2.split(",")[0].strip(), int(speer2.split(",")[1].strip())))
         elif cname in ["conversions"]:
             rconv = []            
             for p in rvalue.split(";"):
@@ -122,7 +145,7 @@ def _get_converted_value(rvalue, ctype, cname):
                         plist += [pitem]
                     elif pitem is not None:
                         plist += [float(pitem)]
-                rconv += [tuple(plist)]        
+                rconv += [tuple(plist)]              
         elif rvalue is not None:
             rconv = ctype(rvalue)
     except (IndexError, AttributeError, ValueError):
@@ -132,39 +155,34 @@ def _get_converted_value(rvalue, ctype, cname):
 def _convert_area(row_values, col_names, sheetname):        
     conv_values = _get_default_values(sheetname)
     if sheetname=="Nodes":
-        conv_to = {'type': NodeType, 'in_service': bool, 'uuid': uuid.UUID, 'geodata': tuple, 'link_types': list}
+        conv_to = {'type': NodeType, 'in_service': bool, 'uuid': uuid.UUID, 'geodata': tuple, 'link_types': list}       
     elif sheetname=="Devices":
         conv_to = {'type': DeviceType, 'in_service': bool, 'uuid': uuid.UUID}
     elif sheetname=="Links":
-        conv_to = {'in_service': bool, 'uuid': uuid.UUID, 'from': tuple, 'to': list} 
+        conv_to = {'in_service': bool, 'uuid': uuid.UUID, 'from': tuple, 'to': list}        
     elif sheetname=="Connections":
         conv_to = {'in_service': bool, 'uuid': uuid.UUID, 'from': int, 'to': int, 'info_items': list, 'peers': tuple, 'producer': list, 'prod_freq_ms': list} 
     elif sheetname=="Apps":
-        conv_to = {'type': AppType, 'in_service': bool, 'uuid': uuid.UUID, 'conversions': list}         
-            
+        conv_to = {'type': AppType, 'in_service': bool, 'uuid': uuid.UUID, 'conversions': list}
+        
+    exts = _get_connector_extensions(_get_df_name(sheetname))
+    if exts:
+        conv_to.update(exts)
+        conv_values += [None]*len(exts.values())         
+           
     for i, col in enumerate(col_names):                
         if row_values[i] is None or row_values[i]=="":
             continue
         elif col in conv_to.keys():            
             conv_values[i] = _get_converted_value(row_values[i], conv_to[col], col)                    
         else:
-            conv_values[i] = row_values[i]
-    
+            conv_values[i] = row_values[i]     
     return conv_values
 
-
 def _add_enums(net, row_values, col_names):
-    allowed_classes = {"InfoItem": InfoItem, "NodeType": NodeType, "DeviceType": DeviceType, "AppType": AppType}
-    if "custom_enums" not in net.keys():
-        net.custom_enums = pd.DataFrame(columns=['name', 'type', 'value'])
+    allowed_classes = {"InfoItem": InfoItem, "NodeType": NodeType, "DeviceType": DeviceType, "AppType": AppType}            
     if row_values[0] in allowed_classes.keys():
-        if row_values[1] not in [m.name for m in allowed_classes[row_values[0]].__members__.values()]:  # if enum doesn't exist           
-            maxvalue = max([m.value for m in allowed_classes[row_values[0]].__members__.values()])
-            newvalue = 1000 if maxvalue<1000 else maxvalue+1
-            extend_enum(allowed_classes[row_values[0]], row_values[1], newvalue) 
-        else:
-            newvalue = allowed_classes[row_values[0]][row_values[1]].value # if anready existing, still add it to net custom enums
-        net.custom_enums.loc[len(net.custom_enums)] = [row_values[1], row_values[0], newvalue]
+        addCustomEnum(net, allowed_classes[row_values[0]], row_values[1])            
     
 def _add_linktypes(net, row_values, col_names):
     data = dict(zip(col_names, row_values))
@@ -180,6 +198,8 @@ def _add_linktypes(net, row_values, col_names):
             cv = _get_converted_value(data[k], list, k)
         elif k=='uuid':
             cv = _get_converted_value(data[k], uuid.UUID, k)
+        elif k=='custom':
+            cv = data[k]
         data.update({k: cv})
                 
     create_std_type(net, data=data, name=name, element="link")
@@ -196,26 +216,31 @@ def _add_protocoltypes(net, row_values, col_names):
             cv = _get_converted_value(data[k], list, k)
         elif k=='uuid':
             cv = _get_converted_value(data[k], uuid.UUID, k)
+        elif k=='custom':
+            cv = data[k]
         data.update({k: cv})
                 
     create_std_type(net, data=data, name=name, element="protocol")
     
+def _get_df_name(sheetname):
+    sheetname_to_df_name = {"Nodes": "node", "Devices": "device", "Links": "link", "Connections": "conn", "Apps": "app"}
+    return sheetname_to_df_name[sheetname]
 
 def _evaluate_sheet(net, wb, sheetname):
     
     ws = wb[sheetname]        
     col_names = []
-    sheetname_to_df_name = {"Nodes": "node", "Devices": "device", "Links": "link", "Connections": "conn", "Apps": "app"}
+    
     start_col, end_col = _get_col_range(ws, "Core")
-    if sheetname=="Nodes":
-        connectors_installed=["pp_pict_connector"] # DEBUG
-        area = _get_col_area(ws, ["Core"]+connectors_installed)    
-    for row in ws.iter_rows():
+        
+    area = _get_col_area(ws, ["Core"]+connectors_installed)       
+    for row in ws.iter_rows(): 
+        rowarea = np.array(row)[area]        
         if col_names==[] and row[0].value=='index':            
-            col_names = [r.value for r in row[start_col:end_col]]            
-        elif col_names!=[] and len(row)>0 and not all([c.value is None for c in row[start_col:end_col]]):            
-            idx = row[0].value
-            values = [r.value for r in row[start_col:end_col]]                    
+            col_names = [r.value for r in rowarea if r.value is not None]             
+        elif col_names!=[] and len(row)>0 and not all([c.value is None for c in rowarea]):            
+            idx = row[0].value       
+            values = [r.value for r in rowarea]                    
             if sheetname=="Custom Enums":
                 _add_enums(net, values, col_names)
             elif sheetname=="Custom Linktypes":
@@ -223,21 +248,21 @@ def _evaluate_sheet(net, wb, sheetname):
             elif sheetname=="Custom Protocoltypes":
                 _add_protocoltypes(net, values+[True], col_names+['custom'])
             else:
-                conv_values = _convert_area(values, col_names, sheetname)
-                net[sheetname_to_df_name[sheetname]].loc[idx] = conv_values            
+                conv_values = _convert_area(values, col_names, sheetname)                
+                net[_get_df_name(sheetname)].loc[idx] = conv_values                        
     return net
 
 def ict_net_from_excel(xlsfilename):
     wb = load_workbook(filename = xlsfilename)  
     md = _get_metadata(wb)              
     net = create_empty_network()
+    net = _bulk_extend_net(net)    
     net.name = md.get('name', "")    
     #dnet = from_json("C:/Users/jringelstein/git/recode/pandaict/test/dummy.json")
     #dnet = create_testnet2()
     
     for sheetname in ["Custom Enums", "Custom Linktypes", "Custom Protocoltypes", "Nodes", "Devices", "Links", "Connections", "Apps"]:
-        net = _evaluate_sheet(net, wb, sheetname)
-        
+        net = _evaluate_sheet(net, wb, sheetname)    
     passed = inspect(net, verbose=True)
     if passed: 
         pilogger.info("Exceltools: loaded network from "+xlsfilename+", inspection passed")
@@ -254,7 +279,7 @@ def _fill_metadata(net, wb):
         if row[0].value=="name":
             row[1].value=net['name']
         elif row[0].value=="connectors" and len(connectors_installed)>0:            
-            row[1].value=connectors_installed
+            row[1].value=str(connectors_installed).replace('[','').replace(']','').strip()
         elif row[0].value=="pandaict_version":
             row[1].value=pandaict_version
         elif row[0].value=="openpyxl_version":
@@ -263,25 +288,29 @@ def _fill_metadata(net, wb):
 def _to_xls_format(dataitem):
     if isinstance(dataitem, (AppType, NodeType, DeviceType, InfoItem)):
         return dataitem.name
-    elif isinstance(dataitem, tuple) and isinstance(dataitem[0], str):
-        return str(dataitem).replace("(","").replace(")","").replace("'","")
-    elif isinstance(dataitem, tuple):
-        return str(dataitem).replace("(","").replace(")","")
-    elif isinstance(dataitem, list) and isinstance(dataitem[0], tuple):
-        s = str(dataitem).replace("[","").replace("]","").replace("'","")
-        s = s.replace("),",";").replace("(","").replace(", ",",")
-        if s[-1]==")": 
-            s = s[:-1]
-        return s
-    elif isinstance(dataitem, list) and isinstance(dataitem[0], str):
-        return str(dataitem).replace("[","").replace("]","").replace("'","")
-    elif isinstance(dataitem, list) and isinstance(dataitem[0], (AppType, NodeType, DeviceType, InfoItem)):        
-        s = [ii.name for ii in dataitem]
-        return str(s).replace("[","").replace("]","").replace("'","")
-    elif isinstance(dataitem, list):
-        return str(dataitem).replace("[","").replace("]","")
     elif isinstance(dataitem, (bool, uuid.UUID)):
-        return str(dataitem)    
+        return str(dataitem)        
+    elif isinstance(dataitem, tuple): 
+        if isinstance(dataitem[0], str):
+            return str(dataitem).replace("(","").replace(")","").replace("'","")
+        elif isinstance(dataitem[0], tuple):
+            return str(dataitem).replace("),",";").replace("(","").replace(")","").replace("'","")
+        else:
+            return str(dataitem).replace("(","").replace(")","")
+    elif isinstance(dataitem, list): 
+        if isinstance(dataitem[0], tuple):
+            s = str(dataitem).replace("[","").replace("]","").replace("'","")
+            s = s.replace("),",";").replace("(","").replace(", ",",")
+            if s[-1]==")": 
+                s = s[:-1]
+            return s
+        elif isinstance(dataitem[0], str):
+            return str(dataitem).replace("[","").replace("]","").replace("'","")
+        elif isinstance(dataitem[0], (AppType, NodeType, DeviceType, InfoItem)):        
+            s = [ii.name for ii in dataitem]
+            return str(s).replace("[","").replace("]","").replace("'","")
+        else:
+            return str(dataitem).replace("[","").replace("]","")
     else:
         return dataitem
 
@@ -296,6 +325,14 @@ def _fill_sheet(net, wb, sheetname):
                      "Apps": ["name", "type", "in_service", "uuid", "device", "conversions"],
                      "Custom Linktypes": ["bandwidth_Mbps", "latency_ms", "wired", "protocols", "ber_per_km", "mtbf_h", "mttr_h", "uuid"],
                      "Custom Protocoltypes": ["base_package_size_byte", "info_items", "payload_size_byte", "uuid"]}
+    
+    for s in data_to_sheet.keys():
+        exts = _get_connector_extensions(data_to_sheet[s])
+        if not exts:
+            continue
+        rdata = data_to_rows[s] 
+        rdata += list(exts.keys())
+        data_to_rows.update({s: rdata})
     
     col_names = []                           
     start_col, end_col = _get_col_range(ws, "Core")    
@@ -338,8 +375,10 @@ def _fill_sheet(net, wb, sheetname):
     return True
     
          
-def ict_net_to_excel(net, xlsfilename, template_path=''):
-    if template_path != '' and template_path[-1]!='/': 
+def ict_net_to_excel(net, xlsfilename, template_path=None):
+    if template_path==None:
+        template_path = os.path.dirname(__file__).replace("\\","/")+"/"
+    elif template_path != '' and template_path[-1]!='/': 
         template_path += '/'
     try:
         wb = load_workbook(filename = template_path+'template.xlsx')
