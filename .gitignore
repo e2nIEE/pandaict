@@ -16,6 +16,9 @@ src/pandaict/datamodel/__pycache__/
 src/pandaict/reliability/__pycache__/
 src/pandaict/networks/__pycache__/
 src/pandaict/utils/__pycache__/
+*.pyc
+*.log
+*.json
 
 .idea/
 public/jupyter/_build/

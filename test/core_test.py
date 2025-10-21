@@ -7,6 +7,7 @@ Created on 8.03.2024
 @authors: jringelstein
 '''
 import unittest 
+import os
 import pandaict as pi
 from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links, get_elt_id_by_name
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
@@ -461,6 +462,8 @@ class Core_Test():
         return 
     
     def test_exceltools(self, utest):
+        print("test_exceltools current path: "+str(os.getcwd()))
+        print("dir:"+str(os.listdir()))
         net = ict_net_from_excel('example_net.xlsx')
         ict_net_to_excel(net,'example_net_rewritten.xlsx')
         net2 = ict_net_from_excel('example_net_rewritten.xlsx')
