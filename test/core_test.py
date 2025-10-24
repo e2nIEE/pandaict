@@ -7,7 +7,6 @@ Created on 8.03.2024
 @authors: jringelstein
 '''
 import unittest 
-import os
 import pandaict as pi
 from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links, get_elt_id_by_name
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
@@ -24,7 +23,7 @@ from pandaict.create import create_ict_app
 from pandaict.topology.ip_address import IP_address
 from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
 from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3
-from pandaict.toolbox.exceltools import ict_net_from_excel, ict_net_to_excel 
+from pandaict.toolbox.exceltools import from_excel, to_excel 
 
 class Core_Test():
     
@@ -171,8 +170,8 @@ class Core_Test():
     
         if ict_net is None: 
             ict_net = create_testnet2()
-        pi.to_json(ict_net, 'dummy.json', save_std_types=True)
-        ict_net_reloaded = pi.from_json('dummy.json')
+        pi.to_json(ict_net, 'test/dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('test/dummy.json')
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         return
@@ -380,8 +379,8 @@ class Core_Test():
         utest.assertEqual(ict_net.std_types['protocol']['SFTP'],  custom_protocol)
         
         # test save/load
-        pi.to_json(ict_net, 'dummy.json', save_std_types=True)
-        ict_net_reloaded = pi.from_json('dummy.json')    
+        pi.to_json(ict_net, 'test/dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('test/dummy.json')    
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         
         # test path calculation for conn 2
@@ -461,16 +460,14 @@ class Core_Test():
         utest.assertTrue(pi.inspect(ict_net))
         return 
     
-    def test_exceltools(self, utest):
-        print("test_exceltools current path: "+str(os.getcwd()))
-        print("dir:"+str(os.listdir()))
-        net = ict_net_from_excel('example_net.xlsx')
-        ict_net_to_excel(net,'example_net_rewritten.xlsx')
-        net2 = ict_net_from_excel('example_net_rewritten.xlsx')
+    def test_exceltools(self, utest):       
+        net = from_excel('test/example_net.xlsx')
+        to_excel(net,'test/example_net_rewritten.xlsx')
+        net2 = from_excel('test/example_net_rewritten.xlsx')
         utest.assertTrue(net.equals_excluding_uuids(net2))
-        pi.to_json(net, 'dummy.json', save_std_types=True)
-        net3 = pi.from_json('dummy.json')
-        assert(net.equals_excluding_uuids(net3))
+        pi.to_json(net, 'test/dummy.json', save_std_types=True)
+        net3 = pi.from_json('test/dummy.json')
+        utest.assertTrue(net.equals_excluding_uuids(net3))
 
 if __name__ == '__main__':
         

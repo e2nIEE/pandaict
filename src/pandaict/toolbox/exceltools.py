@@ -121,16 +121,19 @@ def _get_converted_value(rvalue, ctype, cname):
                 rconv=int(rvalue)
         elif cname in ["info_items"]:   
             if len(rvalue.split(","))==1:          
-                rconv = InfoItem[rvalue.strip()]
+                rconv = [InfoItem[rvalue.strip()]]
             elif rvalue is not None:
                 rconv = [InfoItem[ii.strip()] for ii in rvalue.split(",")]
         elif cname in ["producer","payload_size_byte"]:
-            rconv = [int(ii.strip()) for ii in rvalue.split(",")]
+            if isinstance(rvalue, int):
+                rconv = [rvalue]
+            else:
+                rconv = [int(ii.strip()) for ii in rvalue.split(",")]                
         elif cname in ["prod_freq_ms", "bandwidth_Mbps", "latency_ms"]:
             if isinstance(rvalue, (int, float)): 
-                rconv = rvalue
+                rconv = ctype([rvalue])
             else:
-                rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])                  
+                rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])                        
         elif cname in ["peers"]:
             speer1 = rvalue.split(";")[0].strip()
             speer2 = rvalue.split(";")[1].strip()
@@ -252,7 +255,7 @@ def _evaluate_sheet(net, wb, sheetname):
                 net[_get_df_name(sheetname)].loc[idx] = conv_values                        
     return net
 
-def ict_net_from_excel(xlsfilename):
+def from_excel(xlsfilename):
     wb = load_workbook(filename = xlsfilename)  
     md = _get_metadata(wb)              
     net = create_empty_network()
@@ -375,7 +378,7 @@ def _fill_sheet(net, wb, sheetname):
     return True
     
          
-def ict_net_to_excel(net, xlsfilename, template_path=None):
+def to_excel(net, xlsfilename, template_path=None):
     if template_path==None:
         template_path = os.path.dirname(__file__).replace("\\","/")+"/"
     elif template_path != '' and template_path[-1]!='/': 
@@ -401,7 +404,7 @@ def ict_net_to_excel(net, xlsfilename, template_path=None):
     
 if __name__ == '__main__':
     # ref = from_json('C:/Users/jringelstein/git/recode/pandaict/test/dummy.json') # Reference test network
-    net = ict_net_from_excel('C:/Users/jringelstein/git/recode/pandaict/src/pandaict/toolbox/example_net.xlsx')
-    ict_net_to_excel(net,'example_net_rewritten.xlsx')
-    net2 = ict_net_from_excel('C:/Users/jringelstein/git/recode/pandaict/src/pandaict/toolbox/example_net_rewritten.xlsx')
+    net = from_excel('C:/Users/jringelstein/git/recode/pandaict/src/pandaict/toolbox/example_net.xlsx')
+    to_excel(net,'example_net_rewritten.xlsx')
+    net2 = from_excel('C:/Users/jringelstein/git/recode/pandaict/src/pandaict/toolbox/example_net_rewritten.xlsx')
     print(net.equals_excluding_uuids(net2))

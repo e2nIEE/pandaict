@@ -37,7 +37,6 @@ class DeviceType(Enum):
     CONVERTER      = 1 # Hosts Converter type app
     SERVER         = 2
     RTU            = 3
-    maxvalue       = 3 # Increase this when adding hard-coded items
     
 # NOTE: Values of 1000 or larger are reserved for custom enums
 class AppType(Enum):  
