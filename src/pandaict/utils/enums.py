@@ -7,7 +7,8 @@ Created on 30.01.2024
 @author: jringelstein
 '''
 
-from aenum import Enum
+from aenum import Enum, extend_enum
+import pandas as pd
 
 # Definitions for info items
 class InfoItem(Enum):
@@ -53,3 +54,21 @@ class SortType(Enum):
     LATENCY         = 2
     BIT_ERROR_RATE  = 3 
     BANDWIDTH       = 4
+    
+    
+def addCustomEnum(net, etype, name, value=None):    
+    if name not in [m.name for m in etype.__members__.values()]:  # if enum doesn't exist           
+        if value is None:
+            maxvalue = max([m.value for m in etype.__members__.values()])
+            value = 1000 if maxvalue<1000 else maxvalue+1        
+        extend_enum(etype, name, value)
+    else:
+        value = etype[name].value # if anready existing, still add it to net custom enums    
+    if "custom_enums" not in net.keys():
+        net.custom_enums = pd.DataFrame(columns=['name', 'type', 'value']) 
+    # Check if new enum exists in net
+    for _, ce in net.custom_enums.iterrows():
+        if ce['name']==name and ce['type']==etype:
+            return 
+    net.custom_enums.loc[len(net.custom_enums)] = [name, etype, value]
+    
