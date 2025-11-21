@@ -60,8 +60,9 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
 
 def __get_weight(ict_net, link, wtype):
     
+    ltype = ict_net.std_types['link'][link['type']]
     if wtype=="latency":
-        lty = ict_net.std_types['link'][link['type']]['latency_ms']
+        lty = ltype['latency_ms']
         if isinstance(lty, tuple):
             return lty
         elif lty is not None: 
@@ -71,8 +72,8 @@ def __get_weight(ict_net, link, wtype):
     elif wtype=="length":
         return (link['length'],link['length']) or None
     elif wtype=="bit_error_rate":        
-        return (link['type']['ber_per_km'] * link['length'], link['type']['ber_per_km'] * link['length']) or None
-
+        return (ltype['ber_per_km'] * link['length'], ltype['ber_per_km'] * link['length']) or None
+    
 def __mdg_add_elts(ict_net, mdg, elt_type, in_service_only, idx):
     # elt_type: "node" or "device"
     for i, n in ict_net[elt_type].iterrows():        
