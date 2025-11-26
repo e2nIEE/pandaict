@@ -18,9 +18,7 @@ from pandaict.pilogger import pilogger
 import math
 import networkx as nx
 import random
-import statistics
-from markdown_it.rules_inline import state_inline
-   
+import statistics  
    
 #----------------------------------------------------------------------------------------------------------------------
 # Helper: update the graph based on current edge states
