@@ -59,10 +59,10 @@ def get_testnet_v2():
     
     net   = create_empty_network()
     addCustomEnum(net, NodeType, "COUPLER")
-    SWg   = create_ict_node(net, name="SWg", node_type=NodeType.SWITCH, link_types=["LAN1000"])   
-    SWb   = create_ict_node(net, name="SWb", node_type=NodeType.SWITCH, link_types=["LAN1000"])
-    FE1   = create_ict_node(net, name="FE1", node_type=NodeType.COUPLER, link_types=["LAN1000"])
-    FE2   = create_ict_node(net, name="FE2", node_type=NodeType.COUPLER, link_types=["LAN1000"])
+    SWg   = create_ict_node(net, name="SWg", node_type=NodeType.SWITCH, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)   
+    SWb   = create_ict_node(net, name="SWb", node_type=NodeType.SWITCH, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)
+    FE1   = create_ict_node(net, name="FE1", node_type=NodeType.COUPLER, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)
+    FE2   = create_ict_node(net, name="FE2", node_type=NodeType.COUPLER, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)
     
     addCustomEnum(net, DeviceType, "VIRTUAL")
     addCustomEnum(net, DeviceType, "PROTECTION")        
