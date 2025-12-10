@@ -1,6 +1,6 @@
 import unittest
 from reliability_test_nets import *
-from MonteCarlo_parallel2 import estimate_mttf_mttr
+from monte_carlo import estimate_mttf_mttr
 
 
 class ReliabilityNetTest(unittest.TestCase):
