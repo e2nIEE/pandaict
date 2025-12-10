@@ -15,7 +15,7 @@ except ImportError:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# UNION-FIND structure as backup
+# UNION-FIND structure (fallback if numba not available
 # ----------------------------------------------------------------------------------------------------------------------
 class UnionFind:
     """Optimized Union-Find structure for connectivity checks (replaces networkX)"""
@@ -64,7 +64,6 @@ if NUMBA_AVAILABLE:
     # ------------------------------------------------------------------------------------------------------------------
     # Fenwick Tree (Binary Indexed Tree): Efficient datastructure for sampling of events
     # ------------------------------------------------------------------------------------------------------------------
-
     @njit
     def bit_update(bit, idx, delta):
         """
@@ -208,7 +207,7 @@ if NUMBA_AVAILABLE:
                             mu_edges_arr, mu_nodes_arr,
                             max_cycles, max_time, Laziness=0):
         """
-        Core simulation loop in Numba.
+        Core simulation loop in Numba which simulates UP->DOWN - cycles for max_cycles deep.
         Returns array of (t_fail, t_repair) for each cycle.
         :INPUT:
             **n_edges, n_nodes**                    - ints, number of edges and nodes in network
@@ -226,8 +225,8 @@ if NUMBA_AVAILABLE:
         """
 
         # Initialize states (all UP)
-        edge_state = np.ones(n_edges, dtype=np.int8)
-        node_state = np.ones(n_nodes, dtype=np.int8)
+        edge_state = np.ones(n_edges, dtype=np.bool)
+        node_state = np.ones(n_nodes, dtype=np.bool)
 
         # get total number of possible events
         n_events = n_edges + n_nodes
@@ -370,23 +369,27 @@ if NUMBA_AVAILABLE:
                                      source_idx, target_idx,
                                      lam_edges_arr, lam_nodes_arr):
         """
-        Optimized Numba-Version for non-repairable systems.
-        Optimizations:
-        - Fenwick Tree for O(log n) Event-Sampling
-        - DFS für O(V+E) connectivity in C-Speed
-        - Event-Rates will be set to zero instead of .pop()
+        Simulate system lifetime for a non-repairable system (µ=0).
+        :INPUT:
+            **n_edges, n_nodes**                    - ints, number of edges and nodes in network
+            **adj_offsets, adj_nodes, adj_edges**   - np.ndarrays, topology of graph in csr format
+            **source_idx, target_idx**              - integers, indices of source and target nodes
+            **lam_edges_arr, lam_nodes_arr**        - np.ndarrays, failure rates of edges and nodes
+
+        :OUTPUT:
+            **t** - float, time until first system failure (MTTF sample)
         """
 
         # TODO: edge_state, node_state, n_events, rates, bit, total_rate is static and can hence be prebuild.
         # Initialize states (all UP)
-        edge_state = np.ones(n_edges, dtype=np.int8)
-        node_state = np.ones(n_nodes, dtype=np.int8)
+        edge_state = np.ones(n_edges, dtype=np.bool)
+        node_state = np.ones(n_nodes, dtype=np.bool)
 
-        # Build event list with only failure rates
+        # Build event list
         n_events = n_edges + n_nodes
         rates = np.empty(n_events, dtype=np.float64)
 
-        # All events start with failure rate (all UP)
+        # build list of rates
         for i in range(n_edges):
             rates[i] = lam_edges_arr[i]
         for j in range(n_nodes):
@@ -447,7 +450,7 @@ if NUMBA_AVAILABLE:
                                  source_idx, target_idx,
                                  lam_edges_arr, lam_nodes_arr,
                                  mu_edges_arr, mu_nodes_arr,
-                                 max_cycles, max_time, Laziness):
+                                 max_cycles, max_time, Laziness=0):
         """
         Run n_sims in parallel.
         Uses all N CPU-Cores to each run n_sims/N simulation runs
@@ -465,7 +468,7 @@ if NUMBA_AVAILABLE:
                 mu_edges_arr, mu_nodes_arr,
                 max_cycles, max_time, Laziness
             )
-            # TODO: rewrite such that mean over max_cycles is appended.
+            #
             if results.shape[0] > 0:
                 all_results[sim_idx, 0] = float(np.mean(results[:,0]))
                 all_results[sim_idx, 1] = float(np.mean(results[:,1]))
@@ -807,7 +810,8 @@ def calc_max_time(lam_edges, lam_nodes, mu_edges, mu_nodes):
 def monte_carlo_plotting(mttf, mttr=None, bins="auto",
                          rng=None, density=True, weights=None,
                          show_errors=True, color="C0", label=None,
-                         ax=None, gaussian=True, gaussian_color="C3", gaussian_label="Gauss-Fit", title="Monte-Carlo Histogram (MTTF)"):
+                         ax=None, gaussian=True, gaussian_color="C3", gaussian_label="Gauss-Fit",
+                         title="Monte-Carlo Histogram (MTTF)"):
 
     '''Bar chart of samples'''
     samples = np.asarray(mttf)
