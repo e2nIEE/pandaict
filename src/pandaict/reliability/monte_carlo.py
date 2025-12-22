@@ -13,47 +13,159 @@ except ImportError:
     NUMBA_AVAILABLE = False
     print("Warning: Numba not available. Using Python-only version.")
 
-
 # ----------------------------------------------------------------------------------------------------------------------
-# UNION-FIND structure (fallback if numba not available
+# Helper functions
 # ----------------------------------------------------------------------------------------------------------------------
-class UnionFind:
-    """Optimized Union-Find structure for connectivity checks (replaces networkX)"""
 
-    def __init__(self, nodes):
-        self.parent = {n: n for n in nodes}
-        self.rank = {n: 0 for n in nodes}
+def get_lam_mu_from_graph(G):
+    """Extract failure and repair rates from graph attributes"""
+    lam_edges, mu_edges = {}, {}
+    lam_nodes, mu_nodes = {}, {}
 
-    def find(self, x):
-        if self.parent[x] != x:
-            self.parent[x] = self.find(self.parent[x])
-        return self.parent[x]
+    for e in G.edges(data=True):
+        u, v, edata = e
+        mtbf_h = edata.get('mtbf_h', 0)
+        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
+        lam_edges[(u, v)] = lam
 
-    def union(self, x, y):
-        root_x, root_y = self.find(x), self.find(y)
-        # check if already unified
-        if root_x == root_y:
-            return
-        if self.rank[root_x] < self.rank[root_y]:
-            self.parent[root_x] = root_y
-        elif self.rank[root_x] > self.rank[root_y]:
-            self.parent[root_y] = root_x
-        else:
-            self.parent[root_y] = root_x
-            self.rank[root_x] += 1
+        mttr_h = edata.get('mttr_h', 0)
+        mu = 0 if mttr_h == 0 else 1 / mttr_h
+        mu_edges[(u, v)] = mu
 
-    def connected(self, x, y):
-        return self.find(x) == self.find(y)
+        #print(f"mtbf_h={mtbf_h}, lam={lam},\n mttr_h={mttr_h}, mu={mu}")
 
-    def rebuild_uf(self, edge_list, node_list, edge_state, node_state, node_index):
-        """Rebuild Union-Find structure from scratch"""
-        for n in node_list:
-            self.parent[n] = n
-            self.rank[n] = 0
-        for i, (u, v) in enumerate(edge_list):
-            # two nodes are connected if they are both UP and their related edge is UP
-            if edge_state[i] and node_state[node_index[u]] and node_state[node_index[v]]:
-                self.union(u, v)
+    for n in G.nodes(data=True):
+        u, ndata = n
+        mtbf_h = ndata.get('mtbf_h', 0)
+        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
+        lam_nodes[u] = lam
+
+        mttr_h = ndata.get('mttr_h', 0)
+        mu = 0 if mttr_h == 0 else 1 / mttr_h
+        mu_nodes[u] = mu
+
+    return lam_edges, lam_nodes, mu_edges, mu_nodes
+
+
+def calc_max_time(lam_edges, lam_nodes, mu_edges, mu_nodes):
+    '''
+    DEPRECATED: replaced by event based timeout (max_events).
+    Calculates upper bound for MTTF (see doc)
+
+    :INPUT:
+        **lam_edges**   - dict, failure rates for edges
+        **lam_nodes**   - dict, failure rates for nodes
+        **mu_edges**    - dict, repair rates for edges
+        **mu_nodes**    - dict, repair rates for nodes
+
+    :OUTPUT:
+        **max_time**   - float, upper bound for MTTF
+    '''
+    # init A_max and MTTR_max
+    A_max, MTTR_max = 1.0, 0.0
+    # iterate over edges
+    for lam, mu in zip(lam_edges.values(), mu_edges.values()):
+        MTTF, MTTR = 1 / lam, 1 / mu
+        MTTR_max += MTTR
+        A_i = MTTF / (MTTF + MTTR)
+        A_max *= (1 - A_i)
+
+    # iterate over nodes
+    for lam, mu in zip(lam_nodes.values(), mu_nodes.values()):
+        MTTF, MTTR = 1 / lam, 1 / mu
+        MTTR_max += MTTR
+        A_i = MTTF / (MTTF + MTTR)
+        A_max *= (1 - A_i)
+
+    A_max = 1 - A_max
+    if A_max != 1:
+        max_time = A_max / (1 - A_max) * MTTR_max
+        return max_time
+    print('Availability equals one leading to division by zero. Using fallback.')
+    return 1e8
+
+
+def graph_to_numba_arrays(G, source, target):
+    """
+    Convert NetworkX graph to Numba-compatible np.ndarrays
+
+    :INPUT:
+        **G**      - networkx.Graph, topology of network
+        **source** - string, classifying source node
+        **target** - string, classifying target node
+
+    :OUTPUT:
+        {
+        **n_nodes**     - int, number of nodes
+        **n_edges**     - int, number of edges
+        **adj_offsets** - np.ndarray,
+        **adj_nodes**   - np.ndarray, array of adjacent nodes to all nodes
+        **adj_edges**   - np.ndarray, array of adjacent edges to all nodes
+        **source_idx**  - int, index of source node
+        **target_idx**  - int, index of target node
+        **edge_list**   - np.ndarray, list of edges
+        **node_list**   - np.ndarray, list of nodes
+    }
+
+    """
+    node_list = list(G.nodes())
+    edge_list = list(G.edges())
+    n_nodes = len(node_list)
+    n_edges = len(edge_list)
+
+    # Node index mapping
+    node_to_idx = {n: i for i, n in enumerate(node_list)}
+    source_idx = node_to_idx[source]
+    target_idx = node_to_idx[target]
+
+    # Edge arrays
+    edge_u = np.empty(n_edges, dtype=np.int64)
+    edge_v = np.empty(n_edges, dtype=np.int64)
+    for i, (u, v) in enumerate(edge_list):
+        edge_u[i] = node_to_idx[u]
+        edge_v[i] = node_to_idx[v]
+
+    # Build CSR adjacency structure
+    deg = np.zeros(n_nodes, dtype=np.int64)
+    for u_i, v_i in zip(edge_u, edge_v):
+        deg[u_i] += 1
+        deg[v_i] += 1
+
+    adj_offsets = np.empty(n_nodes + 1, dtype=np.int64)
+    adj_offsets[0] = 0
+    for i in range(n_nodes):
+        adj_offsets[i + 1] = adj_offsets[i] + deg[i]
+
+    total_adj = adj_offsets[n_nodes]
+    adj_nodes = np.empty(total_adj, dtype=np.int64)
+    adj_edges = np.empty(total_adj, dtype=np.int64)
+
+    # Fill adjacency arrays
+    cur = np.zeros(n_nodes, dtype=np.int64)
+    for ei, (u_i, v_i) in enumerate(zip(edge_u, edge_v)):
+        # Add edge u→v
+        pos_u = adj_offsets[u_i] + cur[u_i]
+        adj_nodes[pos_u] = v_i
+        adj_edges[pos_u] = ei
+        cur[u_i] += 1
+
+        # Add edge v→u
+        pos_v = adj_offsets[v_i] + cur[v_i]
+        adj_nodes[pos_v] = u_i
+        adj_edges[pos_v] = ei
+        cur[v_i] += 1
+
+    return {
+        'n_nodes': n_nodes,
+        'n_edges': n_edges,
+        'adj_offsets': adj_offsets,
+        'adj_nodes': adj_nodes,
+        'adj_edges': adj_edges,
+        'source_idx': source_idx,
+        'target_idx': target_idx,
+        'edge_list': edge_list,
+        'node_list': node_list
+    }
 
 
 # ======================================================================================================================
@@ -83,6 +195,7 @@ if NUMBA_AVAILABLE:
         while i <= n:
             bit[i] += delta
             i += i & -i  # next index to update
+
 
     @njit
     def bit_build_from_array(arr):
@@ -137,6 +250,23 @@ if NUMBA_AVAILABLE:
                 value -= bit[t]
             bitmask //= 2
         return idx  # 0-based
+
+
+    @njit
+    def _build_rates_and_bit(n_edges, n_nodes, lam_edges_arr, lam_nodes_arr,
+                             mu_edges_arr=None, mu_nodes_arr=None, repairable=True):
+        """Build rates array and Fenwick Tree."""
+        n_events = n_edges + n_nodes
+        rates = np.empty(n_events, dtype=np.float64)
+
+        # Initial rates = failure rates (all components start UP)
+        for i in range(n_edges):
+            rates[i] = lam_edges_arr[i]
+        for j in range(n_nodes):
+            rates[n_edges + j] = lam_nodes_arr[j]
+
+        bit = bit_build_from_array(rates)
+        return bit
 
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -204,10 +334,10 @@ if NUMBA_AVAILABLE:
                             adj_offsets, adj_nodes, adj_edges,
                             source_idx, target_idx,
                             lam_edges_arr, lam_nodes_arr,
-                            mu_edges_arr, mu_nodes_arr,
-                            max_cycles, max_time, Laziness=0):
+                            mu_edges_arr, mu_nodes_arr, bit,
+                            depth, max_events=-1, laziness=0, track_crit=True):
         """
-        Core simulation loop in Numba which simulates UP->DOWN - cycles for max_cycles deep.
+        Core simulation loop in Numba which simulates UP->DOWN - cycles for depth deep.
         Returns array of (t_fail, t_repair) for each cycle.
         :INPUT:
             **n_edges, n_nodes**                    - ints, number of edges and nodes in network
@@ -215,61 +345,73 @@ if NUMBA_AVAILABLE:
             **source_idx, target_idx**              - integers, indices of source and target nodes
             **lam_edges_arr, lam_nodes_arr**        - np.ndarrays, failure rates of edges and nodes
             **mu_edges_arr, mu_nodes_arr**          - np.ndarrays, repair rates of edges and nodes
-            **max_cycles**                          - int, number of cycles to be simulated on the semi-fixed network
-            **max_time**                            - float, maximum simulation time, to avoid infinite loops
-            **Laziness**                            - float, between 0 and 1. Percentage by which the network has to
+            **bit**                                 - Fenwick Tree Array, containing initial rates
+            **depth**                               - int, number of cycles to be simulated on the semi-fixed network
+            **max_events**                            - float, maximum simulation time, to avoid infinite loops
+            **laziness**                            - float, between 0 and 1. Percentage by which the network has to
                                                       change before connectivity is checked again.
-
         :OUTPUT:
             **results**                             - list of (t_fail, t_repair) for each cycle
         """
 
         # Initialize states (all UP)
-        edge_state = np.ones(n_edges, dtype=np.bool)
-        node_state = np.ones(n_nodes, dtype=np.bool)
+        edge_state = np.ones(n_edges, dtype=np.bool_)
+        node_state = np.ones(n_nodes, dtype=np.bool_)
 
         # get total number of possible events
         n_events = n_edges + n_nodes
 
-        # Initial rates (all UP)
-        rates = np.empty(n_events, dtype=np.float64)
+        if max_events == -1:
+            max_events = n_events * 50 # stop loop if the whole network has changed 50 times
 
-        # Build array of rates (edges first, nodes second)
-        for i in range(n_edges):
-            rates[i] = lam_edges_arr[i]
-        for j in range(n_nodes):
-            rates[n_edges + j] = lam_nodes_arr[j]
-
-        # Build Fenwick Tree for efficient sampling
-        bit = bit_build_from_array(rates)
         total_rate = bit_prefix_sum(bit, n_events - 1)
 
         # Results storage
-        results = np.empty((max_cycles, 2), dtype=np.float64)
+        results = np.empty((depth, 2), dtype=np.float64)
         cycle_idx = 0
 
+        if laziness < 0:
+            print('Choose Values in [0,1) for Laziness')
+            laziness=0
+
+        # threshold after which connectivity is checked again
+        event_threshold = int(laziness * n_events)
+
+        if track_crit:
+            # preallocate array for the identification of critical components. (-1 = invalid)
+            critical_components = np.full(2 * (event_threshold+1) * depth, -1, dtype=np.int32)
+        else:
+            critical_components = np.empty(0, dtype=np.int32)
+
+        crit_idx = 0
+        crit_checkpoint = 0  # position on last successful check
+
         # Main cycle loop
-        while cycle_idx < max_cycles:
+        while cycle_idx < depth:
 
             # === PHASE 1: UP → DOWN (run until failure) ===
             t_fail = 0.0
             connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
                                       edge_state, node_state, source_idx, target_idx)
 
-            # keep track of event number
-            event_idx = 1
+            # keep track of event number (lazy connectivity)
             event_count = -1
+
+            # keep track of event id (max_events)
+            event_idx = 0
 
             while connected:
                 if total_rate <= 0.0:
-                    return np.empty((0, 2), dtype=np.float64)  # failure
+                    return results[:cycle_idx], critical_components[:crit_idx]  # failure
 
                 # Sample time to next event
                 dt = np.random.exponential(1.0 / total_rate)
                 t_fail += dt
-                if t_fail > max_time:
-                    print('max_time reached! System didnt fail in time.')
-                    return np.empty((0, 2), dtype=np.float64)
+                if event_idx >= max_events:
+                    print('\nmax_events reached: System didnt fail and is likely stuck in its current state.\n'
+                          'That means the system is very robust and will most likely never fail!')
+                    results[cycle_idx, 0] = np.inf
+                    return results[:cycle_idx], critical_components[:crit_idx]  # failure
 
                 # Sample event using Fenwick Tree (O(log n))
                 r = np.random.random() * total_rate
@@ -305,29 +447,52 @@ if NUMBA_AVAILABLE:
                     bit_update(bit, idx, delta)
                     total_rate += delta
 
-                event_count += 1
-                # Check connectivity only if a certain portion of the network has changed
-                if event_count == int(Laziness*n_events):
-                    # reset event_count
-                    event_count = -1
+                # increment event counters
+                event_count+=1
+                event_idx+=1
+
+                # store last event
+                if track_crit:
+                    critical_components[crit_idx] = idx
+                    crit_idx += 1
+
+                # Lazy connectivity check
+                if event_count >= event_threshold:
                     connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
                                               edge_state, node_state, source_idx, target_idx)
-                event_idx += 1
+                    if track_crit:
+                        if connected:
+                            # still connected -> not critical -> overwrite values by reseting writer
+                            crit_idx = crit_checkpoint
+                        else:
+                            # disconnected -> components are critical -> update crit_checkpoint
+                            crit_checkpoint = crit_idx
+
+                    # reset event_count
+                    event_count = -1
 
             # === PHASE 2: DOWN → UP (run until repair) ===
             t_repair = 0.0
+            event_count = -1
+            event_idx = 0
+
+            if track_crit:
+                crit_checkpoint = crit_idx
+
             connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
                                       edge_state, node_state, source_idx, target_idx)
 
             while not connected:
                 if total_rate <= 0.0:
-                    return np.empty((0, 2), dtype=np.float64)
+                    return results[:cycle_idx], critical_components[:crit_idx]
 
                 dt = np.random.exponential(1.0 / total_rate)
                 t_repair += dt
-                if t_repair > max_time:
-                    print('max_time reached! System couldnt be repaired in time.')
-                    return np.empty((0, 2), dtype=np.float64)
+                if event_idx >= max_events:
+                    print('max_events reached: System couldnt be repaired and is likely stuck in its current state.\n'
+                          'That means the system isnt very robust and will most likely never be restored!')
+                    results[cycle_idx, 1] = np.inf
+                    return results[:cycle_idx], critical_components[:crit_idx]
 
                 r = np.random.random() * total_rate
                 idx = bit_find_index(bit, r)
@@ -353,21 +518,41 @@ if NUMBA_AVAILABLE:
                     bit_update(bit, idx, delta)
                     total_rate += delta
 
-                connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
-                                          edge_state, node_state, source_idx, target_idx)
+                if track_crit:
+                    critical_components[crit_idx] = idx
+                    crit_idx += 1
+
+                # increment event counters
+                event_count+=1
+                event_idx+=1
+
+                if event_count >= event_threshold:
+                    connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
+                                              edge_state, node_state, source_idx, target_idx)
+                    if track_crit:
+                        if not connected:
+                            # still disconnected -> not critical -> overwrite values by reseting writer
+                            crit_idx = crit_checkpoint
+                        else:
+                            # connected again -> components are critical -> update crit_checkpoint
+                            crit_checkpoint = crit_idx
+
+                    # reset event_count
+                    event_count = -1
 
             # Store results
             results[cycle_idx, 0] = t_fail
             results[cycle_idx, 1] = t_repair
             cycle_idx += 1
 
-        return results
+        return results, critical_components[:crit_idx]
+
 
     @njit
     def simulate_numba_core_norepair(n_edges, n_nodes,
                                      adj_offsets, adj_nodes, adj_edges,
                                      source_idx, target_idx,
-                                     lam_edges_arr, lam_nodes_arr):
+                                     lam_edges_arr, lam_nodes_arr, bit):
         """
         Simulate system lifetime for a non-repairable system (µ=0).
         :INPUT:
@@ -382,21 +567,12 @@ if NUMBA_AVAILABLE:
 
         # TODO: edge_state, node_state, n_events, rates, bit, total_rate is static and can hence be prebuild.
         # Initialize states (all UP)
-        edge_state = np.ones(n_edges, dtype=np.bool)
-        node_state = np.ones(n_nodes, dtype=np.bool)
+        edge_state = np.ones(n_edges, dtype=np.bool_)
+        node_state = np.ones(n_nodes, dtype=np.bool_)
 
         # Build event list
         n_events = n_edges + n_nodes
-        rates = np.empty(n_events, dtype=np.float64)
 
-        # build list of rates
-        for i in range(n_edges):
-            rates[i] = lam_edges_arr[i]
-        for j in range(n_nodes):
-            rates[n_edges + j] = lam_nodes_arr[j]
-
-        # Build Fenwick Tree
-        bit = bit_build_from_array(rates)
         total_rate = bit_prefix_sum(bit, n_events - 1)
 
         t = 0.0
@@ -440,50 +616,83 @@ if NUMBA_AVAILABLE:
                 bit_update(bit, idx, -old_rate)
                 total_rate -= old_rate
 
+
     # ------------------------------------------------------------------------------------------------------------------
-    # Wrappers for parallel code execution
+    # Wrappers for parallel and serial code execution
     # ------------------------------------------------------------------------------------------------------------------
     @njit(parallel=True)
-    def run_parallel_simulations(n_sims,
-                                 n_edges, n_nodes,
-                                 adj_offsets, adj_nodes, adj_edges,
-                                 source_idx, target_idx,
-                                 lam_edges_arr, lam_nodes_arr,
-                                 mu_edges_arr, mu_nodes_arr,
-                                 max_cycles, max_time, Laziness=0):
+    def _run_parallel(n_sims,
+                      n_edges, n_nodes,
+                      adj_offsets, adj_nodes, adj_edges,
+                      source_idx, target_idx,
+                      lam_edges_arr, lam_nodes_arr,
+                      mu_edges_arr, mu_nodes_arr,
+                      depth, max_events, laziness=0, analyze_crit=True):
         """
         Run n_sims in parallel.
-        Uses all N CPU-Cores to each run n_sims/N simulation runs
+        Uses all N CPU-Cores to each run n_sims/N simulation simulations
         Speedup: ~Nx with N Cores.
         """
         all_results = np.empty((n_sims, 2), dtype=np.float64)
 
+        # Build event list
+        n_events = n_edges + n_nodes
+        rates = np.empty(n_events, dtype=np.float64)
+
+        # prebuild list of rates
+        for i in range(n_edges):
+            rates[i] = lam_edges_arr[i]
+        for j in range(n_nodes):
+            rates[n_edges + j] = lam_nodes_arr[j]
+
+        # prebuild fenwick tree
+        bit = bit_build_from_array(rates)
+
+        # threshold to check connectivity
+        event_threshold = int(laziness * n_events)
+
+        # calc max events per simulation to store critical components
+        max_crit_per_sim = 2 * (event_threshold + 1) * depth
+
+        if analyze_crit:
+            # preallocate array for critical components
+            all_critical = np.full((n_sims, max_crit_per_sim), -1, dtype=np.int32)
+        else:
+            all_critical = np.empty((0,0), dtype=np.int32)
+
         # core parallelisation routine
         for sim_idx in prange(n_sims):
-            results = simulate_numba_core(
+            bit_copy = bit.copy()
+
+            results, crit_comp = simulate_numba_core(
                 n_edges, n_nodes,
                 adj_offsets, adj_nodes, adj_edges,
                 source_idx, target_idx,
                 lam_edges_arr, lam_nodes_arr,
-                mu_edges_arr, mu_nodes_arr,
-                max_cycles, max_time, Laziness
+                mu_edges_arr, mu_nodes_arr, bit_copy,
+                depth, max_events, laziness, track_crit=analyze_crit
             )
-            #
+
             if results.shape[0] > 0:
                 all_results[sim_idx, 0] = float(np.mean(results[:,0]))
                 all_results[sim_idx, 1] = float(np.mean(results[:,1]))
+
+                if analyze_crit:
+                    n_crit = min(crit_comp.shape[0], max_crit_per_sim)
+                    all_critical[sim_idx, :n_crit] = crit_comp[:n_crit]
             else:
                 # Markiere als invalid
                 all_results[sim_idx, :] = np.nan
 
-        return all_results
+        return all_results, all_critical
+
 
     @njit(parallel=True)
-    def run_parallel_simulations_norepair(n_sims,
-                                 n_edges, n_nodes,
-                                 adj_offsets, adj_nodes, adj_edges,
-                                 source_idx, target_idx,
-                                 lam_edges_arr, lam_nodes_arr):
+    def _run_parallel_norepair(n_sims,
+                               n_edges, n_nodes,
+                               adj_offsets, adj_nodes, adj_edges,
+                               source_idx, target_idx,
+                               lam_edges_arr, lam_nodes_arr):
         """
         Run n_sims in parallel.
         Uses all N CPU-Cores to each run n_sims/N simulation runs
@@ -491,128 +700,171 @@ if NUMBA_AVAILABLE:
         """
         all_results = np.empty(n_sims, dtype=np.float64)
 
+        bit_template = _build_rates_and_bit(n_edges, n_nodes,
+                                            lam_edges_arr, lam_nodes_arr,
+                                            repairable=False)
+
         # core parallelisation routine
         for sim_idx in prange(n_sims):
+            bit_copy = bit_template.copy()
             results = simulate_numba_core_norepair(
                 n_edges, n_nodes,
                 adj_offsets, adj_nodes, adj_edges,
                 source_idx, target_idx,
-                lam_edges_arr, lam_nodes_arr
+                lam_edges_arr, lam_nodes_arr, bit_copy
             )
-            # TODO: rewrite such that mean over max_cycles is appended.
-            if results is not None:
-                all_results[sim_idx] = results
-            else:
-                # Markiere als invalid
-                all_results[sim_idx] = np.nan
+
+            all_results[sim_idx] = results
 
         return all_results
 
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Graph Conversion Helper
-    # ------------------------------------------------------------------------------------------------------------------
-    def graph_to_numba_arrays(G, source, target):
+    @njit
+    def _run_serial(n_sims, n_edges, n_nodes,
+                    adj_offsets, adj_nodes, adj_edges,
+                    source_idx, target_idx,
+                    lam_edges_arr, lam_nodes_arr,
+                    mu_edges_arr, mu_nodes_arr,
+                    depth, max_events,
+                    laziness=0, track_crit=True):
         """
-        Convert NetworkX graph to Numba-compatible np.arrays
-
-        :INPUT:
-            **G**       - networkx.Graph, topology of network
-            **source** - string, classifying source node
-            **target** - string, classifying target node
-
-        :OUTPUT:
-            {
-            **n_nodes**     - int, number of nodes
-            **n_edges**     - int, number of edges
-            **adj_offsets** - np.ndarray,
-            **adj_nodes**   - np.ndarray, array of adjacent nodes to all nodes
-            **adj_edges**   - np.ndarray, array of adjacent edges to all nodes
-            **source_idx**  - int, index of source node
-            **target_idx**  - int, index of target node
-            **edge_list**   - np.ndarray, list of edges
-            **node_list**   - np.ndarray, list of nodes
-        }
-
+        Wrapper to run n_sims repairable simulations serially.
+        Same structure as parallel, but with range instead of prange.
         """
-        node_list = list(G.nodes())
-        edge_list = list(G.edges())
-        n_nodes = len(node_list)
-        n_edges = len(edge_list)
+        all_results = np.empty((n_sims, 2), dtype=np.float64)
+        n_events = n_edges + n_nodes
 
-        # Node index mapping
-        node_to_idx = {n: i for i, n in enumerate(node_list)}
-        source_idx = node_to_idx[source]
-        target_idx = node_to_idx[target]
+        # Prebuild Fenwick Tree
+        bit_template = _build_rates_and_bit(n_edges, n_nodes,
+                                            lam_edges_arr, lam_nodes_arr,
+                                            mu_edges_arr, mu_nodes_arr)
 
-        # Edge arrays
-        edge_u = np.empty(n_edges, dtype=np.int64)
-        edge_v = np.empty(n_edges, dtype=np.int64)
+        # Critical components storage
+        event_threshold = int(laziness * n_events)
+
+        max_crit_per_sim = 2 * (event_threshold + 1) * depth
+
+        if track_crit:
+            all_critical = np.full((n_sims, max_crit_per_sim), -1, dtype=np.int32)
+        else:
+            all_critical = np.empty((0, 0), dtype=np.int32)
+
+        # Serial loop
+        for sim_idx in range(n_sims):
+            bit_copy = bit_template.copy()
+
+            results, crit_comp = simulate_numba_core(
+                n_edges, n_nodes,
+                adj_offsets, adj_nodes, adj_edges,
+                source_idx, target_idx,
+                lam_edges_arr, lam_nodes_arr,
+                mu_edges_arr, mu_nodes_arr,
+                bit_copy,
+                depth, max_events, laziness, track_crit
+            )
+
+            if results.shape[0] > 0:
+                all_results[sim_idx, 0] = np.mean(results[:, 0])
+                all_results[sim_idx, 1] = np.mean(results[:, 1])
+
+                if track_crit:
+                    n_crit = min(crit_comp.shape[0], max_crit_per_sim)
+                    all_critical[sim_idx, :n_crit] = crit_comp[:n_crit]
+            else:
+                all_results[sim_idx, :] = np.nan
+
+        return all_results, all_critical
+
+
+    @njit
+    def _run_serial_norepair(n_sims, n_edges, n_nodes,
+                             adj_offsets, adj_nodes, adj_edges,
+                             source_idx, target_idx,
+                             lam_edges_arr, lam_nodes_arr):
+        """Wrapper for running n_sims non-repairable simulations serially."""
+        all_results = np.empty(n_sims, dtype=np.float64)
+
+        bit_template = _build_rates_and_bit(n_edges, n_nodes,
+                                            lam_edges_arr, lam_nodes_arr,
+                                            repairable=False)
+
+        for sim_idx in range(n_sims):
+            bit_copy = bit_template.copy()
+
+            result = simulate_numba_core_norepair(
+                n_edges, n_nodes,
+                adj_offsets, adj_nodes, adj_edges,
+                source_idx, target_idx,
+                lam_edges_arr, lam_nodes_arr,
+                bit_copy
+            )
+            all_results[sim_idx] = result
+
+        return all_results
+
+
+# =====================================================================================
+# PYTHON-ONLY Fallback (Union-Find)
+# =====================================================================================
+class UnionFind:
+    """Optimized Union-Find structure for connectivity checks (replaces networkX)"""
+
+    def __init__(self, nodes):
+        self.parent = {n: n for n in nodes}
+        self.rank = {n: 0 for n in nodes}
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        root_x, root_y = self.find(x), self.find(y)
+        # check if already unified
+        if root_x == root_y:
+            return
+        if self.rank[root_x] < self.rank[root_y]:
+            self.parent[root_x] = root_y
+        elif self.rank[root_x] > self.rank[root_y]:
+            self.parent[root_y] = root_x
+        else:
+            self.parent[root_y] = root_x
+            self.rank[root_x] += 1
+
+    def connected(self, x, y):
+        return self.find(x) == self.find(y)
+
+    def rebuild_uf(self, edge_list, node_list, edge_state, node_state, node_index):
+        """Rebuild Union-Find structure from scratch"""
+        for n in node_list:
+            self.parent[n] = n
+            self.rank[n] = 0
         for i, (u, v) in enumerate(edge_list):
-            edge_u[i] = node_to_idx[u]
-            edge_v[i] = node_to_idx[v]
-
-        # Build CSR adjacency structure
-        deg = np.zeros(n_nodes, dtype=np.int64)
-        for u_i, v_i in zip(edge_u, edge_v):
-            deg[u_i] += 1
-            deg[v_i] += 1
-
-        adj_offsets = np.empty(n_nodes + 1, dtype=np.int64)
-        adj_offsets[0] = 0
-        for i in range(n_nodes):
-            adj_offsets[i + 1] = adj_offsets[i] + deg[i]
-
-        total_adj = adj_offsets[n_nodes]
-        adj_nodes = np.empty(total_adj, dtype=np.int64)
-        adj_edges = np.empty(total_adj, dtype=np.int64)
-
-        # Fill adjacency arrays
-        cur = np.zeros(n_nodes, dtype=np.int64)
-        for ei, (u_i, v_i) in enumerate(zip(edge_u, edge_v)):
-            # Add edge u→v
-            pos_u = adj_offsets[u_i] + cur[u_i]
-            adj_nodes[pos_u] = v_i
-            adj_edges[pos_u] = ei
-            cur[u_i] += 1
-
-            # Add edge v→u
-            pos_v = adj_offsets[v_i] + cur[v_i]
-            adj_nodes[pos_v] = u_i
-            adj_edges[pos_v] = ei
-            cur[v_i] += 1
-
-        return {
-            'n_nodes': n_nodes,
-            'n_edges': n_edges,
-            'adj_offsets': adj_offsets,
-            'adj_nodes': adj_nodes,
-            'adj_edges': adj_edges,
-            'source_idx': source_idx,
-            'target_idx': target_idx,
-            'edge_list': edge_list,
-            'node_list': node_list
-        }
+            # two nodes are connected if they are both UP and their related edge is UP
+            if edge_state[i] and node_state[node_index[u]] and node_state[node_index[v]]:
+                self.union(u, v)
 
 
-# =====================================================================================
-# PYTHON-ONLY VERSION (Union-Find)
-# =====================================================================================
-def simulate_cycle_repairable(G, source, target,
-                              lam_edges, lam_nodes,
-                              mu_edges, mu_nodes,
-                              max_cycles=1, max_time=1e6):
+def _simulate_python_repairable(G, source, target,
+                                lam_edges, lam_nodes,
+                                mu_edges, mu_nodes,
+                                depth=1, max_events=-1):
     """
     Python version with Union-Find (original implementation).
     """
     edge_list = list(G.edges())
     node_list = list(G.nodes())
 
+    # Initialize states (all UP)
     edge_state = [1] * len(edge_list)
     node_state = [1] * len(node_list)
 
     edge_index = {e: i for i, e in enumerate(edge_list)}
     node_index = {n: i for i, n in enumerate(node_list)}
+
+    if max_events == -1:
+        n_events = len(edge_list) + len(node_list)
+        max_events = n_events * 50
 
     events = []
     for i, e in enumerate(edge_list):
@@ -627,9 +879,12 @@ def simulate_cycle_repairable(G, source, target,
 
     needs_rebuild = False
 
-    def run_phase(target_connectivity):
-        nonlocal total_rate, needs_rebuild
+    results = []
+    for _ in range(depth):
+
+        # === PHASE 1: UP → DOWN (run until failure) ===
         t = 0.0
+        event_idx = 0
 
         while True:
             if needs_rebuild:
@@ -637,16 +892,19 @@ def simulate_cycle_repairable(G, source, target,
                 needs_rebuild = False
 
             is_connected = uf.connected(source, target)
-            if is_connected != target_connectivity:
+            if not is_connected:
                 break
 
             if total_rate == 0:
+                print("lambda, mu are all 0. Please define rates.")
                 return None
 
             dt = random.expovariate(total_rate)
             t += dt
-            if t > max_time:
+            if event_idx >= max_events:
+                print('System stuck in cycle. Doesnt fail!')
                 return None
+            event_idx += 1
 
             # Linear search with early exit
             r = random.random() * total_rate
@@ -670,14 +928,56 @@ def simulate_cycle_repairable(G, source, target,
                     needs_rebuild = True
                     break
 
-        return t
-
-    results = []
-    for _ in range(max_cycles):
-        t_fail = run_phase(target_connectivity=True)
+        t_fail = t
         if t_fail is None:
             return None
-        t_repair = run_phase(target_connectivity=False)
+
+        t = 0.0
+        event_idx = 0
+        while True:
+            if needs_rebuild:
+                uf.rebuild_uf(edge_list, node_list, edge_state, node_state, node_index)
+                needs_rebuild = False
+
+            is_connected = uf.connected(source, target)
+            if is_connected:
+                break
+
+            if total_rate == 0:
+                return None
+
+            dt = random.expovariate(total_rate)
+            t += dt
+            if event_idx >= max_events:
+                print('System stuck in repair cycle. Couldnt be repaired!')
+                return None
+
+            event_idx += 1
+
+            # Linear search with early exit
+            r = random.random() * total_rate
+            cum = 0.0
+            for etype, idx, lam, mu in events:
+                if etype == "edge":
+                    rate = lam if edge_state[idx] else mu
+                else:
+                    rate = lam if node_state[idx] else mu
+
+                cum += rate
+                if cum >= r:
+                    if etype == "edge":
+                        old = edge_state[idx]
+                        edge_state[idx] = 1 - old
+                        total_rate += (mu - lam) if old else (lam - mu)
+                    else:
+                        old = node_state[idx]
+                        node_state[idx] = 1 - old
+                        total_rate += (mu - lam) if old else (lam - mu)
+                    needs_rebuild = True
+                    break
+
+        t_repair = t
+
         if t_repair is None:
             return None
         results.append((t_fail, t_repair))
@@ -689,7 +989,8 @@ def simulate_cycle_repairable(G, source, target,
     mttr = statistics.mean(r[1] for r in results)
     return mttf, mttr
 
-def simulate_time_to_failure_norepair(G, source, target, lam_edges, lam_nodes):
+
+def _simulate_python_norepair(G, source, target, lam_edges, lam_nodes):
     """Non-repairable system simulation (unchanged)"""
     edge_list = list(G.edges())
     node_list = list(G.nodes())
@@ -738,73 +1039,154 @@ def simulate_time_to_failure_norepair(G, source, target, lam_edges, lam_nodes):
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Helper functions
+# Critical Component Analysis
 # ----------------------------------------------------------------------------------------------------------------------
-def get_lam_mu_from_graph(G):
-    """Extract failure and repair rates from graph attributes"""
-    lam_edges, mu_edges = {}, {}
-    lam_nodes, mu_nodes = {}, {}
-
-    for e in G.edges(data=True):
-        u, v, edata = e
-        mtbf_h = edata.get('mtbf_h', 0)
-        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
-        lam_edges[(u, v)] = lam
-
-        mttr_h = edata.get('mttr_h', 0)
-        mu = 0 if mttr_h == 0 else 1 / mttr_h
-        mu_edges[(u, v)] = mu
-
-        #print(f"mtbf_h={mtbf_h}, lam={lam},\n mttr_h={mttr_h}, mu={mu}")
-
-    for n in G.nodes(data=True):
-        u, ndata = n
-        mtbf_h = ndata.get('mtbf_h', 0)
-        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
-        lam_nodes[u] = lam
-
-        mttr_h = ndata.get('mttr_h', 0)
-        mu = 0 if mttr_h == 0 else 1 / mttr_h
-        mu_nodes[u] = mu
-
-    return lam_edges, lam_nodes, mu_edges, mu_nodes
-
-
-def calc_max_time(lam_edges, lam_nodes, mu_edges, mu_nodes):
-    '''
-    Calculates upper bound for MTTF (see doc)
-
+def analyze_critical_components(all_critical, n_edges, n_nodes,
+                                edge_list, node_list,
+                                lam_edges_arr, lam_nodes_arr,
+                                mu_edges_arr, mu_nodes_arr,
+                                top_n=5, plot=True, verbose=True, rate_adjustment=True):
+    """
+    TODO: validate function
+    TODO: output a plot which shows the topology and colors the critical components in red
+    Analyze which components are disproportionately critical by calculating the expected
     :INPUT:
-        **lam_edges**   - dict, failure rates for edges
-        **lam_nodes**   - dict, failure rates for nodes
-        **mu_edges**    - dict, repair rates for edges
-        **mu_nodes**    - dict, repair rates for nodes
+        **all_critical**    -
+        **n_edges**         -
+        **n_nodes**         -
+        **edge_list**       -
+        **node_list**       -
+        **lam_edges_arr**   -
+        **lam_nodes_arr**   -
+        **mu_edges_arr**    -
+        **mu_nodes_arr**    -
+        **top_n**           -
+        **plot**            -
+        **verbose**         -
+        **rate_adjustment** - Boolean, choose whether to adjust the counts by their rates.
+                              This determines whether the network is analyzed for bare topological
+                              criticalities (True) or a wholistic analysis of critical components
+                              is performed, which explicitly depends on the rates of the components (False).
 
     :OUTPUT:
-        **max_time**   - float, upper bound for MTTF
-    '''
-    # init A_max and MTTR_max
-    A_max, MTTR_max = 1, 0
-    # iterate over edges
-    for lam, mu in zip(lam_edges.values(), mu_edges.values()):
-        MTTF, MTTR = 1 / lam, 1 / mu
-        MTTR_max += MTTR
-        A_i = MTTF / (MTTF + MTTR)
-        A_max *= (1 - A_i)
+        dict with edge_criticality, node_criticality, counts, plots, etc.
 
-    # iterate over nodes
-    for lam, mu in zip(lam_nodes.values(), mu_nodes.values()):
-        MTTF, MTTR = 1 / lam, 1 / mu
-        MTTR_max += MTTR
-        A_i = MTTF / (MTTF + MTTR)
-        A_max *= (1 - A_i)
+    """
+    if top_n == 0:
+        top_n = -1
 
-    A_max = 1 - A_max
-    if A_max != 1:
-        max_time = A_max / (1 - A_max) * MTTR_max
-        return max_time
-    print('Availability equals one leading to division by zero')
-    return 1e8
+    n_events = n_edges + n_nodes
+
+    # Flatten and filter invalid values (-1)
+    flat = all_critical.flatten()
+    valid = flat[flat >= 0]
+
+    if len(valid) == 0:
+        print("No critical components tracked!")
+        return None
+
+    # Count occurrences
+    unique_idx, counts = np.unique(valid, return_counts=True)
+
+    # build array of counts (zero for components that never occured)
+    full_counts = np.zeros(n_events, dtype=np.float64)
+    for idx, count in zip(unique_idx, counts):
+        if idx < n_events:
+            full_counts[idx] = count
+
+    # Normalize by expected rates (λ + μ)
+    expected_rates = np.concatenate([
+        lam_edges_arr + mu_edges_arr,
+        lam_nodes_arr + mu_nodes_arr
+    ])
+    total_rate = np.sum(expected_rates)
+
+    expected_fractions = expected_rates / total_rate if total_rate > 0 else np.ones(n_events) / n_events
+
+    # Criticality score
+    total_observed = np.sum(full_counts)
+    criticality = np.zeros(n_events, dtype=np.float64)
+
+    if total_observed > 0:
+        for i in range(n_events):
+            if rate_adjustment and expected_fractions[i] > 0:
+                criticality[i] = (full_counts[i] / total_observed) / expected_fractions[i]
+            elif not rate_adjustment: # skip expected_fraction <= 0
+                criticality[i] = (full_counts[i] / total_observed)
+
+    edge_crit = criticality[:n_edges]
+    node_crit = criticality[n_edges:]
+
+    top_edge_idx = np.argsort(edge_crit)[::-1][:top_n]
+    top_node_idx = np.argsort(node_crit)[::-1][:top_n]
+
+    # Print results
+    if verbose:
+        print("\n" + "=" * 70)
+        print("CRITICAL COMPONENT ANALYSIS")
+        print("=" * 70)
+        print(f"Total events tracked: {int(total_observed)}")
+        print("\nScore = Observed / Expected")
+        print("  > 1.0: MORE critical")
+        print("  ≈ 1.0: As expected")
+        print("  < 1.0: LESS critical")
+
+        print(f"\n{'─' * 70}")
+        if top_n > 0:
+            print(f"TOP {top_n} CRITICAL EDGES")
+        else:
+            print(f"CRITICAL EDGES")
+        print(f"{'─' * 70}")
+        for rank, i in enumerate(top_edge_idx, 1):
+            print(f"  {rank:2d}. {edge_list[i]}: Score={edge_crit[i]:.3f}, Count={int(full_counts[i])}")
+
+        print(f"\n{'─' * 70}")
+        if top_n > 0:
+            print(f"TOP {top_n} CRITICAL NODES")
+        else:
+            print(f"CRITICAL NODES")
+        print(f"{'─' * 70}")
+        for rank, i in enumerate(top_node_idx, 1):
+            print(f"  {rank:2d}. {node_list[i]}: Score={node_crit[i]:.3f}, Count={int(full_counts[n_edges + i])}")
+
+    if plot:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+        edges_str = [f"{u}-{v}" for u, v in [edge_list[i] for i in top_edge_idx]]
+        colors = ['red' if edge_crit[i] > 1.0 else 'gray' for i in top_edge_idx]
+        ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
+        ax1.axvline(1.0, color='black', linestyle='--', lw=2)
+        ax1.set_yticks(range(len(top_edge_idx)))
+        ax1.set_yticklabels(edges_str)
+        ax1.set_xlabel('Criticality Score')
+        if top_n > 0:
+            ax1.set_title(f'Top {top_n} Critical Edges')
+            ax2.set_title(f'Top {top_n} Critical Nodes')
+        else:
+            ax1.set_title(f'Critical Edges')
+            ax2.set_title(f'Critical Nodes')
+        
+        ax1.invert_yaxis()
+
+        nodes_str = [str(node_list[i]) for i in top_node_idx]
+        colors = ['red' if node_crit[i] > 1.0 else 'gray' for i in top_node_idx]
+        ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
+        ax2.axvline(1.0, color='black', linestyle='--', lw=2)
+        ax2.set_yticks(range(len(top_node_idx)))
+        ax2.set_yticklabels(nodes_str)
+        ax2.set_xlabel('Criticality Score')
+        
+        ax2.invert_yaxis()
+
+        plt.tight_layout()
+        plt.show()
+
+    return {
+        'edge_criticality': edge_crit,
+        'node_criticality': node_crit,
+        'full_counts': full_counts,
+        'total_observed': total_observed
+    }
 
 
 def monte_carlo_plotting(mttf, mttr=None, bins="auto",
@@ -945,11 +1327,10 @@ def monte_carlo_plotting(mttf, mttr=None, bins="auto",
         "heights": heights,
         "errors": errors
     }
-    if not mttr is None:
+    fig2, ax2, res2 = None, None, None
+    if mttr is not None:
         fig2, ax2, res2 = monte_carlo_plotting(mttf=mttr, title="Monte-Carlo Histogramm (MTTR)")
 
-    rng = np.random.default_rng(42)
-    samples = rng.normal(loc=0.0, scale=1.0, size=50_000)
     plt.show()
     return fig, ax, result
 
@@ -957,163 +1338,155 @@ def monte_carlo_plotting(mttf, mttr=None, bins="auto",
 # ----------------------------------------------------------------------------------------------------------------------
 # run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
-def estimate_mttf_mttr(G, source, target, N=1000, max_cycles=1, use_numba=True, Plotting=False, Parallel=True, Laziness=0):
+def estimate_mttf_mttr(G, source, target, N=1000, depth=1,
+                       use_numba=True, parallel=True, plotting=False,
+                       laziness=0, analyze_crit=False):
     """
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
 
-    Args:
-        G: NetworkX graph with 'mtbf_h' and 'mttr_h' attributes
-        source: Source node
-        target: Target node
-        N: Number of simulations
-        max_cycles: Number of UP/DOWN cycles per simulation
-        use_numba: Use Numba-optimized version if available (default: True)
+    :INPUT:
+        **G**           - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
+        **source**      - Source node
+        **target**      - Target node
+        **N**:          - Number of simulations
+        **depth**       - Number of UP/DOWN cycles per simulation run (only repairable).
+                          Adjusts for the natural bias towards larger reliabilities when starting each new cycle
+                          with a fully functional network. Depth hands over a semi-fixed network.
+                          ~200 gives reasonable values.
+        **use_numba**   - Boolean, use Numba-optimized version if available (default: True)
+        **plotting**    - Boolean, enable plotting displaying the distribution of values
+        **parallel**    - Boolean, enable parallelization (default: True)
+        **laziness**    - float in [0,1), parameter which allows to sacrifice some accuracy for performance.
+                          Only checks the connectivity of the network if Lazyness*(V+E) events took place
 
     Returns:
         (mttf, mttr): Mean time to failure and mean time to repair
     """
-    lam_edges, lam_nodes, mu_edges, mu_nodes = get_lam_mu_from_graph(G)
-
-
-    # Check for non-repairable case
-    if all(v == 0 for v in mu_edges.values()) and all(v == 0 for v in mu_nodes.values()):
-
-        if use_numba and NUMBA_AVAILABLE:
-            print(
-                f"Using Numba-optimized implementation (Graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
-
-            # Convert to arrays
-            conv = graph_to_numba_arrays(G, source, target)
-
-            # get edge and node arrays
-            lam_edges_arr = np.array([lam_edges[e] for e in conv['edge_list']], dtype=np.float64)
-            lam_nodes_arr = np.array([lam_nodes[n] for n in conv['node_list']], dtype=np.float64)
-
-
-            if Parallel:
-                print(f"Running {N} simulations in parallel...")
-
-                all_results = run_parallel_simulations_norepair(N, conv['n_edges'], conv['n_nodes'],
-                                                                conv['adj_offsets'], conv['adj_nodes'],
-                                                                conv['adj_edges'], conv['source_idx'],
-                                                                conv['target_idx'], lam_edges_arr, lam_nodes_arr)
-                # Filter valid results
-                valid_mask = ~np.isnan(all_results)
-                valid_results = all_results[valid_mask]
-
-                if valid_results.shape[0] == 0:
-                    return None, None
-
-                samples = valid_results
-                return statistics.mean(samples), np.inf
-
-            else:
-                # Call Numba core and store samples
-                samples = [simulate_numba_core_norepair(conv['n_edges'], conv['n_nodes'],
-                                                        conv['adj_offsets'], conv['adj_nodes'],
-                                                        conv['adj_edges'], conv['source_idx'],
-                                                        conv['target_idx'], lam_edges_arr, lam_nodes_arr)
-                           for _ in range(N)]
-                return statistics.mean(samples), np.inf
-
-        # Union-Find Fallback
-        samples = [simulate_time_to_failure_norepair(G, source, target, lam_edges, lam_nodes)
-                       for _ in range(N)]
-        return statistics.mean(samples), np.inf
-
-    # Check for no-failure case
-    elif all(v == 0 for v in lam_edges.values()) and all(v == 0 for v in lam_nodes.values()):
-        # TODO!
-        return np.inf, 0.0
-
-    # calc max_time
-    max_time = calc_max_time(lam_edges, lam_nodes, mu_edges, mu_nodes)
-
-    mttf_samples, mttr_samples = [], []
-
-    # Repairable case: choose implementation
-    if use_numba and NUMBA_AVAILABLE:
-        # Use Numba version
-        print(f"Using Numba-optimized implementation (Graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
-
-        # Array conversion
-        conv = graph_to_numba_arrays(G, source, target)
-        lam_edges_arr = np.array([lam_edges[e] for e in conv['edge_list']], dtype=np.float64)
-        mu_edges_arr = np.array([mu_edges[e] for e in conv['edge_list']], dtype=np.float64)
-        lam_nodes_arr = np.array([lam_nodes[n] for n in conv['node_list']], dtype=np.float64)
-        mu_nodes_arr = np.array([mu_nodes[n] for n in conv['node_list']], dtype=np.float64)
-
-        if Parallel:
-            print(f"Running {N*max_cycles} simulations in parallel...")
-
-            # Parallel execution!
-            all_results = run_parallel_simulations(
-                N,
-                conv['n_edges'], conv['n_nodes'],
-                conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
-                conv['source_idx'], conv['target_idx'],
-                lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
-                max_cycles, 1e6, Laziness
-            )
-
-            # Filter valid results
-            valid_mask = ~np.isnan(all_results[:, 0])
-            valid_results = all_results[valid_mask]
-
-            if valid_results.shape[0] == 0:
-                return None, None
-
-            mttf_samples = valid_results[:, 0]
-            mttr_samples = valid_results[:, 1]
-
-        else:
-            # N simulations with preconverted arrays
-            for _ in range(N):
-                results = simulate_numba_core(
-                    conv['n_edges'],
-                    conv['n_nodes'],
-                    conv['adj_offsets'],
-                    conv['adj_nodes'],
-                    conv['adj_edges'],
-                    conv['source_idx'],
-                    conv['target_idx'],
-                    lam_edges_arr,
-                    lam_nodes_arr,
-                    mu_edges_arr,
-                    mu_nodes_arr,
-                    max_cycles,
-                    max_time,
-                    Laziness
-                )
-
-                # check if results not empty and append to lists
-                if results.shape[0] > 0:
-                    # append mean over max_cycles deep run
-                    mttf_samples.append(float(np.mean(results[:, 0])))
-                    mttr_samples.append(float(np.mean(results[:, 1])))
-
-    else:
-        # Python version
-        print(f"Using Python implementation (Graph: {G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
-
-        for _ in range(N):
-            res = simulate_cycle_repairable(G, source, target, lam_edges, lam_nodes,
-                                            mu_edges, mu_nodes, max_cycles=max_cycles)
-            if res is not None:
-                tf, tr = res
-                mttf_samples.append(tf)
-                mttr_samples.append(tr)
-
-        mttf_samples = np.array(mttf_samples)
-        mttr_samples = np.array(mttr_samples)
-
-    # check if samples empty
-    if len(mttf_samples) == 0:
+    # Catch if G is not connected at start.
+    if not nx.has_path(G, source, target):
+        print('There exists no connection between source and target. Please fix topology!')
         return None, None
 
-    # Plot results (optional)
-    if Plotting:
-        monte_carlo_plotting(mttf_samples, mttr_samples)
+    # Extract rates from graph
+    lam_edges, lam_nodes, mu_edges, mu_nodes = get_lam_mu_from_graph(G)
 
-    # return mean
-    return float(np.mean(mttf_samples)), float(np.mean(mttr_samples))
+    # Check for non-repairable case
+    is_nonrepairable = (all(mu == 0 for mu in mu_edges.values()) and all(mu == 0 for mu in mu_nodes.values()))
+
+    # Check for no-failure case
+    is_nofailure = (all(lam == 0 for lam in lam_edges.values()) and all(lam == 0 for lam in lam_nodes.values()))
+
+    # Check for no-failure case
+    if is_nofailure:
+        # TODO!
+        print('not implemented')
+        return np.inf, 0.0
+
+    if use_numba and NUMBA_AVAILABLE:
+        # Convert to arrays
+        conv = graph_to_numba_arrays(G, source, target)
+
+        # get edge and node arrays
+        lam_edges_arr = np.array([lam_edges[e] for e in conv['edge_list']], dtype=np.float64)
+        lam_nodes_arr = np.array([lam_nodes[n] for n in conv['node_list']], dtype=np.float64)
+
+        if is_nonrepairable:
+            # non-repairable case
+            if parallel:
+                print(f"Running {N} simulations in parallel...")
+                all_results = _run_parallel_norepair(
+                    N, conv['n_edges'], conv['n_nodes'],
+                    conv['adj_offsets'], conv['adj_nodes'],
+                    conv['adj_edges'], conv['source_idx'],
+                    conv['target_idx'], lam_edges_arr,
+                    lam_nodes_arr
+                )
+            else:
+                all_results = _run_serial_norepair(
+                    N, conv['n_edges'], conv['n_nodes'],
+                    conv['adj_offsets'], conv['adj_nodes'],
+                    conv['adj_edges'], conv['source_idx'],
+                    conv['target_idx'], lam_edges_arr,
+                    lam_nodes_arr
+                )
+            # Filter valid results
+            valid = all_results[~np.isnan(all_results)]
+
+            if len(valid) == 0:
+                return None, None
+
+            return float(np.mean(valid)), np.inf
+
+        else:
+            # Repairable case
+            mu_edges_arr = np.array([mu_edges[e] for e in conv['edge_list']], dtype=np.float64)
+            mu_nodes_arr = np.array([mu_nodes[n] for n in conv['node_list']], dtype=np.float64)
+
+            max_events=-1
+
+            print(f"Running {N*depth} ({N} x {depth}) simulations {'in parallel' if parallel else ''}...")
+
+            if parallel:
+                all_results, all_critical = _run_parallel(
+                    N,
+                    conv['n_edges'], conv['n_nodes'],
+                    conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                    conv['source_idx'], conv['target_idx'],
+                    lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
+                    depth, max_events, laziness, analyze_crit
+                )
+            else:
+                all_results, all_critical = _run_serial(
+                    N,
+                    conv['n_edges'], conv['n_nodes'],
+                    conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                    conv['source_idx'], conv['target_idx'],
+                    lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
+                    depth, max_events, laziness, analyze_crit
+                )
+            valid = ~np.isnan(all_results[:,0])
+            mttf_samples = all_results[valid, 0]
+            mttr_samples = all_results[valid, 1]
+
+            if len(mttf_samples) == 0:
+                return None, None
+
+            if analyze_crit and all_critical.size >0:
+                analyze_critical_components(
+                    all_critical, conv['n_edges'], conv['n_nodes'],
+                    conv['edge_list'], conv['node_list'],
+                    lam_edges_arr, lam_nodes_arr,
+                    mu_edges_arr, mu_nodes_arr, plot=True
+                )
+
+            if plotting:
+                monte_carlo_plotting(mttf_samples, mttr_samples)
+
+            return float(np.mean(mttf_samples)), float(np.mean(mttr_samples))
+
+    # Python fallback
+    print(f"Using Python fallback ({G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
+
+    if is_nonrepairable:
+        samples = [_simulate_python_norepair(G, source, target, lam_edges, lam_nodes) for _ in range(N)]
+        return float(np.mean(samples)), np.inf
+    else:
+        #max_events = calc_max_time(lam_edges, lam_nodes, mu_edges, mu_nodes)
+        results = []
+        for _ in range(N):
+            res = _simulate_python_repairable(G, source, target, lam_edges, lam_nodes,
+                                                  mu_edges, mu_nodes, depth)
+            if res is not None:
+                results.append(res)
+
+        if not results:
+            return None, None
+
+        mttf_samples = [r[0] for r in results]
+        mttr_samples = [r[1] for r in results]
+
+
+        if plotting:
+            monte_carlo_plotting(mttf_samples, mttr_samples)
+
+        return float(np.mean(mttf_samples)), float(np.mean(mttr_samples))
