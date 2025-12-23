@@ -234,7 +234,7 @@ class pandaICTNet(ADict):
                         retval=False
                         break
                 except:
-                    print("A")
+                    pass
                                 
         return retval
     

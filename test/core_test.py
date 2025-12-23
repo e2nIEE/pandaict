@@ -19,39 +19,17 @@ import pandas as pd
 import math
 import csv
 import uuid
+import numpy as np
 from pandaict.create import create_ict_app
 from pandaict.topology.ip_address import IP_address
 from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
-from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3
+from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1, extend_testnet3
 from pandaict.toolbox.exceltools import from_excel, to_excel 
+from simbench.networks.extract_simbench_grids_from_csv import _grid_number_dict
 
 class Core_Test():
     
-    def extend_testnet3(self, ict_net3):
         
-        
-        a1a = get_elt_id_by_name(ict_net3, "A1a", expected="app")
-        a1b = get_elt_id_by_name(ict_net3, "A1b", expected="app")
-        a2  = get_elt_id_by_name(ict_net3, "DA2", expected="app")
-        a3  = get_elt_id_by_name(ict_net3, "DA3", expected="app")
-        a4  = get_elt_id_by_name(ict_net3, "DA4", expected="app")
-        
-        
-        conn1      = pi.create_ict_connection(ict_net3, name="D2_D1", from_app=a2, to_app=a1a, protocol="HTTP",
-                        info_items=[InfoItem.URL, InfoItem.WEBPAGE], 
-                        peers=(a2,a1a), producer=[1,0], prod_freq_ms=[60000, 600])
-        conn2      = pi.create_ict_connection(ict_net3, name="D2_D4", from_app=a2, to_app=a4, protocol="HTTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
-                        peers=(a2,a4), producer=[0,1], prod_freq_ms=[3000, 10])
-        conn3      = pi.create_ict_connection(ict_net3, name="D1_D4", from_app=a1b, to_app=a4, protocol="HTTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
-                        peers=(a1b,a4), producer=[0,1], prod_freq_ms=[3000, 40])
-        conn4      = pi.create_ict_connection(ict_net3, name="D3_D4", from_app=a3, to_app=a4, protocol="FTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.FILE], 
-                        peers=(a3,a4), producer=[1,0], prod_freq_ms=[6000, 20])
-        
-        return ict_net3
-    
     def __assert_node_raises(self, utest, ict_net):
         utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=AppType.CLIENT)
         utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, geodata={'a':10})
@@ -161,6 +139,7 @@ class Core_Test():
     def test_create_ict_net(self, utest):        
     
         ict_net  = create_testnet1()
+        ict_net = extend_testnet1(ict_net)
         ict_net2 = create_testnet2()
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net2))   
@@ -190,7 +169,7 @@ class Core_Test():
     def test_lup_table_calc(self, utest):
     
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         link_bw = {}
         for i, _ in ict_net['conn'].iterrows():
             # TODO: what if connection is not at all possible? 
@@ -208,7 +187,7 @@ class Core_Test():
     def test_sorted_link_calc(self, utest):
     
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         link_bw = {}
         
         # testing value fetching
@@ -252,7 +231,7 @@ class Core_Test():
 
     def test_calc_app_vol_MB(self, utest):
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         app_elt = get_elt_id_by_name(ict_net, "DA2", expected="app")
         res_exp = calc_app_vol_MB(ict_net, app_elt, 86400)
         expected_res = {"('conn', 0)": {'down': 9437.04, 'up': 6.63552},
@@ -272,7 +251,7 @@ class Core_Test():
         
     def test_mtbf_mttr_ber_calc(self, utest):  
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         # single route testing
         ber_d = []
         ber_u = []
@@ -326,7 +305,7 @@ class Core_Test():
             utest.assertAlmostEqual(expected_MTTR[i], calculated_MTTR[i], delta=0.001)
             utest.assertAlmostEqual(expected_ber[i], calculated_ber[i], delta=0.001)
         return 
-    
+
     
     def __get_custom_link_protocol_types(self):
         custom_link = { # 10BASE2 unidirectional (not too realistic, just for testing)
@@ -356,7 +335,7 @@ class Core_Test():
     def __create_testnet3mod_with_custom_types(self):
         
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         custom_link, custom_protocol = self.__get_custom_link_protocol_types()
         create_std_type(ict_net, custom_link, "10BASE2_oneway", element="link")
         create_std_type(ict_net, custom_protocol, "SFTP", element="protocol")
@@ -415,7 +394,7 @@ class Core_Test():
         # TODO: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
                             
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         init_extend_network(ict_net)
         assign_ipaddr_to_elt(ict_net, ('device',0), ip="192.168.1.1/24")
         assign_ipaddr_to_elt(ict_net, ('device',1), ip="192.168.2.1/24")
@@ -471,8 +450,7 @@ class Core_Test():
 
 if __name__ == '__main__':
         
-    bt = Core_Test()
-               
+    bt = Core_Test()    
         
     
      

@@ -91,23 +91,34 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
         __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)    
     from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
-    droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
+    try:
+        droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
+    except:
+        droutes = []    
     if respect_iptables:
         mdg = mdg_orig
         __modify_multidigraph_by_iptables(ict_net, mdg, to_dev, from_dev)
-    uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')        
+    try:
+        uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')
+    except:
+        uroutes = []
         
-    pidlinks = __get_pilinks_lowest_weight(ict_net, mdg, droutes)
-    piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)    
-    if include_hops: 
-        pidhops = __get_pihops(mdg, droutes)
-        piuhops = __get_pihops(mdg, uroutes)
-    else:
-        pidhops = None 
-        piuhops = None        
-    lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks, hops=pidhops)
-    lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks, hops=piuhops)
-        
+    if len(droutes)!=0:
+        pidlinks = __get_pilinks_lowest_weight(ict_net, mdg, droutes)
+        if include_hops: 
+            pidhops = __get_pihops(mdg, droutes)
+        else:
+            pidhops = None 
+        lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks, hops=pidhops)
+    
+    if len(uroutes)!=0:
+        piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)    
+        if include_hops: 
+            piuhops = __get_pihops(mdg, uroutes)
+        else:
+            piuhops = None        
+        lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks, hops=piuhops)
+    
     return lup_table
 
 def calc_lup_table(ict_net, conn_elt, routing_type, include_hops=False, respect_iptables=True):
