@@ -75,7 +75,11 @@ pages:
    - leitwarte_iee
   image: python:3.10.0
   stage: pages
+  before_script:
+  - apt-get update -y
   script:
+  - curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - 
+  - apt-get install -y nodejs
   - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
   - pip install -U sphinx
   - pip install -r requirements.txt
