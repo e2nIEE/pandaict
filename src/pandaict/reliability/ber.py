@@ -3,7 +3,16 @@ Copyright (c) 2024-2026 by University of Kassel and Fraunhofer Institute for Ene
 and Energy System Technology (IEE), Kassel. All rights reserved.
 
 Created on 30.01.2024
-@author: jringelstein
+@author: gbanerjee
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links

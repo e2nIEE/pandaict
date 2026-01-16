@@ -2,6 +2,9 @@
 """
 Created on Wed Mar  6 11:34:37 2024
 @author: gbanerjee
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 """
 
 import networkx as nx

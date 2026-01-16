@@ -1,6 +1,15 @@
 '''
 Created on 24.01.2024
-@author: jringelstein
+@author: gbanerjee
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 import pandapower as pp
