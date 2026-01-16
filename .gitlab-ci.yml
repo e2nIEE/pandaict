@@ -56,7 +56,7 @@ unit-test:
     script:
      - pip install -r requirements.txt
      - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
-     - python3 pandaict_test.py
+     - python3 test/pandaict_test.py
     tags:
      - leitwarte_iee
 
