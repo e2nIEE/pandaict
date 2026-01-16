@@ -25,7 +25,6 @@ from pandaict.topology.ip_address import IP_address
 from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
 from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1, extend_testnet3
 from pandaict.toolbox.exceltools import from_excel, to_excel 
-from simbench.networks.extract_simbench_grids_from_csv import _grid_number_dict
 
 class Core_Test():
     
