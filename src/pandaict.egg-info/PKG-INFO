@@ -1,0 +1,31 @@
+Metadata-Version: 2.4
+Name: pandaict
+Version: 1.1.2rc0
+Summary: Toolbox for ICT networks
+Home-page: https://gitlab.cc-asp.fraunhofer.de/recode/pandaict
+Author: Jan Ringelstein
+Author-email: jan.ringelstein@iee.fraunhofer.de
+Project-URL: Bug Tracker, https://gitlab.cc-asp.fraunhofer.de/recode/pandaict/-/issues
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: AUTHORS
+Requires-Dist: numpy<2.0.0
+Requires-Dist: pandas>2.0.0
+Requires-Dist: networkx
+Requires-Dist: setuptools>=60.9.3
+Requires-Dist: bump2version>=1.0.1
+Requires-Dist: sphinx_rtd_theme
+Requires-Dist: aenum
+Requires-Dist: pillow
+Requires-Dist: matplotlib
+Requires-Dist: regex
+Requires-Dist: openpyxl
+Dynamic: author
+Dynamic: author-email
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: project-url
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

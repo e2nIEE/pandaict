@@ -1,5 +1,3 @@
-# SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
 import logging
 pilogger = logging.getLogger("pandaICT_Core")
 fh = logging.FileHandler('pandaICT_Core.log')

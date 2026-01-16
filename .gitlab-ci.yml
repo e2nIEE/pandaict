@@ -78,7 +78,7 @@ pages:
   before_script:
   - apt-get update -y
   script:
-  - curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash - 
+  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash - 
   - apt-get install -y nodejs
   - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
   - pip install -U sphinx
