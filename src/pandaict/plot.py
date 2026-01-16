@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar  6 11:34:37 2024
+Created on 6.03.2024
 @author: gbanerjee
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
@@ -14,26 +14,19 @@ import matplotlib.pyplot as plt
 
 
 
-def create_plot(net, draw_type='dev', custom_icons=None):
-    
+def create_plot(net, draw_type='dev', custom_icons=None):    
     """
     Create a plot.
-    
+
     :INPUT:
         **net** - The network to be plotted.
+
+        **draw_type** (string) - The type of drawing to be created. There are two possibilities: 'dev' and 'app'.
+            'dev': plotting all devices and nodes in the ICT grid and all the elements are connected via 'link' (physical view)
+            'app': plotting all apps in the ICT grid and all the end-to-end elements are connected via connection 'conn' (logical view).
         
-        **draw_type** (string) - The type of drawing to be created. There are two possibilities, i.e., 'dev' and 'app'.\n
-         'dev': plotting all devices and nodes in the ICT grid and all the elemnets are connected via 'link' (physical view)\n
-         'app': plotting all apps in the ICT grid and all the end-to-end elements are connected via connection 'conn' (logical view).
-        
-        **custom_icons** (dict, optional) - A dictionary of custom icons to be used in the plot. Defaults to None.\n
-        Example:\n
-            "node": "icons/router.png",\n
-            "app":  "icons/app.png",\n
-            "device": "icons/device.png",\n
-            "converter": "icons/convert.png",
+        **custom_icons** (dict, optional) - A dictionary of custom icons to be used in the plot. Defaults to None.                            
     
-            
     :OUTPUT:
         **plot** -  The pyplot figure object.
         
@@ -46,13 +39,17 @@ def create_plot(net, draw_type='dev', custom_icons=None):
         import networkx as nx
         import matplotlib.pyplot as plt
 
-
+        cicons = {"node": "icons/router.png",
+                  "app":  "icons/app.png",
+                  "device": "icons/device.png",
+                  "converter": "icons/convert.png"}
+            
         # Plot the graph for dev
-        plot = create_plot(net, draw_type='dev', custom_icons=None)
+        plot = create_plot(net, draw_type='dev', custom_icons=cicons)
         plot.show()
         
         # Plot the graph for app
-        plot = create_plot(net, draw_type='app', custom_icons=None)
+        plot = create_plot(net, draw_type='app', custom_icons=cicons)
         plot.show()
         
     """    

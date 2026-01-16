@@ -1,3 +1,4 @@
+.. 	@author: jringelstein	
 .. _reliability:
 
 #####################
@@ -13,13 +14,13 @@ MTBF and MTTR
 =============
 
 .. _calc_MTBF_route:
-.. autofunction:: pandaict.reliability.mtbr_mttf.calc_MTBF_route	
+.. autofunction:: pandaict.reliability.mtbf_mttr.calc_mtbf_route	
 
 .. _calc_MTBF_MTTR_route:
-.. autofunction:: pandaict.reliability.mtbr_mttf.calc_MTBF_MTTR_route
+.. autofunction:: pandaict.reliability.mtbf_mttr.calc_mtbf_mttr_route
 	
 .. _calc_MTBF_MTTR_by_lup:
-.. autofunction:: pandaict.reliability.mtbr_mttf.calc_MTBF_MTTR_by_lup
+.. autofunction:: pandaict.reliability.mtbf_mttr.calc_mtbf_mttr_by_lup
 
 Bit error rate
 ==============

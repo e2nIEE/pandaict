@@ -1,3 +1,9 @@
+'''
+@author: brequardt
+
+SPDX-FileCopyrightText: 2024 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+'''
+
 import nbformat
 import base64
 import os
