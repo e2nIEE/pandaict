@@ -1,6 +1,5 @@
 '''
 Created on 24.01.2024
-
 @author: jringelstein
 '''
 

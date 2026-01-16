@@ -1,8 +1,7 @@
 '''
 # Copyright (c) 2016-2025 by Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
+and Energy System Technology (IEE), Kassel. All rights reserved.
 Created on 13.09.2025
-
 @author: fnuetz
 '''
 

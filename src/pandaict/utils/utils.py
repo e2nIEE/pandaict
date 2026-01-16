@@ -1,9 +1,8 @@
 '''
-# Copyright (c) 2024-2026 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
+Copyright (c) 2024-2026 by University of Kassel and Fraunhofer Institute for Energy Economics
+and Energy System Technology (IEE), Kassel. All rights reserved.
 
 Created on 8.02.2024
-
 @author: jringelstein
 '''
 
