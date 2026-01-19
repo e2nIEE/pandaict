@@ -88,7 +88,7 @@ pages:
   - python doc/jupyter/pandaict/convert_attachements.py
   - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/  
   after_script:
-  - more /tmp/sphinx-err-6h0bu32o.log
+  - more /tmp/sphinx-err-*.log
   artifacts:
     paths:
     - public
