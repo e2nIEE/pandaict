@@ -87,6 +87,7 @@ pages:
   - pip install jupyter-book==1.0.4post1
   - python doc/jupyter/pandaict/convert_attachements.py
   - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/
+  - more /tmp/sphinx-err-6h0bu32o.log
   artifacts:
     paths:
     - public
