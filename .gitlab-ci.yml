@@ -86,7 +86,7 @@ pages:
   - sphinx-build -b html doc/sphinx/source public/pandaict
   - pip install jupyter-book==1.0.4post1
   - python doc/jupyter/pandaict/convert_attachements.py
-  - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/ -vvvv
+  - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/
   artifacts:
     paths:
     - public

@@ -22,5 +22,6 @@ src/pandaict/utils/__pycache__/
 
 .idea/
 public/jupyter/_build/
+doc/jupyter/pandaict/.ipynb_checkpoints
 doc/jupyter/pandaict/images/
 public/
