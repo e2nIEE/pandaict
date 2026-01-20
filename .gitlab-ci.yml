@@ -109,6 +109,7 @@ create_artifact_gitlab_nexus::
     - export CURL_CA_BUNDLE=""
     - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
     - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose    
+    - echo "$PYPIRC_CFG_NEXUS" > ~/.pypirc    
     - twine upload --config-file ~/.pypirc -r nexus dist/*
   artifacts:
     paths:
