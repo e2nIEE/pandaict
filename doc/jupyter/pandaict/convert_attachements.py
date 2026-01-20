@@ -34,8 +34,11 @@ def convert_attachments_to_files(notebook_path, output_dir):
     # Durchsuche alle Zellen im Notebook
     for cell in nb.cells:
         if cell.cell_type == 'markdown' and 'attachments' in cell:
-            attachments = cell['attachments']            
-            cell.source = _convert_images_in_attachments(cell, attachments)
+            attachments = cell['attachments']   
+            if cell['attachments']=={}: 
+                cell.pop('attachments')
+            else:
+                cell.source = _convert_images_in_attachments(cell, attachments)
                         		
     
     # Speichere das angepasste Notebook
