@@ -5,7 +5,7 @@ Created on 22.12.2025
 
 import numpy as np
 from numba import njit, prange
-from monte_carlo_numba_core import (
+from pandaict.reliability.monte_carlo_numba_core import (
     _build_rates_and_bit,
     simulate_numba_core,
     simulate_numba_core_norepair

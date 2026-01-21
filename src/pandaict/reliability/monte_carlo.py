@@ -7,17 +7,17 @@ Created on 22.12.2025
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from reliability_utils import get_lam_mu_from_graph
+from pandaict.reliability.reliability_utils import get_lam_mu_from_graph
 
 # import python fallback
-from monte_carlo_python_fallback import (
+from pandaict.reliability.monte_carlo_python_fallback import (
         _simulate_python_repairable,
         _simulate_python_norepair
     )
 
 # try importing wrappers for numba version
 try:
-    from monte_carlo_numba_wrappers import (
+    from pandaict.reliability.monte_carlo_numba_wrappers import (
         _run_parallel,
         _run_parallel_norepair,
         _run_serial,
