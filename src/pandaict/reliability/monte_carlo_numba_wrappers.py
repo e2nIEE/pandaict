@@ -18,7 +18,7 @@ from monte_carlo_numba_core import (
 def _run_parallel(n_sims,
                   n_edges, n_nodes,
                   adj_offsets, adj_nodes, adj_edges,
-                  source_idx, target_idx,
+                  source_idx, target_idx, min_connected,
                   lam_edges_arr, lam_nodes_arr,
                   mu_edges_arr, mu_nodes_arr,
                   depth, max_events, laziness=0, analyze_crit=True):
@@ -56,13 +56,14 @@ def _run_parallel(n_sims,
         results, crit_comp = simulate_numba_core(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
-            source_idx, target_idx,
+            source_idx, target_idx, min_connected,
             lam_edges_arr, lam_nodes_arr,
             mu_edges_arr, mu_nodes_arr, bit_copy,
             depth, max_events, laziness, track_crit=analyze_crit
         )
 
         if results.shape[0] > 0:
+            # TODO: maybe adjust such that samples instead of mean is stored in all_results? okay for now.
             all_results[sim_idx, 0] = float(np.mean(results[:, 0]))
             all_results[sim_idx, 1] = float(np.mean(results[:, 1]))
 
@@ -80,7 +81,7 @@ def _run_parallel(n_sims,
 def _run_parallel_norepair(n_sims,
                            n_edges, n_nodes,
                            adj_offsets, adj_nodes, adj_edges,
-                           source_idx, target_idx,
+                           source_idx, target_idx, min_connected,
                            lam_edges_arr, lam_nodes_arr):
     """
     Wrapper for running n_sims non-repairable simulations in parallel.
@@ -98,7 +99,7 @@ def _run_parallel_norepair(n_sims,
         results = simulate_numba_core_norepair(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
-            source_idx, target_idx,
+            source_idx, target_idx, min_connected,
             lam_edges_arr, lam_nodes_arr, bit_copy
         )
 
@@ -110,7 +111,7 @@ def _run_parallel_norepair(n_sims,
 @njit
 def _run_serial(n_sims, n_edges, n_nodes,
                 adj_offsets, adj_nodes, adj_edges,
-                source_idx, target_idx,
+                source_idx, target_idx, min_connected,
                 lam_edges_arr, lam_nodes_arr,
                 mu_edges_arr, mu_nodes_arr,
                 depth, max_events,
@@ -143,7 +144,7 @@ def _run_serial(n_sims, n_edges, n_nodes,
         results, crit_comp = simulate_numba_core(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
-            source_idx, target_idx,
+            source_idx, target_idx, min_connected,
             lam_edges_arr, lam_nodes_arr,
             mu_edges_arr, mu_nodes_arr,
             bit_copy,
@@ -151,6 +152,7 @@ def _run_serial(n_sims, n_edges, n_nodes,
         )
 
         if results.shape[0] > 0:
+            # TODO: maybe adjust such that samples instead of mean is stored in all_results? okay for now.
             all_results[sim_idx, 0] = np.mean(results[:, 0])
             all_results[sim_idx, 1] = np.mean(results[:, 1])
 
@@ -166,7 +168,7 @@ def _run_serial(n_sims, n_edges, n_nodes,
 @njit
 def _run_serial_norepair(n_sims, n_edges, n_nodes,
                          adj_offsets, adj_nodes, adj_edges,
-                         source_idx, target_idx,
+                         source_idx, target_idx, min_connected,
                          lam_edges_arr, lam_nodes_arr):
     """Wrapper for running n_sims non-repairable simulations serially."""
     all_results = np.empty(n_sims, dtype=np.float64)
@@ -180,7 +182,7 @@ def _run_serial_norepair(n_sims, n_edges, n_nodes,
         result = simulate_numba_core_norepair(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
-            source_idx, target_idx,
+            source_idx, target_idx, min_connected,
             lam_edges_arr, lam_nodes_arr,
             bit_copy
         )

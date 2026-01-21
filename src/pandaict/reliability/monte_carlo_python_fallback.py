@@ -11,18 +11,20 @@ import numpy as np
 # PYTHON-ONLY Fallback (Union-Find)
 # =====================================================================================
 class UnionFind:
-    """Optimized Union-Find structure for connectivity checks (replaces networkX)"""
+    """Optimized Union-Find structure for efficient connectivity checks (replaces networkX)."""
 
     def __init__(self, nodes):
         self.parent = {n: n for n in nodes}
         self.rank = {n: 0 for n in nodes}
 
     def find(self, x):
+        """find parent of x"""
         if self.parent[x] != x:
             self.parent[x] = self.find(self.parent[x])
         return self.parent[x]
 
     def union(self, x, y):
+        """union x and y"""
         root_x, root_y = self.find(x), self.find(y)
         # check if already unified
         if root_x == root_y:
@@ -36,6 +38,7 @@ class UnionFind:
             self.rank[root_x] += 1
 
     def connected(self, x, y):
+        """check if x and y have the same parent and hence are connected."""
         return self.find(x) == self.find(y)
 
     def rebuild_uf(self, edge_list, node_list, edge_state, node_state, node_index):
@@ -55,6 +58,7 @@ def _simulate_python_repairable(G, source, target,
                                 depth=1, max_events=-1):
     """
     Python version with Union-Find (original implementation).
+    TODO: write results in numpy array (for consistent return type in monte_carlo.py)
     """
     edge_list = list(G.edges())
     node_list = list(G.nodes())
@@ -68,7 +72,7 @@ def _simulate_python_repairable(G, source, target,
 
     if max_events == -1:
         n_events = len(edge_list) + len(node_list)
-        max_events = n_events * 50
+        max_events = n_events * 200
 
     events = []
     for i, e in enumerate(edge_list):
@@ -189,13 +193,17 @@ def _simulate_python_repairable(G, source, target,
     if not results:
         return None
 
+    # TODO: maybe adjust such that samples are returned instead of mean value? okay for now.
     mttf = statistics.mean(r[0] for r in results)
     mttr = statistics.mean(r[1] for r in results)
     return mttf, mttr
 
 
 def _simulate_python_norepair(G, source, target, lam_edges, lam_nodes):
-    """Non-repairable system simulation (unchanged)"""
+    """
+    Non-repairable system simulation using python fallback (union-find).
+    TODO: write results in numpy array (for consistent return type in monte_carlo.py)
+    """
     edge_list = list(G.edges())
     node_list = list(G.nodes())
     node_index = {n: i for i, n in enumerate(node_list)}

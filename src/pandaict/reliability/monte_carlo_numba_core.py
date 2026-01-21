@@ -105,10 +105,63 @@ def _build_rates_and_bit(n_edges, n_nodes, lam_edges_arr, lam_nodes_arr):
 # DFS Connectivity Check
 # ------------------------------------------------------------------------------------------------------------------
 @njit
+def check_connections(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
+                      source_indices, target_indices, min_connected=-1):
+    """
+    Checks connectivity for source-target pairs.
+    System is UP if at least min_connected pairs are connected.
+
+    :INPUT:
+        **adj_offset, adj_nodes, adj_edges**    - np.ndarrays, topology of graph in csr format
+        **edge_state, node_state**              - np.ndarrays(dtype=bool_), states of network components
+        **source_indices**                      - np.ndarray(dtype=int64), source node indices
+        **target_indices**                      - np.ndarray(dtype=int64), target node indices (same length)
+        **min_connected**                       - int, minimum number of connected pairs required
+            - min_connected=1: At least 1 pair (old require_all=False)
+            - min_connected=k: At least k pairs (k-out-of-n)
+            - min_connected=-1: All pairs (default) (old require_all=True)
+
+    :OUTPUT: True if at least min_connected pairs are connected, False otherwise
+    """
+    n_pairs = source_indices.shape[0]
+
+    # Clamp min_connected to valid range
+    if min_connected == -1:
+        min_connected = n_pairs
+    elif min_connected < 1:
+        min_connected = 1
+    if min_connected > n_pairs:
+        min_connected = n_pairs
+
+    n_connected = 0
+    n_remaining = n_pairs
+
+    # check connectivity of pairs
+    for i in range(n_pairs):
+        s_idx = source_indices[i]
+        t_idx = target_indices[i]
+
+        if dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state, s_idx, t_idx):
+            n_connected += 1
+
+            # Early exit: Already enough connected
+            if n_connected >= min_connected:
+                return True
+
+        n_remaining -= 1
+
+        # Early exit: Can't reach min_connected anymore
+        if n_connected + n_remaining < min_connected:
+            return False
+
+    return n_connected >= min_connected
+
+
+@njit
 def dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
                   source_idx, target_idx):
     """
-    Depth First Search to determine connectivity of network (replaces slow NetworkX method)
+    Depth First Search to determine connectivity between source_idx and target_idx (replaces slow NetworkX method)
     Check if source and target are connected via DFS.
     Returns True if connected, False otherwise.
 
@@ -123,6 +176,9 @@ def dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
     # Check if source/target are active (enabling early checkout)
     if node_state[source_idx] == 0 or node_state[target_idx] == 0:
         return False
+
+    if source_idx == target_idx:
+        return True
 
     # DFS using stack
     visited = np.zeros(n, dtype=np.int8)
@@ -164,7 +220,7 @@ def dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
 @njit
 def simulate_numba_core(n_edges, n_nodes,
                         adj_offsets, adj_nodes, adj_edges,
-                        source_idx, target_idx,
+                        source_idx, target_idx, min_connected,
                         lam_edges_arr, lam_nodes_arr,
                         mu_edges_arr, mu_nodes_arr, bit,
                         depth, max_events=-1, laziness=0, track_crit=True):
@@ -174,16 +230,20 @@ def simulate_numba_core(n_edges, n_nodes,
     :INPUT:
         **n_edges, n_nodes**                    - ints, number of edges and nodes in network
         **adj_offsets, adj_nodes, adj_edges**   - np.ndarrays, topology of graph in csr format
-        **source_idx, target_idx**              - integers, indices of source and target nodes
+        **source_idx, target_idx**              - np.ndarrays, indices of source(s) and target(s)
+        **min_connected**                       - int, minimum number of connected pairs required
+            - min_connected=1: At least 1 pair (old require_all=False)
+            - min_connected=k: At least k pairs (k-out-of-n)
+            - min_connected=-1: All pairs (default) (old require_all=True)
         **lam_edges_arr, lam_nodes_arr**        - np.ndarrays, failure rates of edges and nodes
         **mu_edges_arr, mu_nodes_arr**          - np.ndarrays, repair rates of edges and nodes
         **bit**                                 - Fenwick Tree Array, containing initial rates
         **depth**                               - int, number of cycles to be simulated on the semi-fixed network
-        **max_events**                            - float, maximum simulation time, to avoid infinite loops
+        **max_events**                          - float, maximum simulation time, to avoid infinite loops
         **laziness**                            - float, between 0 and 1. Percentage by which the network has to
                                                   change before connectivity is checked again.
     :OUTPUT:
-        **results**                             - list of (t_fail, t_repair) for each cycle
+        **results**                             - np.ndarray of (t_fail, t_repair) for each cycle
     """
 
     # Initialize states (all UP)
@@ -194,7 +254,7 @@ def simulate_numba_core(n_edges, n_nodes,
     n_events = n_edges + n_nodes
 
     if max_events == -1:
-        max_events = n_events * 50  # stop loop if the whole network has changed 50 times
+        max_events = n_events * 200  # stop loop if the whole network has changed 50 times
 
     total_rate = bit_prefix_sum(bit, n_events - 1)
 
@@ -221,10 +281,11 @@ def simulate_numba_core(n_edges, n_nodes,
     # Main cycle loop
     while cycle_idx < depth:
 
-        # === PHASE 1: UP → DOWN (run until failure) ===
+        # === PHASE 1: UP -> DOWN (run until failure) ===
         t_fail = 0.0
-        connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
-                                  edge_state, node_state, source_idx, target_idx)
+        connected = check_connections(adj_offsets, adj_nodes, adj_edges,
+                                      edge_state, node_state,
+                                      source_idx, target_idx, min_connected)
 
         # keep track of event number (lazy connectivity)
         event_count = -1
@@ -290,8 +351,9 @@ def simulate_numba_core(n_edges, n_nodes,
 
             # Lazy connectivity check
             if event_count >= event_threshold:
-                connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
-                                          edge_state, node_state, source_idx, target_idx)
+                connected = check_connections(adj_offsets, adj_nodes, adj_edges,
+                                              edge_state, node_state,
+                                              source_idx, target_idx, min_connected)
                 if track_crit:
                     if connected:
                         # still connected -> not critical -> overwrite values by reseting writer
@@ -311,8 +373,9 @@ def simulate_numba_core(n_edges, n_nodes,
         if track_crit:
             crit_checkpoint = crit_idx
 
-        connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
-                                  edge_state, node_state, source_idx, target_idx)
+        connected = check_connections(adj_offsets, adj_nodes, adj_edges,
+                                      edge_state, node_state,
+                                      source_idx, target_idx, min_connected)
 
         while not connected:
             if total_rate <= 0.0:
@@ -359,8 +422,9 @@ def simulate_numba_core(n_edges, n_nodes,
             event_idx += 1
 
             if event_count >= event_threshold:
-                connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
-                                          edge_state, node_state, source_idx, target_idx)
+                connected = check_connections(adj_offsets, adj_nodes, adj_edges,
+                                              edge_state, node_state,
+                                              source_idx, target_idx, min_connected)
                 if track_crit:
                     if not connected:
                         # still disconnected -> not critical -> overwrite values by reseting writer
@@ -383,7 +447,7 @@ def simulate_numba_core(n_edges, n_nodes,
 @njit
 def simulate_numba_core_norepair(n_edges, n_nodes,
                                  adj_offsets, adj_nodes, adj_edges,
-                                 source_idx, target_idx,
+                                 source_idx, target_idx, min_connected,
                                  lam_edges_arr, lam_nodes_arr, bit):
     """
     Simulate system lifetime for a non-repairable system (µ=0).
@@ -391,13 +455,17 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
         **n_edges, n_nodes**                    - ints, number of edges and nodes in network
         **adj_offsets, adj_nodes, adj_edges**   - np.ndarrays, topology of graph in csr format
         **source_idx, target_idx**              - integers, indices of source and target nodes
+        **min_connected**                       - int, minimum number of connected pairs required
+            - min_connected=1: At least 1 pair (old require_all=False)
+            - min_connected=k: At least k pairs (k-out-of-n)
+            - min_connected=-1: All pairs (default) (old require_all=True)
         **lam_edges_arr, lam_nodes_arr**        - np.ndarrays, failure rates of edges and nodes
+        **bit**                                 - Fenwick Tree, containing relevant rates for sampling of events
 
     :OUTPUT:
         **t** - float, time until first system failure (MTTF sample)
     """
 
-    # TODO: bit is static and can hence be prebuild.
     # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)
     node_state = np.ones(n_nodes, dtype=np.bool_)
@@ -412,22 +480,23 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
     # Run until disconnected
     while True:
         # Check connectivity
-        connected = dfs_connected(adj_offsets, adj_nodes, adj_edges,
-                                  edge_state, node_state, source_idx, target_idx)
+        connected = check_connections(adj_offsets, adj_nodes, adj_edges,
+                                      edge_state, node_state,
+                                      source_idx, target_idx, min_connected)
 
         if not connected:
             # System failed!
             return t
 
         if total_rate <= 0.0:
-            # No more failures possible → infinite lifetime
+            # No more failures possible => infinite lifetime
             return np.inf
 
         # Sample time to next failure
         dt = np.random.exponential(1.0 / total_rate)
         t += dt
 
-        # Sample which component fails (Fenwick Tree!)
+        # Sample which component fails from fenwick tree
         r = np.random.random() * total_rate
         idx = bit_find_index(bit, r)
 
