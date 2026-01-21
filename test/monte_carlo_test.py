@@ -6,7 +6,7 @@ Created on 22.12.2025
 import unittest
 import numpy as np
 from monte_carlo_test_nets import *
-from monte_carlo import estimate_mttf_mttr, NUMBA_AVAILABLE
+from pandaict.reliability.monte_carlo import estimate_mttf_mttr, NUMBA_AVAILABLE
 
 
 class ReliabilityNetTest(unittest.TestCase):
