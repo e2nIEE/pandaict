@@ -29,7 +29,6 @@ except ImportError:
     NUMBA_AVAILABLE = False
     print("Warning: Numba not available. Using Python-only version.")
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Helper functions TODO: maybe outsource later
 # ----------------------------------------------------------------------------------------------------------------------
@@ -73,7 +72,6 @@ def _check_initial_connectivity(G, sources, targets, min_connected):
         return False, (f"Only {n_connected} of {n_pairs} pairs connected, "
                        f"but {min_connected} required. "
                        f"Disconnected: {disconnected_pairs[:3]}{'...' if len(disconnected_pairs) > 3 else ''}")
-
 
 def _normalize_connection_pairs(source, target):
     """
@@ -381,6 +379,31 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
         'total_observed': total_observed
     }
 
+def empirical_reliability(T, samples):
+    """
+    Builds an empirical reliability function R and returns its value at timepoint T: R(T)=P(t>=T).
+
+    :INPUT:
+        **T**       - float, timepoint at which the reliability will be evaluated.
+        **samples** - np.ndarray, mttf samples
+
+    :OUTPUT:
+        **R**       - float, reliability function evaluated at timepoint T: R(T)=P(t>=T).
+    """
+
+    n = len(samples)
+
+    if n==0:
+        return 0.0
+
+    n_failure = np.sum(samples <= T)
+    n_survivor = n - n_failure
+
+    p_failure = n_failure / n
+    reliability = n_survivor / n
+
+    return reliability
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
@@ -395,7 +418,7 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1,
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
         **source**              - Source node(s)
         **target**              - Target node(s)
-        **N**:                  - Number of simulations
+        **N**:                  - Number of simulation runs
         **depth**               - Number of UP/DOWN cycles per simulation run (only repairable).
                                   Adjusts for the natural bias towards larger reliabilities when starting each new cycle
                                   with a fully functional network. Depth hands over a semi-fixed network.
