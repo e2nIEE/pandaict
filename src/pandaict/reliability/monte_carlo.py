@@ -407,7 +407,7 @@ def empirical_reliability(T, samples):
 # ----------------------------------------------------------------------------------------------------------------------
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
-def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1,
+def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, max_time=np.inf,
                        use_numba=True, parallel=True,
                        laziness=0, analyze_crit=False,
                        return_samples=False):
@@ -424,6 +424,8 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1,
                                   with a fully functional network. Depth hands over a semi-fixed network.
                                   ~200 gives reasonable values.
         **min_connected**       - int, minimum number of source-target pairs required to be connected
+        **max_time**            - float, parameter to optimize sample collection for empirical reliability function type
+                                  calculations.
         **use_numba**           - Boolean, use Numba-optimized version if available (default: True)
         **parallel**            - Boolean, enable parallelization (default: True)
         **laziness**            - float in [0,1), parameter which allows to sacrifice some accuracy for performance.
@@ -439,6 +441,9 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1,
         **mttr_samples**        - np.ndarray, mttr samples (only if return_samples was set to True)
         }
     """
+
+    if max_time < np.inf:
+        print('Warning: max_time Speedup is used. MTTF, MTTR might be meaningless.')
 
     sources, targets = _normalize_connection_pairs(sources, targets)
     is_multi = len(sources) > 1
@@ -491,14 +496,14 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1,
                     N, conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
                     conv['source_idx'], conv['target_idx'], min_connected,
-                    lam_edges_arr, lam_nodes_arr
+                    lam_edges_arr, lam_nodes_arr, max_time
                 )
             else:
                 all_results = _run_serial_norepair(
                     N, conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
                     conv['source_idx'], conv['target_idx'], min_connected,
-                    lam_edges_arr, lam_nodes_arr
+                    lam_edges_arr, lam_nodes_arr, max_time
                 )
             # Filter valid results
             valid = all_results[~np.isnan(all_results)]
@@ -512,7 +517,7 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1,
                 return {'mttf': float(np.mean(valid)), 'mttr': np.inf, 'mttf_samples': valid, 'mttr_samples': None}
 
 
-            return {'mttf': float(np.mean(valid)), 'mttr': np.inf}
+            return {'mttf': float(np.mean(valid)), 'mttr': np.inf, 'mttf_samples': None, 'mttr_samples': None}
 
         else:
             # Repairable case

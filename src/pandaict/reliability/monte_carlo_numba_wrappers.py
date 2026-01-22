@@ -82,7 +82,7 @@ def _run_parallel_norepair(n_sims,
                            n_edges, n_nodes,
                            adj_offsets, adj_nodes, adj_edges,
                            source_idx, target_idx, min_connected,
-                           lam_edges_arr, lam_nodes_arr):
+                           lam_edges_arr, lam_nodes_arr, max_time):
     """
     Wrapper for running n_sims non-repairable simulations in parallel.
     Facilitates all N CPU-Cores to each run n_sims/N simulations
@@ -100,7 +100,8 @@ def _run_parallel_norepair(n_sims,
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
             source_idx, target_idx, min_connected,
-            lam_edges_arr, lam_nodes_arr, bit_copy
+            lam_edges_arr, lam_nodes_arr, bit_copy,
+            max_time
         )
 
         all_results[sim_idx] = results
@@ -169,7 +170,7 @@ def _run_serial(n_sims, n_edges, n_nodes,
 def _run_serial_norepair(n_sims, n_edges, n_nodes,
                          adj_offsets, adj_nodes, adj_edges,
                          source_idx, target_idx, min_connected,
-                         lam_edges_arr, lam_nodes_arr):
+                         lam_edges_arr, lam_nodes_arr, max_time):
     """Wrapper for running n_sims non-repairable simulations serially."""
     all_results = np.empty(n_sims, dtype=np.float64)
 
@@ -184,7 +185,7 @@ def _run_serial_norepair(n_sims, n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
             source_idx, target_idx, min_connected,
             lam_edges_arr, lam_nodes_arr,
-            bit_copy
+            bit_copy, max_time
         )
         all_results[sim_idx] = result
 

@@ -448,7 +448,7 @@ def simulate_numba_core(n_edges, n_nodes,
 def simulate_numba_core_norepair(n_edges, n_nodes,
                                  adj_offsets, adj_nodes, adj_edges,
                                  source_idx, target_idx, min_connected,
-                                 lam_edges_arr, lam_nodes_arr, bit):
+                                 lam_edges_arr, lam_nodes_arr, bit, max_time):
     """
     Simulate system lifetime for a non-repairable system (µ=0).
     :INPUT:
@@ -465,6 +465,7 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
     :OUTPUT:
         **t** - float, time until first system failure (MTTF sample)
     """
+    # TODO: implement max_cycles to avoid infinite loops
 
     # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)
@@ -495,6 +496,10 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
         # Sample time to next failure
         dt = np.random.exponential(1.0 / total_rate)
         t += dt
+
+        if t > max_time:
+            # reached max_time
+            return np.inf
 
         # Sample which component fails from fenwick tree
         r = np.random.random() * total_rate
