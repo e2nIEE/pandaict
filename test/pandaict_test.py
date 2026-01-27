@@ -6,6 +6,7 @@ Created on 8.03.2024
 import unittest
 from core_test import Core_Test
 from plot_test import Plot_Test
+from monte_carlo_test import ReliabilityNetTest
 
 class PandaICT_Test(unittest.TestCase):    
     
@@ -64,9 +65,11 @@ class PandaICT_Test(unittest.TestCase):
     
     def test_graph_app(self):
         self.plot_tester.test_graph_app(self)
-
+        
+   
 if __name__ == '__main__':    
     #pitest = PandaICT_Test() 
-    #pitest.test_exceltools()
+    #pitest.test_saveload()
+    
     unittest.main()
     

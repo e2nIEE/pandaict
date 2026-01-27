@@ -237,27 +237,41 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
                                 lam_edges_arr, lam_nodes_arr,
                                 mu_edges_arr, mu_nodes_arr,
                                 top_n=10, plot=True, verbose=True, rate_adjustment=True):
+    # TODO: validate function
+    # TODO: output a plot which shows the topology and colors the critical components in red
+    
     """
-    TODO: validate function
-    TODO: output a plot which shows the topology and colors the critical components in red
     Analyze which components are disproportionately critical by calculating the expected
+    
     :INPUT:
         **all_critical**    -
+        
         **n_edges**         -
+        
         **n_nodes**         -
+        
         **edge_list**       -
+        
         **node_list**       -
+        
         **lam_edges_arr**   -
+        
         **lam_nodes_arr**   -
+        
         **mu_edges_arr**    -
+        
         **mu_nodes_arr**    -
+        
         **top_n**           -
+        
         **plot**            -
+        
         **verbose**         -
-        **rate_adjustment** - Boolean, choose whether to adjust the counts by their rates.
-                              This determines whether the network is analyzed for bare topological
-                              criticalities (True) or a wholistic analysis of critical components
-                              is performed, which explicitly depends on the rates of the components (False).
+        
+        **rate_adjustment** - Boolean, choose whether to adjust the counts by their rates. \
+            This determines whether the network is analyzed for bare topological \
+            criticalities (True) or a wholistic analysis of critical components \
+            is performed, which explicitly depends on the rates of the components (False).
 
     :OUTPUT:
         dict with edge_criticality, node_criticality, counts, plots, etc.
@@ -416,32 +430,46 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, m
 
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
+
         **source**              - Source node(s)
+
         **target**              - Target node(s)
+
         **N**:                  - Number of simulation runs
-        **depth**               - Number of UP/DOWN cycles per simulation run (only repairable).
-                                  Adjusts for the natural bias towards larger reliabilities when starting each new cycle
-                                  with a fully functional network. Depth hands over a semi-fixed network.
-                                  ~200 gives reasonable values.
+
+        **depth**               - Number of UP/DOWN cycles per simulation run (only repairable). \
+            Adjusts for the natural bias towards larger reliabilities when starting each new cycle \
+            with a fully functional network. Depth hands over a semi-fixed network. \
+            ~200 gives reasonable values.
+
         **min_connected**       - int, minimum number of source-target pairs required to be connected
-        **max_time**            - float, parameter to optimize sample collection for empirical reliability function type
-                                  calculations.
+
+        **max_time**            - float, parameter to optimize sample collection for empirical reliability function type \
+            calculations.
+
         **use_numba**           - Boolean, use Numba-optimized version if available (default: True)
+        
         **parallel**            - Boolean, enable parallelization (default: True)
-        **laziness**            - float in [0,1), parameter which allows to sacrifice some accuracy for performance.
-                                  Only checks the connectivity of the network if laziness*(V+E) events took place (only numba).
+        
+        **laziness**            - float in [0,1), parameter which allows to sacrifice some accuracy for performance. \
+            Only checks the connectivity of the network if laziness*(V+E) events took place (only numba).
+                                  
         **analyze_crit**        - Boolean, choose whether network should be analyzed for critical components.
+        
         **return_samples**      - Boolean, choose whether all samples should be returned, alongside the mean values.
 
     :OUTPUT:
-        {
+        
         **mttf**                - float, mean time to failure
-        **mttr**                - float, mean time to repair
-        **mttf_samples**        - np.ndarray, mttf samples (only if return_samples was set to True)
-        **mttr_samples**        - np.ndarray, mttr samples (only if return_samples was set to True)
-        }
-    """
 
+        **mttr**                - float, mean time to repair
+
+        **mttf_samples**        - np.ndarray, mttf samples (only if return_samples was set to True)
+
+        **mttr_samples**        - np.ndarray, mttr samples (only if return_samples was set to True)
+        
+    """
+    
     if max_time < np.inf:
         print('Warning: max_time Speedup is used. MTTF, MTTR might be meaningless.')
 
