@@ -1,10 +1,6 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 8.03.2024
-
-@authors: jringelstein
+@author: jringelstein
 @note: file_io is not threadsave through the use of copy.deepcopy 
 
 '''
@@ -16,9 +12,10 @@ import uuid
 from math import isnan
 from pandaict import create_empty_network
 from pandaict import __version__
-from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem
+from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem, addCustomEnum
 from pandaict.pilogger import pilogger
 from json import JSONDecodeError
+from aenum import extend_enum
 
 def __df_to_json(df):
     dfc = copy.deepcopy(df)
@@ -34,41 +31,60 @@ def __std_type_dict_to_json(di):
     for etype in dic.keys():
         for stdtype in dic[etype].keys():
             if 'uuid' in dic[etype][stdtype].keys():            
-                dic[etype][stdtype].update({'uuid': str(dic[etype][stdtype]['uuid'])})
+                if dic[etype][stdtype]['uuid'] is not None:                
+                    dic[etype][stdtype].update({'uuid': str(dic[etype][stdtype]['uuid'])})                
             if 'info_items' in dic[etype][stdtype].keys():            
-                dic[etype][stdtype].update({'info_items': [{'name': ii.name, 'value': ii.value} for ii in dic[etype][stdtype]['info_items']]})
-                 
+                dic[etype][stdtype].update({'info_items': [{'name': ii.name, 'value': ii.value} for ii in dic[etype][stdtype]['info_items']]})                
     return json.dumps(dic)
+
+def __custom_enums_to_json():
+    dic = [] 
+    enum_types = [NodeType, DeviceType, AppType, InfoItem]
+    for et in enum_types:
+        for e in et.__iter__():
+            if (e.value >= 1000):                                
+                dic += [{'type': et.__name__, 'name': e.name, 'value': e.value}]
+    return json.dumps(dic) 
 
 def __check_index_and_uuid(df):
     
     if df.index[0].isnumeric():
-        df.index = df.index.astype(int)
+        df.index = df.index.astype(int)    
     
-    if "uuid" in df.keys():
-        for i, s in enumerate(df["uuid"]):
-            if s is not None:
-                df.at[i,"uuid"] = uuid.UUID(s)
-            
+    if "uuid" in df.keys():       
+        uuids_str = list(df["uuid"].values)
+        uuids = []
+        df.drop(columns=["uuid"], inplace=True)        
+        for s in uuids_str: 
+            if s:
+                uuids.append(uuid.UUID(s))
+            else:
+                uuids.append(None)
+        df.insert(3, "uuid", uuids)       
+        #for i, s in enumerate(df["uuid"]):
+        #    if s is not None:
+        #        df.at[i,"uuid"] = None
+        #        df.at[i,"uuid"] = uuid.UUID(s)
+        
     return df
        
        
 def __to_type(df, dfkey, totype, dflist=""):
     if dfkey in df.keys():
-            for i, s in enumerate(df[dfkey]):
-                if s is None:
-                    continue
-                if isinstance(s, dict):
-                    s = s.get('value', None) # for aenums
-                if (dflist=="list" or dflist=="tuple"):
-                    if isinstance(s[0], dict):                                                    
-                        df.at[i,dfkey] = [totype(e.get('value',None)) for e in s]  # for aenums
-                    elif dflist=="list":
-                        df.at[i,dfkey] = [totype(e) for e in s]                        
-                    else:
-                        df.at[i,dfkey] = tuple([totype(e) for e in s])
+        for i, s in enumerate(df[dfkey]):
+            if s is None:
+                continue
+            if isinstance(s, dict):
+                s = s.get('value', None) # for aenums
+            if (dflist=="list" or dflist=="tuple"):
+                if isinstance(s[0], dict):                                                    
+                    df.at[i,dfkey] = [totype(e.get('value',None)) for e in s]  # for aenums
+                elif dflist=="list":
+                    df.at[i,dfkey] = [totype(e) for e in s]                        
                 else:
-                    df.at[i,dfkey] = totype(s)
+                    df.at[i,dfkey] = tuple([totype(e) for e in s])
+            else:
+                df.at[i,dfkey] = totype(s)
     return df
         
         
@@ -91,12 +107,21 @@ def __convert_std_types(df):
     for pr in df['protocol'].keys():        
         if isinstance(df['protocol'][pr], dict):
             df['protocol'][pr].update({'info_items': [InfoItem(v['value']) for v in df['protocol'][pr]['info_items']]})
-            df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})
+            if df['protocol'][pr]['uuid'] is not None:
+                df['protocol'][pr].update({'uuid': uuid.UUID(df['protocol'][pr]['uuid'])})           
     for li in df['link'].keys():        
         if isinstance(df['link'][li], dict):          
-            df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
+            if df['link'][li]['uuid'] is not None:
+                df['link'][li].update({'uuid': uuid.UUID(df['link'][li]['uuid'])})
             __list_to_tuple(df['link'][li], 'bandwidth_Mbps')
             __list_to_tuple(df['link'][li], 'latency_ms')                                       
+    return df
+
+def __json_to_enum(ict_net, df):
+    str_to_type = {'NodeType': NodeType, 'DeviceType': DeviceType, 'AppType':AppType, 'InfoItem': InfoItem}
+    for i, e in df.iterrows():        
+        etype = str_to_type[e['type']]
+        addCustomEnum(ict_net, etype, e['name'], e['value'])                     
     return df
                 
 def __json_to_df(df, elt_type):
@@ -120,7 +145,7 @@ def __json_to_df(df, elt_type):
         df = __to_type(df, 'peers', tuple, dflist="tuple")              
         df = __to_type(df, 'info_items', InfoItem, dflist="list")       
     elif elt_type=="std_type":
-        df = __convert_std_types(df)   
+        df = __convert_std_types(df)       
     return df
 
 def to_json(ict_net, filename, save_std_types=False):
@@ -145,6 +170,7 @@ def to_json(ict_net, filename, save_std_types=False):
             jappc = __df_to_json(ict_net.app)
             jconn = __df_to_json(ict_net.conn)            
             jstdt = __std_type_dict_to_json(ict_net.std_types) if save_std_types else "{}"
+            jcenm = __custom_enums_to_json()
             jipta = __df_to_json(ict_net.iptables) if "iptables" in ict_net.keys() else "{}"
             json.dump({"info": "pandaICT net file", "pandaict_version": __version__, "name": ict_net.name, "connectors": ict_net.connectors[0].to_list(),                               
                         "node":       json.loads(jnode),
@@ -153,6 +179,7 @@ def to_json(ict_net, filename, save_std_types=False):
                         "app":        json.loads(jappc),
                         "conn":       json.loads(jconn),
                         "std_type":   json.loads(jstdt),
+                        "cenum":      json.loads(jcenm),
                         "iptables":   json.loads(jipta),
                         }, pifile, indent=2)                            
         except (TypeError, IndexError, ValueError, NameError) as e:
@@ -207,6 +234,8 @@ def from_json(filename):
     if not pd.DataFrame(jall["std_type"]).empty:
         ict_net.std_types  = __json_to_df(pd.DataFrame(jall["std_type"]),"std_type").to_dict()
         ict_net.std_types  = __remove_nans_from_std_types(ict_net.std_types)
+    if not pd.DataFrame(jall["cenum"]).empty:
+        __json_to_enum(ict_net, pd.DataFrame(jall["cenum"]))
     if not pd.DataFrame(jall["iptables"]).empty:
         ict_net.iptables   = __json_to_df(pd.DataFrame(jall["iptables"]),"iptables")
 

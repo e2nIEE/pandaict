@@ -1,10 +1,15 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 10.09.2024
+@author: gbanerjee
 
-@author: jringelstein
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 from pandaict.utils.utils import get_elts_any
@@ -46,5 +51,32 @@ def __check_lup_prob_sum_lt_one(lup_table, downstream):
         pilogger.warn("calc_MTBF_MTTR_by_lup: lup table probabilities add up to "+str(pr_sum)+", maximal supported: 1.0")
         return False 
     return True 
+
+def get_lam_mu_from_graph(G):
+    """Extract failure and repair rates from graph attributes"""
+    lam_edges, mu_edges = {}, {}
+    lam_nodes, mu_nodes = {}, {}
+
+    for e in G.edges(data=True):
+        u, v, edata = e
+        mtbf_h = edata.get('mtbf_h', 0)
+        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
+        lam_edges[(u, v)] = lam
+
+        mttr_h = edata.get('mttr_h', 0)
+        mu = 0 if mttr_h == 0 else 1 / mttr_h
+        mu_edges[(u, v)] = mu
+
+    for n in G.nodes(data=True):
+        u, ndata = n
+        mtbf_h = ndata.get('mtbf_h', 0)
+        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
+        lam_nodes[u] = lam
+
+        mttr_h = ndata.get('mttr_h', 0)
+        mu = 0 if mttr_h == 0 else 1 / mttr_h
+        mu_nodes[u] = mu
+
+    return lam_edges, lam_nodes, mu_edges, mu_nodes
     
 

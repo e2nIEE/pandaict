@@ -8,3 +8,5 @@ aenum
 pillow
 matplotlib
 regex
+openpyxl
+numba>=0.61.0

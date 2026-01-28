@@ -1,3 +1,4 @@
+.. 	@author: jringelstein	
 .. _std_types:
 
 ##############
@@ -28,12 +29,12 @@ Link types
 Protocol types
 --------------
 
-  .. tabularcolumns:: |l|l|l|l|
+.. tabularcolumns:: |l|l|l|l|
 .. csv-table::
    :file: protocoltypes.csv
    :delim: ;
    :widths: 60, 15, 50, 50 
-
+	
 
 Adding and creating standard types
 ==================================

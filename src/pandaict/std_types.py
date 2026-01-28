@@ -1,14 +1,19 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 2.02.2024
+@author: gbanerjee
 
-@author: jringelstein
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 import uuid
-from   pandaict.utils.enums import InfoItem
+from pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
 
 
@@ -179,7 +184,7 @@ def __transmission_protocoltypes():
             "uuid": uuid.UUID("fdb0612d-3791-437a-b570-139c49c9dea9"),   
             },
         "UDP": {        
-            "base_package_size_byte": 8,
+            "base_package_size_byte": 12, # UDP Header has at least 12 byte
             "info_items":
                 [ InfoItem.REQUEST,
                   InfoItem.RESPONSE,                   

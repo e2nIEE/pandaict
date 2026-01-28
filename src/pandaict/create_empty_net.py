@@ -1,10 +1,15 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 30.01.2024
+@author: gbanerjee
 
-@author: jringelstein
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 from pandaict.auxiliary import pandaICTNet
@@ -64,6 +69,7 @@ def __get_conn_structure():
         ("uuid", dtype(object)), 
         ("from", "u4"), 
         ("to", "u4"), 
+        ("protocol", dtype(object)),
         ("info_items", dtype(object)), 
         ("peers", dtype(object)), 
         ("producer", dtype(object)), 

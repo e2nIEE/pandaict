@@ -1,3 +1,4 @@
+.. 	@author: jringelstein	
 .. _index:
 
 ############################
@@ -54,7 +55,8 @@ Operation at the Fraunhofer Institute for Energy Economics and Energy System Tec
     std_types    
     topology/routing  
     visualisation     
-    reliability
+    reliability_basic
+    montecarlo    
     ip_support
     
 

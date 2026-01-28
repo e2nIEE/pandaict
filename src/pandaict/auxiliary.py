@@ -1,10 +1,15 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 30.01.2024
+@author: gbanerjee
 
-@author: jringelstein
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 from collections.abc import MutableMapping
@@ -229,9 +234,12 @@ class pandaICTNet(ADict):
                 cols = list(self[k].columns)                            
                 if 'uuid' in cols: 
                     cols.remove('uuid')                        
-                if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
-                    retval=False
-                    break
+                try:
+                    if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
+                        retval=False
+                        break
+                except:
+                    pass
                                 
         return retval
     

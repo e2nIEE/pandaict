@@ -1,10 +1,15 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 8.02.2024
+@author: gbanerjee
 
-@author: jringelstein
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 import numpy as np 
@@ -357,7 +362,7 @@ def is_bidirectional(ict_net, link_elt):
     if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
         pilogger.warn("link_elt is not a link")
         return None
-    bw = get_bandwidth_Mbps(ict_net, link_elt)
+    bw = get_bandwidth_Mbps(ict_net, link_elt)   
     return False if (isinstance(bw, float) or isinstance(bw, int) or len(bw)<2 or bw[1]==0) else True  
    
 def get_supported_protocols(ict_net, link_elt):       
