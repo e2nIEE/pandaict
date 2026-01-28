@@ -45,7 +45,6 @@ sonarqube-check:
     paths:
       - .sonar/cache
   script:
-    - ping applik-170.iee.fraunhofer.de
     - curl -sSf https://applik-170.iee.fraunhofer.de
     - sonar-scanner -X
   allow_failure: true
