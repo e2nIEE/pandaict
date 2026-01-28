@@ -55,7 +55,7 @@ def __check_index_and_uuid(df):
         if "uuid" in df.keys():
             for i, s in enumerate(df["uuid"]):
                 if s is not None:
-                    df.at[i,"uuid"] = uuid.UUID(s)
+                    df.at[i,"uuid"] = uuid.UUID(str(s))
     except:
         print("Exception in file_io")
         print("i: "+str(i))
