@@ -52,10 +52,16 @@ def __check_index_and_uuid(df):
         df.index = df.index.astype(int)    
     
     if "uuid" in df.keys():
-        for i, s in enumerate(df["uuid"]):
-            if s is not None:
-                df.at[i,"uuid"] = None
-                df.at[i,"uuid"] = uuid.UUID(s)
+        uuids_str = list(df["uuid"].values)
+        uuids = []
+        df.drop(columns=["uuid"], axis=1, inplace=True)        
+        for s in uuids_str: 
+            uuids.append(uuid.UUID(s))        
+        df.insert(3, "uuid", uuids)
+        #for i, s in enumerate(df["uuid"]):
+        #    if s is not None:
+        #        df.at[i,"uuid"] = None
+        #        df.at[i,"uuid"] = uuid.UUID(s)
         
     return df
        
