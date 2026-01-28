@@ -1,9 +1,5 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 8.03.2024
-
 @authors: jringelstein
 '''
 import unittest 
@@ -12,45 +8,23 @@ from   pandaict.utils.utils import uuid2elt, elt2uuid, get_values_for_links, get
 from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
 from   pandaict.topology.routing import *
 from   pandaict.topology.routing import calc_sorted_links_by_connection
-from   pandaict.reliability.mtbr_mttf import calc_mtbf_route, calc_mtbf_mttr_route, calc_mtbf_mttr_by_lup
+from   pandaict.reliability.mtbf_mttr import calc_mtbf_route, calc_mtbf_mttr_route, calc_mtbf_mttr_by_lup
 from   pandaict.reliability.ber import calc_ber_route, calc_ber_by_lup
 from   pandaict.std_types import create_std_type
 import pandas as pd
 import math
 import csv
 import uuid
+import numpy as np
 from pandaict.create import create_ict_app
 from pandaict.topology.ip_address import IP_address
 from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
-from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3
+from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1, extend_testnet3
+from pandaict.toolbox.exceltools import from_excel, to_excel 
 
 class Core_Test():
     
-    def extend_testnet3(self, ict_net3):
         
-        
-        a1a = get_elt_id_by_name(ict_net3, "A1a", expected="app")
-        a1b = get_elt_id_by_name(ict_net3, "A1b", expected="app")
-        a2  = get_elt_id_by_name(ict_net3, "DA2", expected="app")
-        a3  = get_elt_id_by_name(ict_net3, "DA3", expected="app")
-        a4  = get_elt_id_by_name(ict_net3, "DA4", expected="app")
-        
-        
-        conn1      = pi.create_ict_connection(ict_net3, name="D2_D1", from_app=a2, to_app=a1a, protocol="HTTP",
-                        info_items=[InfoItem.URL, InfoItem.WEBPAGE], 
-                        peers=(a2,a1a), producer=[1,0], prod_freq_ms=[60000, 600])
-        conn2      = pi.create_ict_connection(ict_net3, name="D2_D4", from_app=a2, to_app=a4, protocol="HTTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
-                        peers=(a2,a4), producer=[0,1], prod_freq_ms=[3000, 10])
-        conn3      = pi.create_ict_connection(ict_net3, name="D1_D4", from_app=a1b, to_app=a4, protocol="HTTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
-                        peers=(a1b,a4), producer=[0,1], prod_freq_ms=[3000, 40])
-        conn4      = pi.create_ict_connection(ict_net3, name="D3_D4", from_app=a3, to_app=a4, protocol="FTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.FILE], 
-                        peers=(a3,a4), producer=[1,0], prod_freq_ms=[6000, 20])
-        
-        return ict_net3
-    
     def __assert_node_raises(self, utest, ict_net):
         utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=AppType.CLIENT)
         utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=NodeType.ROUTER, geodata={'a':10})
@@ -160,6 +134,7 @@ class Core_Test():
     def test_create_ict_net(self, utest):        
     
         ict_net  = create_testnet1()
+        ict_net = extend_testnet1(ict_net)
         ict_net2 = create_testnet2()
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net2))   
@@ -169,8 +144,8 @@ class Core_Test():
     
         if ict_net is None: 
             ict_net = create_testnet2()
-        pi.to_json(ict_net, 'dummy.json', save_std_types=True)
-        ict_net_reloaded = pi.from_json('dummy.json')
+        pi.to_json(ict_net, 'test/dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('test/dummy.json')
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         return
@@ -189,7 +164,7 @@ class Core_Test():
     def test_lup_table_calc(self, utest):
     
         ict_net = create_testnet3()
-        self.extend_testnet3(ict_net)
+        extend_testnet3(ict_net)
         link_bw = {}
         for i, _ in ict_net['conn'].iterrows():
             # TODO: what if connection is not at all possible? 
@@ -207,6 +182,7 @@ class Core_Test():
     def test_sorted_link_calc(self, utest):
     
         ict_net = create_testnet3()
+        extend_testnet3(ict_net)
         link_bw = {}
         
         # testing value fetching
@@ -250,14 +226,15 @@ class Core_Test():
 
     def test_calc_app_vol_MB(self, utest):
         ict_net = create_testnet3()
-        app_elt = get_elt_id_by_name(ict_net, "D2", expected="app")
+        extend_testnet3(ict_net)
+        app_elt = get_elt_id_by_name(ict_net, "DA2", expected="app")
         res_exp = calc_app_vol_MB(ict_net, app_elt, 86400)
         expected_res = {"('conn', 0)": {'down': 9437.04, 'up': 6.63552},
                         "('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                         "total": {'down':  9562.377600000002, 'up': 123869.67551999999}} 
         utest.assertEqual(res_exp, expected_res)
         
-        app_elt = get_elt_id_by_name(ict_net, "D4", expected="app")
+        app_elt = get_elt_id_by_name(ict_net, "DA4", expected="app")
         res_cal = calc_app_vol_MB(ict_net, app_elt, 86400)
         calculated_res = {"('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                           "('conn', 2)": {'down': 125.33760000000001, 'up': 30965.76},
@@ -269,7 +246,7 @@ class Core_Test():
         
     def test_mtbf_mttr_ber_calc(self, utest):  
         ict_net = create_testnet3()
-        
+        extend_testnet3(ict_net)
         # single route testing
         ber_d = []
         ber_u = []
@@ -323,7 +300,7 @@ class Core_Test():
             utest.assertAlmostEqual(expected_MTTR[i], calculated_MTTR[i], delta=0.001)
             utest.assertAlmostEqual(expected_ber[i], calculated_ber[i], delta=0.001)
         return 
-    
+
     
     def __get_custom_link_protocol_types(self):
         custom_link = { # 10BASE2 unidirectional (not too realistic, just for testing)
@@ -353,7 +330,7 @@ class Core_Test():
     def __create_testnet3mod_with_custom_types(self):
         
         ict_net = create_testnet3()
-        
+        extend_testnet3(ict_net)
         custom_link, custom_protocol = self.__get_custom_link_protocol_types()
         create_std_type(ict_net, custom_link, "10BASE2_oneway", element="link")
         create_std_type(ict_net, custom_protocol, "SFTP", element="protocol")
@@ -376,8 +353,8 @@ class Core_Test():
         utest.assertEqual(ict_net.std_types['protocol']['SFTP'],  custom_protocol)
         
         # test save/load
-        pi.to_json(ict_net, 'dummy.json', save_std_types=True)
-        ict_net_reloaded = pi.from_json('dummy.json')    
+        pi.to_json(ict_net, 'test/dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('test/dummy.json')    
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         
         # test path calculation for conn 2
@@ -412,6 +389,7 @@ class Core_Test():
         # TODO: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
                             
         ict_net = create_testnet3()
+        extend_testnet3(ict_net)
         init_extend_network(ict_net)
         assign_ipaddr_to_elt(ict_net, ('device',0), ip="192.168.1.1/24")
         assign_ipaddr_to_elt(ict_net, ('device',1), ip="192.168.2.1/24")
@@ -455,11 +433,19 @@ class Core_Test():
         self.test_save_load(utest, ict_net)
         utest.assertTrue(pi.inspect(ict_net))
         return 
+    
+    def test_exceltools(self, utest):       
+        net = from_excel('test/example_net.xlsx')
+        to_excel(net,'test/example_net_rewritten.xlsx')
+        net2 = from_excel('test/example_net_rewritten.xlsx')
+        utest.assertTrue(net.equals_excluding_uuids(net2))
+        pi.to_json(net, 'test/dummy.json', save_std_types=True)
+        net3 = pi.from_json('test/dummy.json')
+        utest.assertTrue(net.equals_excluding_uuids(net3))
 
 if __name__ == '__main__':
         
-    bt = Core_Test()
-               
+    bt = Core_Test()    
         
     
      
