@@ -49,19 +49,14 @@ def __custom_enums_to_json():
 def __check_index_and_uuid(df):
     
     if df.index[0].isnumeric():
-        df.index = df.index.astype(int)
+        df.index = df.index.astype(int)    
     
-    try:
-        if "uuid" in df.keys():
-            for i, s in enumerate(df["uuid"]):
-                if s is not None:
-                    df.at[i,"uuid"] = uuid.UUID(str(s))
-    except:
-        print("Exception in file_io")
-        print("i: "+str(i))
-        print("s: "+str(s))
-        print("df.iloc[0]: "+str(df.iloc[0].get('name', 'n.a.')))
-            
+    if "uuid" in df.keys():
+        for i, s in enumerate(df["uuid"]):
+            if s is not None:
+                df.at[i,"uuid"] = None
+                df.at[i,"uuid"] = uuid.UUID(s)
+        
     return df
        
        
