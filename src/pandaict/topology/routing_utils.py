@@ -46,13 +46,16 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
                     passed = __log_debug_and_return_false("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))                    
         
-    if not passed:        
+    __print_failed(passed)
+    
+    return passed
+
+def __print_failed(passed):
+    if not passed:
         if pilogger.level != logging.DEBUG:
             print("__validate_multidigraph FAILED, set loglevel to debug and check the log")
         else:
             print("__validate_multidigraph FAILED, check the log")
-    
-    return passed
 
 def __get_weight(ict_net, link, wtype):
     

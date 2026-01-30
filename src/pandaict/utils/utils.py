@@ -40,7 +40,7 @@ def uuid2elt(ict_net, uid):
         try:
             idx = np.nonzero(ict_net[et]['uuid']==uid)[0][0]
             return (et, idx)
-        except:
+        except (TypeError, KeyError, IndexError, ValueError):
             pass            
     return None
     
@@ -65,7 +65,7 @@ def elt2uuid(ict_net, elt):
     try:
         uid = get_elt(ict_net,elt)['uuid']
         return uid
-    except:
+    except (TypeError, KeyError, IndexError, ValueError):
         return None
     
 def to_elt(ict_net, any_id):
@@ -130,7 +130,7 @@ def get_elt(ict_net, elt):
     try:
         retval = ict_net[elt[0]].loc[elt[1]]
         return retval
-    except:
+    except (TypeError, KeyError, IndexError, ValueError):
         return None
 
 def get_elt_by_uuid(ict_net, uid):

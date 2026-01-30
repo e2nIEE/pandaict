@@ -45,7 +45,8 @@ sonarqube-check:
     paths:
       - .sonar/cache
   before_script:
-    - echo "${SONAR_CRT}" | base64 -d > sonar.crt
+    - echo "$SONAR_CRT"
+    - echo "$SONAR_CRT" | base64 -d > sonar.crt
     - keytool -v -importcert -noprompt -alias sonar -file sonar.crt -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
   script:
     - curl -sSf https://applik-170.iee.fraunhofer.de

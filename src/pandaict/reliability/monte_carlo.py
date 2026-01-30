@@ -494,12 +494,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     # Catch if G is not connected at start.
     is_connected, error_msg = _check_initial_connectivity(G, sources, targets, min_connected)
 
-    if not is_connected:
-        print(f'Initial connectivity check failed: {error_msg}')
-        print('Please fix topology!')
-        if return_samples:
-            return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
-        return {'mttf': None, 'mttr': None}
+    _check_is_connected(is_connected, error_msg, return_samples)
 
     # Extract rates from graph
     lam_edges, lam_nodes, mu_edges, mu_nodes = get_lam_mu_from_graph(G)
@@ -511,13 +506,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     is_nofailure = (all(lam == 0 for lam in lam_edges.values()) and all(lam == 0 for lam in lam_nodes.values()))
 
     # Check for no-failure case
-    if is_nofailure:
-        # TODO!
-        print('not implemented')
-
-        if return_samples:
-            return {'mttf':np.inf, 'mttr':0.0, 'mttf_samples':None, 'mttr_samples':None}
-        return np.inf, 0.0
+    __check_nofailure(is_nofailure,return_samples)
 
     if use_numba and NUMBA_AVAILABLE:
         # Convert graph to arrays
@@ -702,3 +691,19 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                 'mttr': float(np.mean(mttr_samples)),
                 'mttf_samples': None,
                 'mttr_samples': None}
+
+def _check_is_connected(is_connected, error_msg, return_samples):
+    if not is_connected:
+        print(f'Initial connectivity check failed: {error_msg}')
+        print('Please fix topology!')
+        if return_samples:
+            return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
+        return {'mttf': None, 'mttr': None}
+
+def __check_nofailure(is_nofailure, return_samples):
+    if is_nofailure:
+        # TODO!
+        print('not implemented')
+        if return_samples:
+            return {'mttf':np.inf, 'mttr':0.0, 'mttf_samples':None, 'mttr_samples':None}
+        return np.inf, 0.0
