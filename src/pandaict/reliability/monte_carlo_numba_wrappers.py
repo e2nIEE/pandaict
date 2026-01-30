@@ -15,18 +15,21 @@ from pandaict.reliability.monte_carlo_numba_core import (
 # Wrappers for parallel and serial code execution
 # ------------------------------------------------------------------------------------------------------------------
 @njit(parallel=True)
-def _run_parallel(n_sims,
+def _run_parallel(n_sims, depth, TOL,
                   n_edges, n_nodes,
-                  adj_offsets, adj_nodes, adj_edges,
+	              adj_offsets, adj_nodes, adj_edges,
+                  lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
                   source_idx, target_idx, min_connected,
-                  lam_edges_arr, lam_nodes_arr,
-                  mu_edges_arr, mu_nodes_arr,
-                  depth, max_events, laziness=0, analyze_crit=True):
+                  max_events, max_time,
+	              return_samples, analyze_crit, laziness):
     """
     Wrapper for running n_sims repairable simulations in parallel.
-    Facilitates all N CPU-Cores to each run n_sims/N simulations
+    Facilitates all N CPU-Cores to each run n_sims simulations
     Speedup: ~Nx with N Cores.
     """
+    # TODO: implement convergence criteria (TOL)
+    # TODO: use return samples to improve memory efficiency
+
     all_results = np.empty((n_sims, 2), dtype=np.float64)
 
     # Build event list
@@ -51,15 +54,16 @@ def _run_parallel(n_sims,
 
     # core parallelisation routine
     for sim_idx in prange(n_sims):
-        bit_copy = bit_template.copy()
+        bit = bit_template.copy()
 
         results, crit_comp = simulate_numba_core(
+            depth,
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
+            lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,
             source_idx, target_idx, min_connected,
-            lam_edges_arr, lam_nodes_arr,
-            mu_edges_arr, mu_nodes_arr, bit_copy,
-            depth, max_events, laziness, track_crit=analyze_crit
+            max_events, max_time,
+            analyze_crit, laziness
         )
 
         if results.shape[0] > 0:
@@ -78,16 +82,22 @@ def _run_parallel(n_sims,
 
 
 @njit(parallel=True)
-def _run_parallel_norepair(n_sims,
+def _run_parallel_norepair(n_sims, TOL,
                            n_edges, n_nodes,
                            adj_offsets, adj_nodes, adj_edges,
+                           lam_edges_arr, lam_nodes_arr,
                            source_idx, target_idx, min_connected,
-                           lam_edges_arr, lam_nodes_arr, max_time):
+	                       max_events, max_time,
+	                       return_samples, analyze_crit, laziness):
     """
     Wrapper for running n_sims non-repairable simulations in parallel.
     Facilitates all N CPU-Cores to each run n_sims/N simulations
     Speedup: ~Nx with N Cores.
     """
+    # TODO: implement analyze_crit
+    # TODO: use return samples to improve memory efficiency
+    # TODO: implement convergence criteria (TOL)
+
     all_results = np.empty(n_sims, dtype=np.float64)
 
     bit_template = _build_rates_and_bit(n_edges, n_nodes,
@@ -95,13 +105,14 @@ def _run_parallel_norepair(n_sims,
 
     # core parallelisation routine
     for sim_idx in prange(n_sims):
-        bit_copy = bit_template.copy()
+        bit = bit_template.copy()
         results = simulate_numba_core_norepair(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
+            lam_edges_arr, lam_nodes_arr, bit,
             source_idx, target_idx, min_connected,
-            lam_edges_arr, lam_nodes_arr, bit_copy,
-            max_time
+            max_events, max_time,
+            analyze_crit, laziness
         )
 
         all_results[sim_idx] = results
@@ -110,17 +121,20 @@ def _run_parallel_norepair(n_sims,
 
 
 @njit
-def _run_serial(n_sims, n_edges, n_nodes,
-                adj_offsets, adj_nodes, adj_edges,
+def _run_serial(n_sims, depth, TOL,
+	            n_edges, n_nodes,
+	            adj_offsets, adj_nodes, adj_edges,
+                lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
                 source_idx, target_idx, min_connected,
-                lam_edges_arr, lam_nodes_arr,
-                mu_edges_arr, mu_nodes_arr,
-                depth, max_events,
-                laziness=0, track_crit=True):
+                max_events, max_time,
+	            return_samples, analyze_crit, laziness):
     """
     Wrapper to run n_sims repairable simulations serially.
     Same structure as parallel, but with range instead of prange.
     """
+    # TODO: implement convergence criteria (TOL)
+    # TODO: use return samples to improve memory efficiency
+
     all_results = np.empty((n_sims, 2), dtype=np.float64)
     n_events = n_edges + n_nodes
 
@@ -133,23 +147,23 @@ def _run_serial(n_sims, n_edges, n_nodes,
 
     max_crit_per_sim = 2 * (event_threshold + 1) * depth
 
-    if track_crit:
+    if analyze_crit:
         all_critical = np.full((n_sims, max_crit_per_sim), -1, dtype=np.int32)
     else:
         all_critical = np.empty((0, 0), dtype=np.int32)
 
     # Serial loop
     for sim_idx in range(n_sims):
-        bit_copy = bit_template.copy()
+        bit = bit_template.copy()
 
         results, crit_comp = simulate_numba_core(
+            depth,
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
+            lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,
             source_idx, target_idx, min_connected,
-            lam_edges_arr, lam_nodes_arr,
-            mu_edges_arr, mu_nodes_arr,
-            bit_copy,
-            depth, max_events, laziness, track_crit
+            max_events, max_time,
+            analyze_crit, laziness
         )
 
         if results.shape[0] > 0:
@@ -157,7 +171,7 @@ def _run_serial(n_sims, n_edges, n_nodes,
             all_results[sim_idx, 0] = np.mean(results[:, 0])
             all_results[sim_idx, 1] = np.mean(results[:, 1])
 
-            if track_crit:
+            if analyze_crit:
                 n_crit = min(crit_comp.shape[0], max_crit_per_sim)
                 all_critical[sim_idx, :n_crit] = crit_comp[:n_crit]
         else:
@@ -167,25 +181,35 @@ def _run_serial(n_sims, n_edges, n_nodes,
 
 
 @njit
-def _run_serial_norepair(n_sims, n_edges, n_nodes,
+def _run_serial_norepair(n_sims, TOL,
+                         n_edges, n_nodes,
                          adj_offsets, adj_nodes, adj_edges,
+                         lam_edges_arr, lam_nodes_arr,
                          source_idx, target_idx, min_connected,
-                         lam_edges_arr, lam_nodes_arr, max_time):
+	                     max_events, max_time,
+	                     return_samples, analyze_crit, laziness):
     """Wrapper for running n_sims non-repairable simulations serially."""
+
+    # TODO: implement convergence criteria (TOL)
+    # TODO: use return samples to improve memory efficiency
+    # TODO: implement analyze_crit
+
+
     all_results = np.empty(n_sims, dtype=np.float64)
 
     bit_template = _build_rates_and_bit(n_edges, n_nodes,
                                         lam_edges_arr, lam_nodes_arr)
 
     for sim_idx in range(n_sims):
-        bit_copy = bit_template.copy()
+        bit = bit_template.copy()
 
         result = simulate_numba_core_norepair(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
+            lam_edges_arr, lam_nodes_arr, bit,
             source_idx, target_idx, min_connected,
-            lam_edges_arr, lam_nodes_arr,
-            bit_copy, max_time
+            max_events, max_time,
+            analyze_crit, laziness
         )
         all_results[sim_idx] = result
 

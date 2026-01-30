@@ -218,12 +218,13 @@ def dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
 # Core Simulation Loops
 # ------------------------------------------------------------------------------------------------------------------
 @njit
-def simulate_numba_core(n_edges, n_nodes,
-                        adj_offsets, adj_nodes, adj_edges,
-                        source_idx, target_idx, min_connected,
-                        lam_edges_arr, lam_nodes_arr,
-                        mu_edges_arr, mu_nodes_arr, bit,
-                        depth, max_events=-1, laziness=0, track_crit=True):
+def simulate_numba_core(depth,															# number of samples
+		                n_edges, n_nodes,												# topology, precomputed constants
+                        adj_offsets, adj_nodes, adj_edges,								# topology, connections
+                        lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,	# topology, rates
+                        source_idx, target_idx, min_connected,							# connectivity
+                        max_events, max_time,											# early stoppage
+		                analyze_crit, laziness):
     """
     Core simulation loop in Numba which simulates UP->DOWN - cycles for depth deep.
     Returns array of (t_fail, t_repair) for each cycle.
@@ -245,6 +246,8 @@ def simulate_numba_core(n_edges, n_nodes,
     :OUTPUT:
         **results**                             - np.ndarray of (t_fail, t_repair) for each cycle
     """
+
+    # TODO: implement max_time
 
     # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)
@@ -269,7 +272,7 @@ def simulate_numba_core(n_edges, n_nodes,
     # threshold after which connectivity is checked again
     event_threshold = int(laziness * n_events)
 
-    if track_crit:
+    if analyze_crit:
         # preallocate array for the identification of critical components. (-1 = invalid)
         critical_components = np.full(2 * (event_threshold + 1) * depth, -1, dtype=np.int32)
     else:
@@ -345,7 +348,7 @@ def simulate_numba_core(n_edges, n_nodes,
             event_idx += 1
 
             # store last event
-            if track_crit:
+            if analyze_crit:
                 critical_components[crit_idx] = idx
                 crit_idx += 1
 
@@ -354,9 +357,9 @@ def simulate_numba_core(n_edges, n_nodes,
                 connected = check_connections(adj_offsets, adj_nodes, adj_edges,
                                               edge_state, node_state,
                                               source_idx, target_idx, min_connected)
-                if track_crit:
+                if analyze_crit:
                     if connected:
-                        # still connected -> not critical -> overwrite values by reseting writer
+                        # still connected -> not critical -> overwrite values by resetting writer
                         crit_idx = crit_checkpoint
                     else:
                         # disconnected -> components are critical -> update crit_checkpoint
@@ -370,7 +373,7 @@ def simulate_numba_core(n_edges, n_nodes,
         event_count = -1
         event_idx = 0
 
-        if track_crit:
+        if analyze_crit:
             crit_checkpoint = crit_idx
 
         connected = check_connections(adj_offsets, adj_nodes, adj_edges,
@@ -413,7 +416,7 @@ def simulate_numba_core(n_edges, n_nodes,
                 bit_update(bit, idx, delta)
                 total_rate += delta
 
-            if track_crit:
+            if analyze_crit:
                 critical_components[crit_idx] = idx
                 crit_idx += 1
 
@@ -425,9 +428,9 @@ def simulate_numba_core(n_edges, n_nodes,
                 connected = check_connections(adj_offsets, adj_nodes, adj_edges,
                                               edge_state, node_state,
                                               source_idx, target_idx, min_connected)
-                if track_crit:
+                if analyze_crit:
                     if not connected:
-                        # still disconnected -> not critical -> overwrite values by reseting writer
+                        # still disconnected -> not critical -> overwrite values by resetting writer
                         crit_idx = crit_checkpoint
                     else:
                         # connected again -> components are critical -> update crit_checkpoint
@@ -445,12 +448,14 @@ def simulate_numba_core(n_edges, n_nodes,
 
 
 @njit
-def simulate_numba_core_norepair(n_edges, n_nodes,
-                                 adj_offsets, adj_nodes, adj_edges,
-                                 source_idx, target_idx, min_connected,
-                                 lam_edges_arr, lam_nodes_arr, bit, max_time):
+def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precomputed constants
+		                        adj_offsets, adj_nodes, adj_edges,								# topology, connections
+                                lam_edges_arr, lam_nodes_arr, bit, 								# topology, rates
+                                source_idx, target_idx, min_connected,							# connectivity
+		                        max_events, max_time,											# early stoppage
+		                        analyze_crit, laziness):
     """
-    Simulate system lifetime for a non-repairable system (µ=0).
+    Simulate system lifetime for a non-repairable system (mu_i=0 for all i).
     :INPUT:
         **n_edges, n_nodes**                    - ints, number of edges and nodes in network
         **adj_offsets, adj_nodes, adj_edges**   - np.ndarrays, topology of graph in csr format
@@ -465,7 +470,9 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
     :OUTPUT:
         **t** - float, time until first system failure (MTTF sample)
     """
-    # TODO: implement max_cycles to avoid infinite loops
+    # TODO: implement analyze_crit
+    # TODO: implement laziness
+    # TODO: implement max_events to avoid infinite loops
 
     # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)

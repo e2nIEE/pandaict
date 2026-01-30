@@ -83,7 +83,7 @@ def _normalize_connection_pairs(source, target):
         3. broadcast: source=["S1","S2"], target="T" → [idx_S1,idx_S2], [idx_T,idx_T]
 
     :OUTPUT:
-     **(source_indices, target_indices)**    - np.ndarray(dtype=int64)
+        **(source_indices, target_indices)**    - np.ndarray(dtype=int64)
     """
     # Normalize to lists
     if isinstance(source, (str, int, np.integer)):
@@ -237,41 +237,41 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
                                 lam_edges_arr, lam_nodes_arr,
                                 mu_edges_arr, mu_nodes_arr,
                                 top_n=10, plot=True, verbose=True, rate_adjustment=True):
-    # TODO: validate function
-    # TODO: output a plot which shows the topology and colors the critical components in red
-    
+    #TODO: validate function
+    #TODO: output a plot which shows the topology and colors the critical components in red
     """
+
     Analyze which components are disproportionately critical by calculating the expected
-    
     :INPUT:
-        **all_critical**    -
-        
-        **n_edges**         -
-        
-        **n_nodes**         -
-        
-        **edge_list**       -
-        
-        **node_list**       -
-        
-        **lam_edges_arr**   -
-        
-        **lam_nodes_arr**   -
-        
-        **mu_edges_arr**    -
-        
-        **mu_nodes_arr**    -
-        
-        **top_n**           -
-        
-        **plot**            -
-        
-        **verbose**         -
-        
-        **rate_adjustment** - Boolean, choose whether to adjust the counts by their rates. \
-            This determines whether the network is analyzed for bare topological \
-            criticalities (True) or a wholistic analysis of critical components \
-            is performed, which explicitly depends on the rates of the components (False).
+
+        **all_critical**    - array of all critical components returned by monte_carlo (WIP)
+
+        **n_edges**         - int, number of edges on graph
+
+        **n_nodes**         - int, number of nodes on graph
+
+        **edge_list**       - list of all edges
+
+        **node_list**       - list of all nodes
+
+        **lam_edges_arr**   - array of failure rates (edges)
+
+        **lam_nodes_arr**   - array of failure rates (nodes)
+
+        **mu_edges_arr**    - array of repair rates (edges)
+
+        **mu_nodes_arr**    - array of repair rates (nodes)
+
+        **top_n**           - int, number of most critical components to be displayed
+
+        **plot**            - bool, whether to plot the graph
+
+        **verbose**         - bool,
+
+        **rate_adjustment** - bool, choose whether to adjust the counts by their rates.
+                              This determines whether the network is analyzed for bare topological
+                              criticalities (True) or a wholistic analysis of critical components
+                              is performed, which explicitly depends on the rates of the components (False).
 
     :OUTPUT:
         dict with edge_criticality, node_criticality, counts, plots, etc.
@@ -299,7 +299,7 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
         if idx < n_events:
             full_counts[idx] = count
 
-    # Normalize by expected rates (λ + μ)
+    # Normalize by expected rates (lam + mu)
     expected_rates = np.concatenate([
         lam_edges_arr + mu_edges_arr,
         lam_nodes_arr + mu_nodes_arr
@@ -319,9 +319,11 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
             elif not rate_adjustment:  # skip expected_fraction <= 0
                 criticality[i] = (full_counts[i] / total_observed)
 
+    # slice array in critical edges and critical nodes
     edge_crit = criticality[:n_edges]
     node_crit = criticality[n_edges:]
 
+    # sort arrays
     top_edge_idx = np.argsort(edge_crit)[::-1][:top_n]
     top_node_idx = np.argsort(node_crit)[::-1][:top_n]
 
@@ -333,7 +335,7 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
         print(f"Total events tracked: {int(total_observed)}")
         print("\nScore = Observed / Expected")
         print("  > 1.0: MORE critical")
-        print("  ≈ 1.0: As expected")
+        print("  ~ 1.0: As expected")
         print("  < 1.0: LESS critical")
 
         print(f"\n{'─' * 70}")
@@ -399,6 +401,7 @@ def empirical_reliability(T, samples):
 
     :INPUT:
         **T**       - float, timepoint at which the reliability will be evaluated.
+
         **samples** - np.ndarray, mttf samples
 
     :OUTPUT:
@@ -421,55 +424,67 @@ def empirical_reliability(T, samples):
 # ----------------------------------------------------------------------------------------------------------------------
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
-def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, max_time=np.inf,
-                       use_numba=True, parallel=True,
-                       laziness=0, analyze_crit=False,
-                       return_samples=False):
+def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
+                       N=1000, depth=1, TOL=0,
+                       max_time=np.inf, max_events=-1,
+                       return_samples=False, analyze_crit=False, laziness=0,
+                       use_numba=True, parallel=True):
     """
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
 
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
 
-        **source**              - Source node(s)
+        **sources**             - Source node(s)
 
-        **target**              - Target node(s)
+        **targets**             - Target node(s)
 
-        **N**:                  - Number of simulation runs
+        **min_connected**       - int, minimum number of connected source-target-pairs required
+            - min_connected=1:  At least 1 pair (any)
+            - min_connected=k:  At least k pairs (k-out-of-n)
+            - min_connected=-1: All pairs (all) (default)
 
-        **depth**               - Number of UP/DOWN cycles per simulation run (only repairable). \
-            Adjusts for the natural bias towards larger reliabilities when starting each new cycle \
-            with a fully functional network. Depth hands over a semi-fixed network. \
-            ~200 gives reasonable values.
+        **N**:                  - Number of simulation runs. It is recommended to not use more than 1e9, since beyond
+                                  that most systems will run into memory issues. Samples are stored as np.float64,
+                                  allocating 11 bits exponent and 52 bits mantissa resulting in.
+                                  1e9 samples result in ~8GB of RAM usage.
 
-        **min_connected**       - int, minimum number of source-target pairs required to be connected
+        **depth**               - Number of UP/DOWN cycles per simulation run (only repairable).
+                                  Adjusts for the natural bias towards larger reliabilities when starting each new cycle
+                                  with a fully functional network. Depth hands over a semi-fixed network into the next cycle.
+                                  ~200 gives reasonable values.
 
-        **max_time**            - float, parameter to optimize sample collection for empirical reliability function type \
-            calculations.
+        **TOL**                 - float, tolerance for convergence of MTTF/MTTR (not yet implemented).
 
-        **use_numba**           - Boolean, use Numba-optimized version if available (default: True)
-        
-        **parallel**            - Boolean, enable parallelization (default: True)
-        
-        **laziness**            - float in [0,1), parameter which allows to sacrifice some accuracy for performance. \
-            Only checks the connectivity of the network if laziness*(V+E) events took place (only numba).
-                                  
-        **analyze_crit**        - Boolean, choose whether network should be analyzed for critical components.
-        
+        **max_time**            - float, parameter to optimize sample collection for empirical reliability function type
+                                  calculations.
+
+        **max_events**          - int, control maximum number of events to avoid infinite loops for super-robust networks.
+
         **return_samples**      - Boolean, choose whether all samples should be returned, alongside the mean values.
 
+        **analyze_crit**        - Boolean, choose whether network should be analyzed for critical components. (WIP)
+
+        **laziness**            - float in [0,1), parameter which allows to sacrifice some accuracy for performance.
+                                  Only checks the connectivity of the network if laziness*(V+E) events took place (only numba).
+
+        **use_numba**           - Boolean, use Numba-optimized version if available (default: True)
+
+        **parallel**            - Boolean, enable parallelization (default: True)
+
     :OUTPUT:
-        
+        {
         **mttf**                - float, mean time to failure
 
-        **mttr**                - float, mean time to repair
+        **mttr**                - float, mean time to repair (np.inf if non-repairable)
 
-        **mttf_samples**        - np.ndarray, mttf samples (only if return_samples was set to True)
+        **mttf_samples**        - np.ndarray, mttf samples (None if not return_samples)
 
-        **mttr_samples**        - np.ndarray, mttr samples (only if return_samples was set to True)
-        
+        **mttr_samples**        - np.ndarray, mttr samples (None if not return_samples or non-repairable)
+
+        }
     """
-    
+
     if max_time < np.inf:
         print('Warning: max_time Speedup is used. MTTF, MTTR might be meaningless.')
 
@@ -521,25 +536,30 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, m
             if parallel:
                 print(f"Running {N} simulations in parallel...")
                 all_results = _run_parallel_norepair(
-                    N, conv['n_edges'], conv['n_nodes'],
+                    N, TOL,
+                    conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                    lam_edges_arr, lam_nodes_arr,
                     conv['source_idx'], conv['target_idx'], min_connected,
-                    lam_edges_arr, lam_nodes_arr, max_time
+                    max_events, max_time,
+                    return_samples, analyze_crit, laziness
                 )
             else:
                 all_results = _run_serial_norepair(
-                    N, conv['n_edges'], conv['n_nodes'],
+                    N, TOL,
+                    conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                    lam_edges_arr, lam_nodes_arr,
                     conv['source_idx'], conv['target_idx'], min_connected,
-                    lam_edges_arr, lam_nodes_arr, max_time
+                    max_events, max_time,
+                    return_samples, analyze_crit, laziness
                 )
             # Filter valid results
             valid = all_results[~np.isnan(all_results)]
 
             if len(valid) == 0:
-                if return_samples:
-                    return {'mttf':None, 'mttr':None, 'mttf_samples':None, 'mttr_samples':None}
-                return {'mttf':None, 'mttr':None}
+                return {'mttf':None, 'mttr':None, 'mttf_samples':None, 'mttr_samples':None}
+
 
             if return_samples:
                 return {'mttf': float(np.mean(valid)), 'mttr': np.inf, 'mttf_samples': valid, 'mttr_samples': None}
@@ -558,21 +578,23 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, m
 
             if parallel:
                 all_results, all_critical = _run_parallel(
-                    N,
+                    N, depth, TOL,
                     conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
-                    conv['source_idx'], conv['target_idx'], min_connected,
                     lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
-                    depth, max_events, laziness, analyze_crit
+                    conv['source_idx'], conv['target_idx'], min_connected,
+                    max_events, max_time,
+                    return_samples, analyze_crit, laziness
                 )
             else:
                 all_results, all_critical = _run_serial(
-                    N,
+                    N, depth, TOL,
                     conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
-                    conv['source_idx'], conv['target_idx'], min_connected,
                     lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
-                    depth, max_events, laziness, analyze_crit
+                    conv['source_idx'], conv['target_idx'], min_connected,
+                    max_events, max_time,
+                    return_samples, analyze_crit, laziness
                 )
 
             # filter results
@@ -626,7 +648,9 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, m
 
 
             return {'mttf': float(np.mean(mttf_samples)),
-                    'mttr': float(np.mean(mttr_samples))}
+                    'mttr': float(np.mean(mttr_samples)),
+                        'mttf_samples': None,
+                        'mttr_samples': None}
 
     # Python fallback
     print(f"Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
@@ -675,4 +699,6 @@ def estimate_mttf_mttr(G, sources, targets, N=1000, depth=1, min_connected=-1, m
 
 
         return {'mttf': float(np.mean(mttf_samples)),
-                'mttr': float(np.mean(mttr_samples))}
+                'mttr': float(np.mean(mttr_samples)),
+                'mttf_samples': None,
+                'mttr_samples': None}
