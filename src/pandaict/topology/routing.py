@@ -1,18 +1,10 @@
 '''
 Created on 30.01.2024
 @author: gbanerjee
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 import networkx as nx
+from networkx.exception import NodeNotFound
 
 from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links, get_conn_by_app
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
@@ -98,32 +90,32 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
     try:
         droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
-    except:
-        droutes = []    
+    except (ValueError, nx.NodeNotFound, nx.NetworkXNoPath):
+        droutes = []
     if respect_iptables:
         mdg = mdg_orig
         __modify_multidigraph_by_iptables(ict_net, mdg, to_dev, from_dev)
     try:
         uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')
-    except:
+    except (ValueError, nx.NodeNotFound, nx.NetworkXNoPath):
         uroutes = []
         
     if len(droutes)!=0:
         pidlinks = __get_pilinks_lowest_weight(ict_net, mdg, droutes)
-        if include_hops: 
+        if include_hops:
             pidhops = __get_pihops(mdg, droutes)
         else:
-            pidhops = None 
+            pidhops = None
         lup_table.add_route(downstream=True, delivering=True, probability=1.0, links=pidlinks, hops=pidhops)
-    
+
     if len(uroutes)!=0:
-        piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)    
-        if include_hops: 
+        piulinks = __get_pilinks_lowest_weight(ict_net, mdg, uroutes)
+        if include_hops:
             piuhops = __get_pihops(mdg, uroutes)
         else:
-            piuhops = None        
+            piuhops = None
         lup_table.add_route(downstream=False, delivering=True, probability=1.0, links=piulinks, hops=piuhops)
-    
+
     return lup_table
 
 def calc_lup_table(ict_net, conn_elt, routing_type, include_hops=False, respect_iptables=True):

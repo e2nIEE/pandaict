@@ -320,38 +320,45 @@ def update_iptables(ict_net, lup_table):
         # traverse hops
         destination = __get_ipaddr_by_element(ict_net, r['hops'][-1])[0]
         for i in range(0, len(r['hops'])-1):
-            e = r['hops'][i]
-            if e[0]!="node": 
-                continue
-            # check if there is already static routing entry - if yes, continue
-            iptables_static = ict_net.iptables[(ict_net.iptables.node_idx==e[1]) & (ict_net.iptables.destination==destination) & (ict_net.iptables.type=="static")]
-            if not iptables_static.empty: 
-                continue
-            # fetch IP addresses at sender and gateway nodes that lie in the same network
-            (reachable_ips, ports) = __get_neighbour_ips_respecting_ports(ict_net, e)
-            gateway_ips_all = __get_ipaddr_by_element(ict_net, r['hops'][i+1])
-            gateway_ip = [ip for ip in gateway_ips_all if ip in reachable_ips]            
-            if gateway_ip is None:
-                pilogger.warning("Nodes "+str(e)+" and "+str(r['hops'][i+1])+" are supposed to be connected but don't seem to share an IP network. Did you specify IP addresses and netmasks correctly?")
-                continue
-            else:
-                if len(gateway_ip) > 1:
-                    pilogger.warning("Nodes "+str(e)+" and "+str(r['hops'][i+1])+" seem to share multiple IP networks. This may or may not be intended. Are you sure that IP addresses and netmasks are defined correctly?")            
-                gateway_ip = gateway_ip[0]
-                pidx = reachable_ips.index(gateway_ip) 
-                link_idx = ports[pidx]
-            gateway_netmasks_all = __get_netmask_by_element(ict_net, r['hops'][i+1])
-            gateway_netmask = gateway_netmasks_all[gateway_ips_all.index(gateway_ip)]
-                                
-            entrycount = len(ict_net.iptables[ict_net.iptables["node_idx"]==e[1]])
-            if not ict_net.iptables[(ict_net.iptables.node_idx==e[1]) & (ict_net.iptables.destination==destination)].empty:
-                # iptable entry for this already exists 
-                continue
-            ientry = {"node_idx": e[1], "entry": entrycount, "destination": destination, "netmask": gateway_netmask, "gateway": gateway_ip, 
-                      "link_idx": link_idx,"type": "dynamic", "metric": metric}
-            ict_net.iptables.loc[len(ict_net.iptables.index)] = ientry
+            _traverse_hops(ict_net, i, r, destination, metric)
             
-    
+def _traverse_hops(ict_net, i, r, destination, metric):
+    e = r['hops'][i]
+    if e[0] != "node":
+        return
+    # check if there is already static routing entry - if yes, continue
+    iptables_static = ict_net.iptables[
+        (ict_net.iptables.node_idx == e[1]) & (ict_net.iptables.destination == destination) & (
+                    ict_net.iptables.type == "static")]
+    if not iptables_static.empty:
+        return
+    # fetch IP addresses at sender and gateway nodes that lie in the same network
+    (reachable_ips, ports) = __get_neighbour_ips_respecting_ports(ict_net, e)
+    gateway_ips_all = __get_ipaddr_by_element(ict_net, r['hops'][i + 1])
+    gateway_ip = [ip for ip in gateway_ips_all if ip in reachable_ips]
+    if len(gateway_ip)==0:
+        pilogger.warning("Nodes " + str(e) + " and " + str(r['hops'][
+                                                               i + 1]) + " are supposed to be connected but don't seem to share an IP network. Did you specify IP addresses and netmasks correctly?")
+        return
+    else:
+        if len(gateway_ip) > 1:
+            pilogger.warning("Nodes " + str(e) + " and " + str(r['hops'][
+                                                                   i + 1]) + " seem to share multiple IP networks. This may or may not be intended. Are you sure that IP addresses and netmasks are defined correctly?")
+        gateway_ip = gateway_ip[0]
+        pidx = reachable_ips.index(gateway_ip)
+        link_idx = ports[pidx]
+    gateway_netmasks_all = __get_netmask_by_element(ict_net, r['hops'][i + 1])
+    gateway_netmask = gateway_netmasks_all[gateway_ips_all.index(gateway_ip)]
+
+    entrycount = len(ict_net.iptables[ict_net.iptables["node_idx"] == e[1]])
+    if not ict_net.iptables[(ict_net.iptables.node_idx == e[1]) & (ict_net.iptables.destination == destination)].empty:
+        # iptable entry for this already exists
+        return
+    ientry = {"node_idx": e[1], "entry": entrycount, "destination": destination, "netmask": gateway_netmask,
+              "gateway": gateway_ip,
+              "link_idx": link_idx, "type": "dynamic", "metric": metric}
+    ict_net.iptables.loc[len(ict_net.iptables.index)] = ientry
+
 def get_iptable(ict_net, node_elt):
     """
     Fetch IP routing table entries for a router-type node.
