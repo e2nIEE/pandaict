@@ -75,9 +75,12 @@ def __get_weight(ict_net, link, wtype):
         else:
             return None
     elif wtype=="length":
-        return (link['length'],link['length']) or None
-    elif wtype=="bit_error_rate":        
-        return (ltype['ber_per_km'] * link['length'], ltype['ber_per_km'] * link['length']) or None
+        return (link['length'],link['length']) if 'length' in link.keys() else None
+    elif wtype=="bit_error_rate":
+        if ('length' in link.keys()) and ('ber_per_km' in ltype.keys()):
+            return (ltype['ber_per_km'] * link['length'], ltype['ber_per_km'] * link['length'])
+        else:
+            return None
     
 def __mdg_add_elts(ict_net, mdg, elt_type, in_service_only, idx):
     # elt_type: "node" or "device"

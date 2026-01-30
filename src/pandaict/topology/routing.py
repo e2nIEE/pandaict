@@ -13,6 +13,7 @@ SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 import networkx as nx
+from networkx.exception import NodeNotFound
 
 from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links, get_conn_by_app
 from pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt, __get_possible_routes, __get_end_nxnodes_for_conn, __print_paths
@@ -98,14 +99,14 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
     try:
         droutes = nx.shortest_path(mdg, source=from_nxnode, target=to_nxnode, weight='weight')
-    except:
+    except (ValueError, nx.NodeNotFound, nx.NetworkXNoPath):
         droutes = []    
     if respect_iptables:
         mdg = mdg_orig
         __modify_multidigraph_by_iptables(ict_net, mdg, to_dev, from_dev)
     try:
         uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')
-    except:
+    except (ValueError, nx.NodeNotFound, nx.NetworkXNoPath):
         uroutes = []
         
     if len(droutes)!=0:

@@ -238,7 +238,7 @@ class pandaICTNet(ADict):
                     if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
                         retval=False
                         break
-                except:
+                except (IndexError, AttributeError, ValueError, TypeError):
                     pass
                                 
         return retval

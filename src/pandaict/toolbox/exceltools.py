@@ -113,54 +113,85 @@ def _get_converted_value(rvalue, ctype, cname):
         elif cname in ["link_types", "protocols", "measures", "controls"]:            
             rconv = [lt.strip() for lt in rvalue.split(",")]
         elif cname in ["from","map_to"]:
-            if ctype==tuple: 
-                elt = rvalue.split(',')[0].strip()
-                idx = int(rvalue.split(',')[1].strip())
-                rconv = (elt,idx)
-            elif ctype==int:
-                rconv = int(rvalue)
+            rconv = _convert_pandaelt(ctype, rconv, rvalue)
         elif cname in ["to"]:
-            if ctype==list: 
-                rconv=[(i.split(',')[0].strip(), int(i.split(',')[1].strip())) for i in rvalue.split(';')]
-            elif ctype==int:
-                rconv=int(rvalue)
-        elif cname in ["info_items"]:   
-            if len(rvalue.split(","))==1:          
-                rconv = [InfoItem[rvalue.strip()]]
-            elif rvalue is not None:
-                rconv = [InfoItem[ii.strip()] for ii in rvalue.split(",")]
+            rconv = _convert_toelt(ctype, rconv, rvalue)
+        elif cname in ["info_items"]:
+            rconv = _convert_info_item(rconv, rvalue)
         elif cname in ["producer","payload_size_byte"]:
-            if isinstance(rvalue, int):
-                rconv = [rvalue]
-            else:
-                rconv = [int(ii.strip()) for ii in rvalue.split(",")]                
+            rconv = _convert_prod_payload(rconv, rvalue)
         elif cname in ["prod_freq_ms", "bandwidth_Mbps", "latency_ms"]:
-            if isinstance(rvalue, (int, float)): 
-                rconv = ctype([rvalue])
-            else:
-                rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])                        
+            rconv = _convert_prodfreq_bw_lat(ctype, rconv, rvalue)
         elif cname in ["peers"]:
             speer1 = rvalue.split(";")[0].strip()
             speer2 = rvalue.split(";")[1].strip()
             rconv = ((speer1.split(",")[0].strip(), int(speer1.split(",")[1].strip())), 
                      (speer2.split(",")[0].strip(), int(speer2.split(",")[1].strip())))
         elif cname in ["conversions"]:
-            rconv = []            
-            for p in rvalue.split(";"):
-                plist = []
-                for i, pitem in enumerate(p.strip().split(",")):
-                    if i<2:
-                        plist += [pitem]
-                    elif pitem is not None:
-                        plist += [float(pitem)]
-                rconv += [tuple(plist)]              
+            rconv = _convert_conversions(rconv, rvalue)
         elif rvalue is not None:
             rconv = ctype(rvalue)
     except (IndexError, AttributeError, ValueError):
         raise UserWarning("Can not convert '" + str(rvalue) + "' into "+str(ctype)+" for "+cname+".")
     return rconv
 
-def _convert_area(row_values, col_names, sheetname):        
+
+def _convert_prodfreq_bw_lat(ctype, rconv, rvalue):
+    if isinstance(rvalue, (int, float)):
+        rconv = ctype([rvalue])
+    else:
+        rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])
+    return rconv
+
+
+def _convert_prod_payload(rconv, rvalue):
+    if isinstance(rvalue, int):
+        rconv = [rvalue]
+    else:
+        rconv = [int(ii.strip()) for ii in rvalue.split(",")]
+    return rconv
+
+
+def _convert_conversions(rconv, rvalue):
+    rconv = []
+    for p in rvalue.split(";"):
+        plist = []
+        for i, pitem in enumerate(p.strip().split(",")):
+            if i < 2:
+                plist += [pitem]
+            elif pitem is not None:
+                plist += [float(pitem)]
+        rconv += [tuple(plist)]
+    return rconv
+
+
+def _convert_info_item(rconv, rvalue):
+    if len(rvalue.split(",")) == 1:
+        rconv = [InfoItem[rvalue.strip()]]
+    elif rvalue is not None:
+        rconv = [InfoItem[ii.strip()] for ii in rvalue.split(",")]
+    return rconv
+
+
+def _convert_toelt(ctype, rconv, rvalue):
+    if ctype == list:
+        rconv = [(i.split(',')[0].strip(), int(i.split(',')[1].strip())) for i in rvalue.split(';')]
+    elif ctype == int:
+        rconv = int(rvalue)
+    return rconv
+
+
+def _convert_pandaelt(ctype, rconv, rvalue):
+    if ctype == tuple:
+        elt = rvalue.split(',')[0].strip()
+        idx = int(rvalue.split(',')[1].strip())
+        rconv = (elt, idx)
+    elif ctype == int:
+        rconv = int(rvalue)
+    return rconv
+
+
+def _convert_area(row_values, col_names, sheetname):
     conv_values = _get_default_values(sheetname)
     if sheetname=="Nodes":
         conv_to = {'type': NodeType, 'in_service': bool, 'uuid': uuid.UUID, 'geodata': tuple, 'link_types': list}       
@@ -333,56 +364,62 @@ def _fill_sheet(net, wb, sheetname):
                      "Apps": ["name", "type", "in_service", "uuid", "device", "conversions"],
                      "Custom Linktypes": ["bandwidth_Mbps", "latency_ms", "wired", "protocols", "ber_per_km", "mtbf_h", "mttr_h", "uuid"],
                      "Custom Protocoltypes": ["base_package_size_byte", "info_items", "payload_size_byte", "uuid"]}
-    
+
+    data_to_rows = _update_data_to_rows(data_to_sheet, data_to_rows)
+    col_names = _get_col_names(ws)
+
+    row_data = []
+    match sheetname:
+        case "Custom Enums":
+            i = 0
+            for enum_type in [NodeType, DeviceType, AppType, InfoItem]:
+                for en in enum_type.__members__.items():
+                    if en[1].value >= 1000:
+                        row_data = [i, enum_type.__name__, en[0], en[1].value]
+                        ws.append(row_data)
+                        i+=1
+        case "Custom Linktypes":
+            ws = _append_customtypes(net, ws, data_to_rows[sheetname], 'link')
+
+        case "Custom Protocoltypes":
+            ws = _append_customtypes(net, ws, data_to_rows[sheetname], 'protocol')
+        case _:
+            elt = data_to_sheet[sheetname]
+            data_to_row = data_to_rows[sheetname]
+            for i, ielt in net[elt].iterrows():
+                row_data = [i] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
+                ws.append(row_data)
+
+    return True
+
+
+def _append_customtypes(net, ws, data_to_row, stype):
+    i = 0
+    for n, ielt in net['std_types'][stype].items():
+        if 'custom' in ielt.keys():
+            row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
+            ws.append(row_data)
+            i += 1
+
+
+def _get_col_names(ws):
+    col_names = []
+    start_col, end_col = _get_col_range(ws, "Core")
+    for row in ws.iter_rows():
+        if col_names == [] and row[0].value == 'index':
+            col_names = [r.value for r in row[start_col:end_col]]
+    return col_names
+
+def _update_data_to_rows(data_to_sheet, data_to_rows):
     for s in data_to_sheet.keys():
         exts = _get_connector_extensions(data_to_sheet[s])
         if not exts:
             continue
-        rdata = data_to_rows[s] 
+        rdata = data_to_rows[s]
         rdata += list(exts.keys())
         data_to_rows.update({s: rdata})
-    
-    col_names = []                           
-    start_col, end_col = _get_col_range(ws, "Core")    
-    for row in ws.iter_rows():
-        if col_names==[] and row[0].value=='index':            
-            col_names = [r.value for r in row[start_col:end_col]]            
-    
-    row_data = []
-    if sheetname=="Custom Enums":
-        i = 0
-        for enum_type in [NodeType, DeviceType, AppType, InfoItem]:
-            for en in enum_type.__members__.items():
-                if en[1].value >= 1000: 
-                    row_data = [i, enum_type.__name__, en[0], en[1].value]
-                    ws.append(row_data)
-                    i+=1       
-    elif sheetname=="Custom Linktypes": 
-        data_to_row = data_to_rows[sheetname]
-        i = 0
-        for n, ielt in net['std_types']['link'].items():  
-            if 'custom' in ielt.keys():
-                row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
-                ws.append(row_data)
-                i+=1  
-    elif sheetname=="Custom Protocoltypes": 
-        data_to_row = data_to_rows[sheetname]
-        i = 0
-        for n, ielt in net['std_types']['protocol'].items():  
-            if 'custom' in ielt.keys():
-                row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
-                ws.append(row_data)
-                i+=1          
-    else:        
-        elt = data_to_sheet[sheetname]    
-        data_to_row = data_to_rows[sheetname]
-        for i, ielt in net[elt].iterrows():  
-            row_data = [i] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
-            ws.append(row_data)    
-                
-    return True
-    
-         
+    return data_to_rows
+
 def to_excel(net, xlsfilename, template_path=None):
     if template_path==None:
         template_path = os.path.dirname(__file__).replace("\\","/")+"/"
@@ -390,7 +427,7 @@ def to_excel(net, xlsfilename, template_path=None):
         template_path += '/'
     try:
         wb = load_workbook(filename = template_path+'template.xlsx')
-    except:
+    except FileNotFoundError:
         msg = "Exceltools: Could not load "+template_path+"template.xlsx, network can not be saved to xlsx"
         pilogger.error(msg)
         raise UserWarning(msg)  

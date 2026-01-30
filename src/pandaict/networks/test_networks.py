@@ -70,15 +70,15 @@ def extend_testnet1(ict_net, use_uuid=False):
     asc = get_elt_id_by_name(ict_net, "SC", expected="app")
     
     if use_uuid:
-        aconv1 = elt2uuid(aconv1)
-        aconv2 = elt2uuid(aconv2)
-        aconv3 = elt2uuid(aconv3)
-        acc = elt2uuid(acc)
-        apc1 = elt2uuid(apc1)
-        apq1 = elt2uuid(apq1)
-        apc2 = elt2uuid(apc2)
-        apq2 = elt2uuid(apq2)
-        asc = elt2uuid(asc)
+        aconv1 = elt2uuid(ict_net, aconv1)
+        aconv2 = elt2uuid(ict_net, aconv2)
+        aconv3 = elt2uuid(ict_net, aconv3)
+        acc = elt2uuid(ict_net, acc)
+        apc1 = elt2uuid(ict_net, apc1)
+        apq1 = elt2uuid(ict_net, apq1)
+        apc2 = elt2uuid(ict_net, apc2)
+        apq2 = elt2uuid(ict_net, apq2)
+        asc = elt2uuid(ict_net, asc)
             
     create_ict_connection(ict_net, use_uuid=use_uuid, name="CC_Conv1", from_app=acc, to_app=aconv1, protocol="HTTP",
                                   info_items=[InfoItem.VALUE, InfoItem.ACK], 
@@ -137,7 +137,7 @@ def create_testnet2():
     return ict_net2
 
 def extend_testnet2(ict_net): 
-    extend_testnet2(ict_net, use_uuid=True)
+    extend_testnet1(ict_net, use_uuid=True)
     
 def create_testnet3():
     ict_net3 = create_empty_network("Test network 3", True) 
