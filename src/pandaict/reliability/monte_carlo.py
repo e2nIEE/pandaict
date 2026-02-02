@@ -280,6 +280,12 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
     if top_n == 0:
         top_n = -1
 
+    if mu_edges_arr is None:
+        mu_edges_arr = np.zeros(n_edges, dtype=np.float16)
+
+    if mu_nodes_arr is None:
+        mu_nodes_arr = np.zeros(n_nodes, dtype=np.float16)
+
     n_events = n_edges + n_nodes
 
     # Flatten and filter invalid values (-1)
@@ -535,7 +541,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
             if parallel:
                 print(f"Running {N} simulations in parallel...")
-                all_results = _run_parallel_norepair(
+                all_results, all_critical = _run_parallel_norepair(
                     N, TOL,
                     conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
@@ -545,7 +551,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                     return_samples, analyze_crit, laziness
                 )
             else:
-                all_results = _run_serial_norepair(
+                all_results, all_critical = _run_serial_norepair(
                     N, TOL,
                     conv['n_edges'], conv['n_nodes'],
                     conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
@@ -554,18 +560,51 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                     max_events, max_time,
                     return_samples, analyze_crit, laziness
                 )
-            # Filter valid results
-            valid = all_results[~np.isnan(all_results)]
+            # Filter results
+            fail_inf_mask = np.isinf(all_results)
+            n_fail_inf = int(np.sum(fail_inf_mask))
 
-            if len(valid) == 0:
+            nan_mask = np.isnan(all_results)
+            n_nan = int(np.sum(nan_mask))
+
+            finite_mask = np.isfinite(all_results)
+
+            mttf_samples = all_results[finite_mask]
+            #valid = all_results[~np.isnan(all_results)]
+
+            if n_fail_inf > 0 or n_nan > 0:
+                msg_parts = []
+                if n_fail_inf > 0:
+                    msg_parts.append(f"{n_fail_inf} simulation(s) reached max_events without system failure. "
+                                     f"That speaks for a rather robust system which will likely never fail!")
+                if n_nan > 0:
+                    msg_parts.append(f"{n_nan} simulation(s) returned NaN (e.g. total_rate <= 0)")
+                print("Warning: (Monte Carlo): " + "; ".join(msg_parts) +
+                      ". These runs were excluded from MTTF/MTTR estimation.")
+
+            if len(mttf_samples) == 0:
+                print("Warning: No valid Monte Carlo samples (all runs either NaN or max_events timeout)")
                 return {'mttf':None, 'mttr':None, 'mttf_samples':None, 'mttr_samples':None}
 
+            if analyze_crit and all_critical.size > 0:
+                print(all_critical.flatten())
+                analyze_critical_components(
+                    all_critical, conv['n_edges'], conv['n_nodes'],
+                    conv['edge_list'], conv['node_list'],
+                    lam_edges_arr, lam_nodes_arr,
+                    None, None, plot=True
+                )
 
             if return_samples:
-                return {'mttf': float(np.mean(valid)), 'mttr': np.inf, 'mttf_samples': valid, 'mttr_samples': None}
+                return {'mttf': float(np.mean(mttf_samples)),
+                        'mttr': np.inf,
+                        'mttf_samples': mttf_samples,
+                        'mttr_samples': None}
 
-
-            return {'mttf': float(np.mean(valid)), 'mttr': np.inf, 'mttf_samples': None, 'mttr_samples': None}
+            return {'mttf': float(np.mean(mttf_samples)),
+                    'mttr': np.inf,
+                    'mttf_samples': None,
+                    'mttr_samples': None}
 
         else:
             # Repairable case
@@ -627,10 +666,8 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
             if len(mttf_samples) == 0:
                 print("Warning: No valid Monte Carlo samples (all runs either NaN or max_events timeout)")
-                if return_samples:
-                    return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
 
-                return {'mttf': None, 'mttr': None}
+                return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
 
             if analyze_crit and all_critical.size > 0:
                 analyze_critical_components(
@@ -649,8 +686,8 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
             return {'mttf': float(np.mean(mttf_samples)),
                     'mttr': float(np.mean(mttr_samples)),
-                        'mttf_samples': None,
-                        'mttr_samples': None}
+                    'mttf_samples': None,
+                    'mttr_samples': None}
 
     # Python fallback
     print(f"Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
@@ -672,7 +709,9 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                     'mttr_samples': None}
 
         return {'mttf': float(np.mean(samples)),
-                'mttr': np.inf}
+                'mttr': np.inf,
+                'mttf_samples': None,
+                'mttr_samples': None}
     else:
         results = []
         for _ in range(N):

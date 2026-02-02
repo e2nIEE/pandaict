@@ -257,7 +257,7 @@ def simulate_numba_core(depth,															# number of samples
     n_events = n_edges + n_nodes
 
     if max_events == -1:
-        max_events = n_events * 200  # stop loop if the whole network has changed 50 times
+        max_events = n_events * 200  # stop loop if the whole network has changed 200 times
 
     total_rate = bit_prefix_sum(bit, n_events - 1)
 
@@ -303,6 +303,7 @@ def simulate_numba_core(depth,															# number of samples
             # Sample time to next event
             dt = np.random.exponential(1.0 / total_rate)
             t_fail += dt
+
             if event_idx >= max_events:
                 results[cycle_idx, 0] = np.inf
                 results[cycle_idx, 1] = 0.0
@@ -470,9 +471,7 @@ def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precom
     :OUTPUT:
         **t** - float, time until first system failure (MTTF sample)
     """
-    # TODO: implement analyze_crit
-    # TODO: implement laziness
-    # TODO: implement max_events to avoid infinite loops
+    # TODO: implement laziness [DONE, check required]
 
     # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)
@@ -480,6 +479,28 @@ def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precom
 
     # Build event list
     n_events = n_edges + n_nodes
+
+    # max_events default
+    if max_events == -1:
+        max_events = n_events * 200  # stop loop if the whole network has changed 200 times
+
+    # keep track of event id to compare against max_events
+    event_idx = 0
+
+    # keep track of event number since last connectivity check
+    event_count = -1
+
+    # threshold after which connectivity is checked again
+    event_threshold = int(laziness * n_events)
+
+    if analyze_crit:
+        # preallocate array for the identification of critical components. (-1 = invalid)
+        critical_components = np.full(2 * (event_threshold + 1), -1, dtype=np.int32)
+    else:
+        critical_components = np.empty(0, dtype=np.int32)
+
+    crit_idx = 0
+    crit_checkpoint = 0  # position on last successful check
 
     total_rate = bit_prefix_sum(bit, n_events - 1)
 
@@ -494,11 +515,16 @@ def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precom
 
         if not connected:
             # System failed!
-            return t
+            return t, critical_components[:crit_idx]
 
         if total_rate <= 0.0:
             # No more failures possible => infinite lifetime
-            return np.inf
+            return np.inf, critical_components[:crit_idx]
+
+        if event_idx >= max_events:
+            # system did not fail in max_events, return MTTF=np.inf and None for critical components
+            t = np.inf
+            return t, critical_components[:crit_idx]  # failure
 
         # Sample time to next failure
         dt = np.random.exponential(1.0 / total_rate)
@@ -506,7 +532,7 @@ def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precom
 
         if t > max_time:
             # reached max_time
-            return np.inf
+            return np.inf, critical_components[:crit_idx]
 
         # Sample which component fails from fenwick tree
         r = np.random.random() * total_rate
@@ -528,3 +554,28 @@ def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precom
             old_rate = lam_nodes_arr[ni]
             bit_update(bit, idx, -old_rate)
             total_rate -= old_rate
+
+        # increment event counters
+        event_count += 1
+        event_idx += 1
+
+        # store last event
+        if analyze_crit:
+            critical_components[crit_idx] = idx
+            crit_idx += 1
+
+        # Lazy connectivity check
+        if event_count >= event_threshold:
+            connected = check_connections(adj_offsets, adj_nodes, adj_edges,
+                                          edge_state, node_state,
+                                          source_idx, target_idx, min_connected)
+            if analyze_crit:
+                if connected:
+                    # still connected -> not critical -> overwrite values by resetting writer
+                    crit_idx = crit_checkpoint
+                else:
+                    # disconnected -> components are critical -> update crit_checkpoint
+                    crit_checkpoint = crit_idx
+
+            # reset event_count
+            event_count = -1

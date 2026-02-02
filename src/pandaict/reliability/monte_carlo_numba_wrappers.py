@@ -99,14 +99,25 @@ def _run_parallel_norepair(n_sims, TOL,
     # TODO: implement convergence criteria (TOL)
 
     all_results = np.empty(n_sims, dtype=np.float64)
+    n_events = n_edges + n_nodes
 
     bit_template = _build_rates_and_bit(n_edges, n_nodes,
                                         lam_edges_arr, lam_nodes_arr)
 
-    # core parallelisation routine
+    # Critical components storage
+    event_threshold = int(laziness * n_events)
+
+    max_crit_per_sim = event_threshold + 1
+
+    if analyze_crit:
+        all_critical = np.full((n_sims, max_crit_per_sim), -1, dtype=np.int32)
+    else:
+        all_critical = np.empty((0, 0), dtype=np.int32)
+
     for sim_idx in prange(n_sims):
         bit = bit_template.copy()
-        results = simulate_numba_core_norepair(
+
+        result, crit_comp = simulate_numba_core_norepair(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
             lam_edges_arr, lam_nodes_arr, bit,
@@ -114,10 +125,13 @@ def _run_parallel_norepair(n_sims, TOL,
             max_events, max_time,
             analyze_crit, laziness
         )
+        all_results[sim_idx] = result
 
-        all_results[sim_idx] = results
+        if analyze_crit:
+            n_crit = min(crit_comp.shape[0], max_crit_per_sim)
+            all_critical[sim_idx, :n_crit] = crit_comp[:n_crit]
 
-    return all_results
+    return all_results, all_critical
 
 
 @njit
@@ -196,14 +210,25 @@ def _run_serial_norepair(n_sims, TOL,
 
 
     all_results = np.empty(n_sims, dtype=np.float64)
+    n_events = n_edges + n_nodes
 
     bit_template = _build_rates_and_bit(n_edges, n_nodes,
                                         lam_edges_arr, lam_nodes_arr)
 
+    # Critical components storage
+    event_threshold = int(laziness * n_events)
+
+    max_crit_per_sim = event_threshold + 1
+
+    if analyze_crit:
+        all_critical = np.full((n_sims, max_crit_per_sim), -1, dtype=np.int32)
+    else:
+        all_critical = np.empty((0, 0), dtype=np.int32)
+
     for sim_idx in range(n_sims):
         bit = bit_template.copy()
 
-        result = simulate_numba_core_norepair(
+        result, crit_comp = simulate_numba_core_norepair(
             n_edges, n_nodes,
             adj_offsets, adj_nodes, adj_edges,
             lam_edges_arr, lam_nodes_arr, bit,
@@ -213,4 +238,8 @@ def _run_serial_norepair(n_sims, TOL,
         )
         all_results[sim_idx] = result
 
-    return all_results
+        if analyze_crit:
+            n_crit = min(crit_comp.shape[0], max_crit_per_sim)
+            all_critical[sim_idx, :n_crit] = crit_comp[:n_crit]
+
+    return all_results, all_critical
