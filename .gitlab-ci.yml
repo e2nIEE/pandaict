@@ -47,7 +47,6 @@ sonarqube-check:
   before_script:
     - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
   script:
-    - curl -sSf https://applik-170.iee.fraunhofer.de
     - sonar-scanner -X
   allow_failure: true
   only:
