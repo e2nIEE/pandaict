@@ -53,10 +53,7 @@ class AppType(Enum):
     RESTCLIENT     = 7
     
 class RoutingType(Enum):  
-    # RANDOM_ROUNDROBIN       = 1                            
-    # FLOODING                = 2
-    LOWEST_TOTAL_LATENCY      = 3 
-    # BALANCED_BANDWITH_USAGE = 4
+    LOWEST_TOTAL_LATENCY      = 3
     
 class SortType(Enum):  
     USAGE           = 1
@@ -64,7 +61,7 @@ class SortType(Enum):
     BIT_ERROR_RATE  = 3 
     BANDWIDTH       = 4
     
-def addCustomEnum(net, etype, name, value=None):    
+def add_custom_enum(net, etype, name, value=None):
     if name not in [m.name for m in etype.__members__.values()]:  # if enum doesn't exist           
         if value is None:
             maxvalue = max([m.value for m in etype.__members__.values()])

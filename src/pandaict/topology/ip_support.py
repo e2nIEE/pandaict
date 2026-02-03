@@ -381,7 +381,7 @@ def get_iptable(ict_net, node_elt):
     return iptable
 
 def __get_link_type_to_destination(ict_net, node_elt, gateway, destination):
-    # TODO: review this, maybe needs checking if the link connects node and gateway within same network (if changed, adapt Sphinx).
+    # Review this, maybe needs checking if the link connects node and gateway within same network (if changed, adapt Sphinx).
     ltype = None
     for l_idx in get_links_at(ict_net, node_elt):
         # Check if link connects our node with the gateway ip

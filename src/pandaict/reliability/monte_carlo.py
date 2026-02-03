@@ -340,9 +340,9 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
 
         print(f"\n{'─' * 70}")
         if top_n > 0:
-            print(f"TOP {top_n} CRITICAL EDGES")
+            print("TOP "+str(top_n)+" CRITICAL EDGES")
         else:
-            print(f"CRITICAL EDGES")
+            print("CRITICAL EDGES")
         print(f"{'─' * 70}")
         for rank, i in enumerate(top_edge_idx, 1):
             print(f"  {rank:2d}. {edge_list[i]}: Score={edge_crit[i]:.3f}, Count={int(full_counts[i])}")
@@ -351,7 +351,7 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
         if top_n > 0:
             print(f"TOP {top_n} CRITICAL NODES")
         else:
-            print(f"CRITICAL NODES")
+            print("CRITICAL NODES")
         print(f"{'─' * 70}")
         for rank, i in enumerate(top_node_idx, 1):
             print(f"  {rank:2d}. {node_list[i]}: Score={node_crit[i]:.3f}, Count={int(full_counts[n_edges + i])}")
@@ -370,8 +370,8 @@ def analyze_critical_components(all_critical, n_edges, n_nodes,
             ax1.set_title(f'Top {top_n} Critical Edges')
             ax2.set_title(f'Top {top_n} Critical Nodes')
         else:
-            ax1.set_title(f'Critical Edges')
-            ax2.set_title(f'Critical Nodes')
+            ax1.set_title('Critical Edges')
+            ax2.set_title('Critical Nodes')
 
         ax1.invert_yaxis()
 
@@ -642,8 +642,8 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                         'mttr_samples': None}
 
     # Python fallback
-    print(f"Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
-    print(f"Using Python fallback ({G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
+    print("Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
+    print("Using Python fallback "+str(G.number_of_nodes())+" nodes, "+str(G.number_of_edges())+" edges)")
 
     if is_multi:
         # TODO

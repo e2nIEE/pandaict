@@ -34,7 +34,6 @@ def _run_parallel(n_sims, depth, TOL,
 
     # Build event list
     n_events = n_edges + n_nodes
-    rates = np.empty(n_events, dtype=np.float64)
 
     # prebuild fenwick tree
     bit_template = _build_rates_and_bit(n_edges, n_nodes,

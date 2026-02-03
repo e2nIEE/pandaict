@@ -12,7 +12,7 @@ import uuid
 from math import isnan
 from pandaict import create_empty_network
 from pandaict import __version__
-from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem, addCustomEnum
+from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem, add_custom_enum
 from pandaict.pilogger import pilogger
 from json import JSONDecodeError
 from aenum import extend_enum
@@ -61,11 +61,7 @@ def __check_index_and_uuid(df):
             else:
                 uuids.append(None)
         df.insert(3, "uuid", uuids)       
-        #for i, s in enumerate(df["uuid"]):
-        #    if s is not None:
-        #        df.at[i,"uuid"] = None
-        #        df.at[i,"uuid"] = uuid.UUID(s)
-        
+
     return df
        
        
@@ -82,7 +78,7 @@ def __to_type(df, dfkey, totype, dflist=""):
                 elif dflist=="list":
                     df.at[i,dfkey] = [totype(e) for e in s]                        
                 else:
-                    df.at[i,dfkey] = tuple([totype(e) for e in s])
+                    df.at[i,dfkey] = tuple(totype(e) for e in s)
             else:
                 df.at[i,dfkey] = totype(s)
     return df
@@ -121,7 +117,7 @@ def __json_to_enum(ict_net, df):
     str_to_type = {'NodeType': NodeType, 'DeviceType': DeviceType, 'AppType':AppType, 'InfoItem': InfoItem}
     for i, e in df.iterrows():        
         etype = str_to_type[e['type']]
-        addCustomEnum(ict_net, etype, e['name'], e['value'])                     
+        add_custom_enum(ict_net, etype, e['name'], e['value'])
     return df
                 
 def __json_to_df(df, elt_type):

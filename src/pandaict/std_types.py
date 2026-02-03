@@ -245,7 +245,7 @@ def __application_protocoltypes():
         }
     return pt  
 
-def __MODBUS_protocoltypes():
+def __modbus_protocoltypes():
     return {"MODBUS-TCP": {        
                 "base_package_size_byte": 1024,
                 "info_items":
@@ -271,7 +271,7 @@ def __basic_protocol_std_types():
     protocoltypes = __simple_protocoltypes()
     protocoltypes.update(__transmission_protocoltypes())
     protocoltypes.update(__application_protocoltypes())   
-    protocoltypes.update(__MODBUS_protocoltypes())                      
+    protocoltypes.update(__modbus_protocoltypes())
     return protocoltypes
 
 

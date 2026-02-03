@@ -169,7 +169,7 @@ class Core_Test():
         for i, _ in ict_net['conn'].iterrows():
             # TODO: what if connection is not at all possible? 
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY, respect_iptables=False)
-            link_bw = add_link_bandwidth_Mbps(ict_net, link_bw, lup_table)
+            link_bw = add_link_bandwidth_mbps(ict_net, link_bw, lup_table)
         
         link_bw_cmp = {1: [0.8854053333333334, 11.4694144], 8: [0.8738, 0.0006144], 0: [0.012219733333333333, 3.741], 10: [0.011605333333333334, 11.4688], 3: [14.341802666666666, 26.258810666666665], 4: [2.8672, 0.011605333333333334], 7: [0.011605333333333334, 2.8672], 2: [26.235599999999998, 0.005802666666666667], 11: [26.235599999999998, 0.005802666666666667]}
         # Note: there are links unused (5,6,9) but that may be OK - hard to tell, though
@@ -228,14 +228,14 @@ class Core_Test():
         ict_net = create_testnet3()
         extend_testnet3(ict_net)
         app_elt = get_elt_id_by_name(ict_net, "DA2", expected="app")
-        res_exp = calc_app_vol_MB(ict_net, app_elt, 86400)
+        res_exp = calc_app_vol_mbyte(ict_net, app_elt, 86400)
         expected_res = {"('conn', 0)": {'down': 9437.04, 'up': 6.63552},
                         "('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                         "total": {'down':  9562.377600000002, 'up': 123869.67551999999}} 
         utest.assertEqual(res_exp, expected_res)
         
         app_elt = get_elt_id_by_name(ict_net, "DA4", expected="app")
-        res_cal = calc_app_vol_MB(ict_net, app_elt, 86400)
+        res_cal = calc_app_vol_mbyte(ict_net, app_elt, 86400)
         calculated_res = {"('conn', 1)": {'down': 125.33760000000001, 'up': 123863.04},
                           "('conn', 2)": {'down': 125.33760000000001, 'up': 30965.76},
                           "('conn', 3)": {'down': 283344.48, 'up': 62.668800000000005},

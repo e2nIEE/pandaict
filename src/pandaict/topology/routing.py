@@ -14,7 +14,7 @@ from pandaict.topology.ip_support import __get_element_by_ipaddr
 from pandaict.pilogger import pilogger
 
 # checks if there is a static route with destination to_dev and, if yes, removes edges from the mdg that are not on the static route
-def __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev):    
+def __modify_multidigraph_by_iptables(ict_net, mdg, to_dev):
     if "iptables" not in ict_net.keys() or ict_net.iptables.empty:
         return mdg
     # We need the destination IP
@@ -85,7 +85,7 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
     to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
     if respect_iptables:
         mdg_orig = mdg.copy()
-        __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)    
+        __modify_multidigraph_by_iptables(ict_net, mdg, to_dev)
     from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)
     try:
@@ -94,7 +94,7 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
         droutes = []
     if respect_iptables:
         mdg = mdg_orig
-        __modify_multidigraph_by_iptables(ict_net, mdg, to_dev, from_dev)
+        __modify_multidigraph_by_iptables(ict_net, mdg, from_dev)
     try:
         uroutes = nx.shortest_path(mdg, source=to_nxnode, target=from_nxnode, weight='weight')
     except (ValueError, nx.NodeNotFound, nx.NetworkXNoPath):
@@ -155,7 +155,7 @@ def __get_info_item_package_size_byte(ict_net, info_item_type, protocol):
     
     return pack_size
     
-def __get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
+def __get_total_bandwidth_conn_mbps(ict_net, conn, downstream):
     
     totbw = 0
     if not conn.in_service:
@@ -171,7 +171,7 @@ def __get_total_bandwidth_conn_Mbps(ict_net, conn, downstream):
     
     return totbw
         
-def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
+def calc_conn_bandwidth_mbps(ict_net, conn_elt):
     """
     Calculate total bandwidth used by a connection, in Mbps.     
 
@@ -181,18 +181,18 @@ def calc_conn_bandwidth_Mbps(ict_net, conn_elt):
         **conn_elt** (tuple or uuid) - id of connection element to calculate the bandwidth for
                                 
     :OUTPUT:
-        **(tot_bw_down, tot_bw_up)** (tuple) - Bandwith used by the connection in its downstream and upstream direction  
+        **(tot_bw_down, tot_bw_up)** (tuple) - Bandwith used by the connection in its downstream and upstream direction [Mbps]
 
     :EXAMPLE:
-        calc_conn_bandwidth_Mbps(ict_net, ('conn',2))
+        calc_conn_bandwidth_mbps(ict_net, ('conn',2))
     """        
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
-    tot_bw_down = __get_total_bandwidth_conn_Mbps(ict_net, conn, True)
-    tot_bw_up   = __get_total_bandwidth_conn_Mbps(ict_net, conn, False)
+    tot_bw_down = __get_total_bandwidth_conn_mbps(ict_net, conn, True)
+    tot_bw_up   = __get_total_bandwidth_conn_mbps(ict_net, conn, False)
     return (tot_bw_down, tot_bw_up)
 
 
-def calc_app_vol_MB(ict_net, app_elt, time_delta):
+def calc_app_vol_mbyte(ict_net, app_elt, time_delta):
     """
     Calculate total data volume created/received by an app during a given time period, in MB.
 
@@ -205,20 +205,20 @@ def calc_app_vol_MB(ict_net, app_elt, time_delta):
 
     :OUTPUT:
         **res** (dictionary) - Data volume used by app per connection in its downstream and upstream direction 
-        and total datavolume transferred summing all the connections for 1 day
+        and total datavolume transferred summing all the connections for 1 day [MB]
 
     :EXAMPLE:
-        calc_conn_vol_MB(ict_net, ('app', 2), 86400)
+        calc_conn_vol_mbyte(ict_net, ('app', 2), 86400)
     """
     # call out conn from utils
     conns, _ = get_conn_by_app(ict_net, app_elt)
-    res_dict = dict()
+    res_dict = {}
     dv_down = []
     dv_up = []
     for one_conn in conns:
-        bw = calc_conn_bandwidth_Mbps(ict_net, one_conn)
+        bw = calc_conn_bandwidth_mbps(ict_net, one_conn)
         key_name = str(one_conn)      
-        res_dict[key_name] = dict()
+        res_dict[key_name] = {}
         res_dict[key_name]['down']= bw[0] * time_delta / 8
         dv_down.append(res_dict[key_name]['down'])
         res_dict[key_name]['up']= bw[1] * time_delta / 8
@@ -227,7 +227,7 @@ def calc_app_vol_MB(ict_net, app_elt, time_delta):
     return res_dict
 
 
-def calc_link_bandwidth_Mbps(ict_net, lup_table):
+def calc_link_bandwidth_mbps(ict_net, lup_table):
     """
     Calculate link bandwidths resulting from a specific link usage probability.  
     The latter needs to be given as lup table which was calculated for a specific connection. 
@@ -240,7 +240,7 @@ def calc_link_bandwidth_Mbps(ict_net, lup_table):
                                 
     :OUTPUT:
         **link_bw** (dict) - dict with link ids as keys and tuples as items. The tuples give the calculated used link bandwidth \
-            in (downstream,upstream) directions  
+            in (downstream,upstream) directions [Mbps]
 
     :EXAMPLE:
         .. highlight:: python
@@ -248,11 +248,11 @@ def calc_link_bandwidth_Mbps(ict_net, lup_table):
         
             ict_net = self.create_testnet3()
             lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
-            link_bw   = calc_link_bandwidth_Mbps(ict_net, lup_table)
+            link_bw   = calc_link_bandwidth_mbps(ict_net, lup_table)
     """                      
-    return add_link_bandwidth_Mbps(ict_net, {}, lup_table)    
+    return add_link_bandwidth_mbps(ict_net, {}, lup_table)
 
-def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
+def add_link_bandwidth_mbps(ict_net, link_bw, lup_table):
     """
     Calculate link bandwidths resulting from a specific link usage probability, and add them up to already existing link bandwidths. 
     The latter needs to be given as lup table which was calculated for a specific connection. 
@@ -264,7 +264,7 @@ def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
         **ict_net** (pandaictNet) - A pandaict network     
 
         **link_bw** (dict) - dict with link ids as keys and tuples as items. The tuples give the already used link bandwidth \
-            in (downstream,upstream) directions 
+            in (downstream,upstream) directions [Mbps]
             
         **lup_table** (LUP_table) - lup table for a connection in ict_net
                                 
@@ -280,10 +280,10 @@ def add_link_bandwidth_Mbps(ict_net, link_bw, lup_table):
             link_bw = {}
             for i,_ in ict_net['conn'].iterrows():
                 lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY)
-                link_bw   = add_link_bandwidth_Mbps(ict_net, link_bw, lup_table)
+                link_bw   = add_link_bandwidth_mbps(ict_net, link_bw, lup_table)
     """     
     # Calculate total data bandwidth for connection down/upstream
-    tot_bw_down, tot_bw_up = calc_conn_bandwidth_Mbps(ict_net, lup_table.conn_elt)    
+    tot_bw_down, tot_bw_up = calc_conn_bandwidth_mbps(ict_net, lup_table.conn_elt)
     
     for r in lup_table:         
         p = r['probability']

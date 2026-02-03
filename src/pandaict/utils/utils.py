@@ -362,7 +362,7 @@ def is_bidirectional(ict_net, link_elt):
     if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
         pilogger.warn("link_elt is not a link")
         return None
-    bw = get_bandwidth_Mbps(ict_net, link_elt)   
+    bw = get_bandwidth_mbps(ict_net, link_elt)
     return False if (isinstance(bw, float) or isinstance(bw, int) or len(bw)<2 or bw[1]==0) else True  
    
 def get_supported_protocols(ict_net, link_elt):       
@@ -383,7 +383,7 @@ def get_supported_protocols(ict_net, link_elt):
     
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['protocols']  
 
-def get_bandwidth_Mbps(ict_net, link_elt):     
+def get_bandwidth_mbps(ict_net, link_elt):
     """
     Get bandwidth of a link
 
@@ -393,10 +393,10 @@ def get_bandwidth_Mbps(ict_net, link_elt):
         **link_elt** (str, int) - The link's pandaict notation element identifier.                 
                             
     :OUTPUT:
-        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction 
+        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction [Mbps]
 
     :EXAMPLE:
-        get_bandwidth_Mbps(ict_net, ('link',2))
+        get_bandwidth_mbps(ict_net, ('link',2))
     """  
     
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
@@ -494,7 +494,7 @@ def get_neighbour_elts(ict_net, elt, respect_in_service=False):
     link_idxs = get_links_at(ict_net, elt)
     if link_idxs is None:
         return None
-    neighbours = set([])
+    neighbours = {}
     for li in link_idxs: 
         l = ict_net.link.iloc[li]
         if respect_in_service and not(l.in_service): 

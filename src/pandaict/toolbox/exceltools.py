@@ -13,7 +13,7 @@ from openpyxl.cell import MergedCell
 import os
 import uuid
 import numpy as np
-from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType, addCustomEnum
+from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType, add_custom_enum
 from pandaict.pilogger import pilogger
 from pandaict.create_empty_net import create_empty_network
 from pandaict.create import create_ict_node, create_ict_link, create_ict_app, create_ict_connection
@@ -64,7 +64,7 @@ def _get_default_values(sheetname):
 # fetch column number range for "Core" or "pp_pict_connector" areas
 def _get_col_range(ws, areastring):
     for row in ws.iter_rows():
-        if not any([isinstance(c, MergedCell) for c in row]):
+        if not any(isinstance(c, MergedCell) for c in row):
             continue
         values = [c.value for c in row]
         if areastring not in values:
@@ -78,7 +78,7 @@ def _get_col_range(ws, areastring):
 # fetch column area for list of areas
 def _get_col_area(ws, arealist):
     for row in ws.iter_rows():
-        if not any([isinstance(c, MergedCell) for c in row]):
+        if not any(isinstance(c, MergedCell) for c in row):
             continue
         values = [c.value for c in row]
         areamap = []
@@ -114,16 +114,16 @@ def _get_converted_value(rvalue, ctype, cname):
         elif cname in ["info_items"]:
             rconv = _convert_info_item(rconv, rvalue)
         elif cname in ["producer","payload_size_byte"]:
-            rconv = _convert_prod_payload(rconv, rvalue)
+            rconv = _convert_prod_payload(rvalue)
         elif cname in ["prod_freq_ms", "bandwidth_Mbps", "latency_ms"]:
-            rconv = _convert_prodfreq_bw_lat(ctype, rconv, rvalue)
+            rconv = _convert_prodfreq_bw_lat(ctype, rvalue)
         elif cname in ["peers"]:
             speer1 = rvalue.split(";")[0].strip()
             speer2 = rvalue.split(";")[1].strip()
             rconv = ((speer1.split(",")[0].strip(), int(speer1.split(",")[1].strip())),
                      (speer2.split(",")[0].strip(), int(speer2.split(",")[1].strip())))
         elif cname in ["conversions"]:
-            rconv = _convert_conversions(rconv, rvalue)
+            rconv = _convert_conversions(rvalue)
         elif rvalue is not None:
             rconv = ctype(rvalue)
     except (IndexError, AttributeError, ValueError):
@@ -131,7 +131,7 @@ def _get_converted_value(rvalue, ctype, cname):
     return rconv
 
 
-def _convert_prodfreq_bw_lat(ctype, rconv, rvalue):
+def _convert_prodfreq_bw_lat(ctype, rvalue):
     if isinstance(rvalue, (int, float)):
         rconv = ctype([rvalue])
     else:
@@ -139,7 +139,7 @@ def _convert_prodfreq_bw_lat(ctype, rconv, rvalue):
     return rconv
 
 
-def _convert_prod_payload(rconv, rvalue):
+def _convert_prod_payload(rvalue):
     if isinstance(rvalue, int):
         rconv = [rvalue]
     else:
@@ -147,7 +147,7 @@ def _convert_prod_payload(rconv, rvalue):
     return rconv
 
 
-def _convert_conversions(rconv, rvalue):
+def _convert_conversions(rvalue):
     rconv = []
     for p in rvalue.split(";"):
         plist = []
@@ -213,10 +213,10 @@ def _convert_area(row_values, col_names, sheetname):
             conv_values[i] = row_values[i]
     return conv_values
 
-def _add_enums(net, row_values, col_names):
+def _add_enums(net, row_values):
     allowed_classes = {"InfoItem": InfoItem, "NodeType": NodeType, "DeviceType": DeviceType, "AppType": AppType}
     if row_values[0] in allowed_classes.keys():
-        addCustomEnum(net, allowed_classes[row_values[0]], row_values[1])
+        add_custom_enum(net, allowed_classes[row_values[0]], row_values[1])
 
 def _add_linktypes(net, row_values, col_names):
     data = dict(zip(col_names, row_values))
@@ -265,18 +265,18 @@ def _evaluate_sheet(net, wb, sheetname):
     ws = wb[sheetname]
     col_names = []
 
-    start_col, end_col = _get_col_range(ws, "Core")
+    _, _ = _get_col_range(ws, "Core")
 
     area = _get_col_area(ws, ["Core"]+connectors_installed)
     for row in ws.iter_rows():
         rowarea = np.array(row)[area]
         if col_names==[] and row[0].value=='index':
             col_names = [r.value for r in rowarea if r.value is not None]
-        elif col_names!=[] and len(row)>0 and not all([c.value is None for c in rowarea]):
+        elif col_names!=[] and len(row)>0 and not all(c.value is None for c in rowarea):
             idx = row[0].value
             values = [r.value for r in rowarea]
             if sheetname=="Custom Enums":
-                _add_enums(net, values, col_names)
+                _add_enums(net, values)
             elif sheetname=="Custom Linktypes":
                 _add_linktypes(net, values+[True], col_names+['custom'])
             elif sheetname=="Custom Protocoltypes":
@@ -292,8 +292,6 @@ def from_excel(xlsfilename):
     net = create_empty_network()
     net = _bulk_extend_net(net)
     net.name = md.get('name', "")
-    #dnet = from_json("C:/Users/jringelstein/git/recode/pandaict/test/dummy.json")
-    #dnet = create_testnet2()
     
     for sheetname in ["Custom Enums", "Custom Linktypes", "Custom Protocoltypes", "Nodes", "Devices", "Links", "Connections", "Apps"]:
         net = _evaluate_sheet(net, wb, sheetname)
@@ -350,7 +348,6 @@ def _to_xls_format(dataitem):
 
 def _fill_sheet(net, wb, sheetname):
     ws = wb[sheetname]
-    # data_to_sheet = {"node": "Nodes", "device": "Devices", "link": "Links", "conn": "Connections", "app": "Apps"}
     data_to_sheet = {"Nodes": "node", "Devices": "device", "Links": "link", "Connections": "conn", "Apps": "app"}
     data_to_rows  = {"Nodes": ["name", "type", "in_service", "uuid", "geodata", "link_types", "ber", "mtbf_h", "mttr_h"],
                      "Devices": ["name", "type", "in_service", "uuid", "mtbf_h", "mttr_h"],
@@ -361,7 +358,6 @@ def _fill_sheet(net, wb, sheetname):
                      "Custom Protocoltypes": ["base_package_size_byte", "info_items", "payload_size_byte", "uuid"]}
 
     data_to_rows = _update_data_to_rows(data_to_sheet, data_to_rows)
-    col_names = _get_col_names(ws)
 
     row_data = []
     match sheetname:
@@ -395,15 +391,6 @@ def _append_customtypes(net, ws, data_to_row, stype):
             row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
             ws.append(row_data)
             i += 1
-
-
-def _get_col_names(ws):
-    col_names = []
-    start_col, end_col = _get_col_range(ws, "Core")
-    for row in ws.iter_rows():
-        if col_names == [] and row[0].value == 'index':
-            col_names = [r.value for r in row[start_col:end_col]]
-    return col_names
 
 def _update_data_to_rows(data_to_sheet, data_to_rows):
     for s in data_to_sheet.keys():
@@ -440,7 +427,6 @@ def to_excel(net, xlsfilename, template_path=None):
     pilogger.info("Exceltools: saved network to "+xlsfilename)
 
 if __name__ == '__main__':
-    # ref = from_json('C:/Users/jringelstein/git/recode/pandaict/test/dummy.json') # Reference test network
     net = from_excel('C:/Users/jringelstein/git/recode/pandaict/src/pandaict/toolbox/example_net.xlsx')
     to_excel(net,'example_net_rewritten.xlsx')
     net2 = from_excel('C:/Users/jringelstein/git/recode/pandaict/src/pandaict/toolbox/example_net_rewritten.xlsx')

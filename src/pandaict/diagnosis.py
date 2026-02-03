@@ -76,7 +76,7 @@ def __inspect_device(ict_net, passed, verbose):
         apps = get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps == []:
             passed = __log_info_and_return_false(" device '" + str(d['name']) + "' (index " + str(i) + ") does not run any apps", verbose)            
-        if (any([ict_net.app.iloc[a]['type'] == AppType.CONVERTER for a in apps])):
+        if any(ict_net.app.iloc[a]['type'] == AppType.CONVERTER for a in apps):
             l = get_links_at(ict_net, ('device', i))
             if len(l) < 2:
                 passed = __log_info_and_return_false(" device '" + str(d['name']) + "' (index " + str(i) + ") is running converter type app(s) but has less than two links", verbose)                
@@ -133,10 +133,10 @@ def __inspect_ip(ict_net, passed, verbose):
     if "ip_addr" not in ict_net['node'].keys():
         return passed
     # check for double IP addresses (could be intended, warn only)    
-    all_ips = [i for i in ict_net['node']['ip_addr']]        # get all node ips, 2d list
-    all_ips = [i for sub in all_ips for i in sub]            # flattens list
-    all_ips += [i for i in ict_net['device']['ip_addr']]     # add device ips
-    duplicates = set([d for d in all_ips if all_ips.count(d)>1])  # get duplicates
+    all_ips = list(ict_net['node']['ip_addr'])        # get all node ips, 2d list
+    all_ips = [i for sub in all_ips for i in sub]     # flattens list
+    all_ips += list(ict_net['device']['ip_addr'])     # add device ips
+    duplicates = {d for d in all_ips if all_ips.count(d)>1}  # get duplicates
     for d in duplicates: 
         passed = __log_info_and_return_false("Warning: found duplicate IP "+str(d), verbose)        
 

@@ -6,7 +6,7 @@ Created on 13.09.2025
 import networkx as nx
 import random
 import statistics
-from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType, addCustomEnum
+from   pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType, add_custom_enum
 from   pandaict.create import create_ict_node, create_ict_link, create_ict_device, create_ict_app, create_ict_devapp, create_ict_connection
 from   pandaict.create_empty_net import create_empty_network
 from   pandaict.topology.routing import is_connection_possible, __modify_multidigraph_by_iptables
@@ -19,17 +19,17 @@ from aenum import extend_enum
 def get_testnet_v1():
     
     net   = create_empty_network()
-    addCustomEnum(net, NodeType, "VIRTUAL")
+    add_custom_enum(net, NodeType, "VIRTUAL")
     SWg   = create_ict_node(net, name="SWg", node_type=NodeType.SWITCH, link_types=["LAN1000"])   
     SWb   = create_ict_node(net, name="SWb", node_type=NodeType.SWITCH, link_types=["LAN1000"])
     _f1   = create_ict_node(net, name="_f1", node_type=NodeType.VIRTUAL, link_types=["LAN1000"])   
     _f2   = create_ict_node(net, name="_f2", node_type=NodeType.VIRTUAL, link_types=["LAN1000"])
     
-    addCustomEnum(net, DeviceType, "PROTECTION")
-    addCustomEnum(net, DeviceType, "VIRTUAL")        
-    addCustomEnum(net, AppType, "PROTECTION")
-    addCustomEnum(net, AppType, "POWERMETER") 
-    addCustomEnum(net, InfoItem, "ACTIVE_POWER") 
+    add_custom_enum(net, DeviceType, "PROTECTION")
+    add_custom_enum(net, DeviceType, "VIRTUAL")
+    add_custom_enum(net, AppType, "PROTECTION")
+    add_custom_enum(net, AppType, "POWERMETER")
+    add_custom_enum(net, InfoItem, "ACTIVE_POWER")
     (SGd, SGa) = create_ict_devapp(net, name="SG", device_type=DeviceType.PROTECTION, app_type=AppType.PROTECTION) 
     (_md, _ma) = create_ict_devapp(net, name="_m", device_type=DeviceType.VIRTUAL, app_type=AppType.POWERMETER) 
     FE1 = create_ict_device(net, name="FE1", device_type=DeviceType.RTU)
@@ -55,17 +55,17 @@ def get_testnet_v1():
 def get_testnet_v2():
     
     net   = create_empty_network()
-    addCustomEnum(net, NodeType, "COUPLER")
+    add_custom_enum(net, NodeType, "COUPLER")
     SWg   = create_ict_node(net, name="SWg", node_type=NodeType.SWITCH, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)   
     SWb   = create_ict_node(net, name="SWb", node_type=NodeType.SWITCH, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)
     FE1   = create_ict_node(net, name="FE1", node_type=NodeType.COUPLER, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)
     FE2   = create_ict_node(net, name="FE2", node_type=NodeType.COUPLER, link_types=["LAN1000"], mtbf_h=2000, mttr_h=2000)
     
-    addCustomEnum(net, DeviceType, "VIRTUAL")
-    addCustomEnum(net, DeviceType, "PROTECTION")        
-    addCustomEnum(net, AppType, "PROTECTION")
-    addCustomEnum(net, AppType, "POWERMETER") 
-    addCustomEnum(net, InfoItem, "ACTIVE_POWER") 
+    add_custom_enum(net, DeviceType, "VIRTUAL")
+    add_custom_enum(net, DeviceType, "PROTECTION")
+    add_custom_enum(net, AppType, "PROTECTION")
+    add_custom_enum(net, AppType, "POWERMETER")
+    add_custom_enum(net, InfoItem, "ACTIVE_POWER")
     (SGd, SGa) = create_ict_devapp(net, name="SG", device_type=DeviceType.PROTECTION, app_type=AppType.PROTECTION) 
     (_md, _ma) = create_ict_devapp(net, name="_m", device_type=DeviceType.VIRTUAL, app_type=AppType.POWERMETER) 
     

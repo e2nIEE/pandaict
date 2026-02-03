@@ -16,7 +16,7 @@ from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
 
 def __preserve_dtypes(df, dtypes):
-    for item, dtype in list(dtypes.items()):
+    for item, dtype in dtypes.items():
         if df.dtypes.at[item] != dtype:
             if (dtype == bool or dtype == np.bool_) and np.any(df[item].isnull()):
                 raise UserWarning(f"Encountered NaN value(s) in a boolean column {item}! "
@@ -56,10 +56,6 @@ class ADict(dict, MutableMapping):
         self.update(mapping)
         self.__setattr('_allow_invalid_attributes', allow_invalid_attributes)
 
-    @classmethod
-    def __constructor(cls, mapping):
-        return cls(mapping)
-
     # --- taken from MutableAttr
 
     def __setattr(self, key, value):
@@ -76,9 +72,6 @@ class ADict(dict, MutableMapping):
                     cls=self.__class__.__name__
                 )
             )
-
-    def __delattr(self, key):
-        super(MutableMapping, self).__delattr__(key)
 
     def __delattr__(self, key, force=False):
         if self.__valid_name(key):
@@ -171,7 +164,7 @@ class pandaICTNet(ADict):
     def __repr__(self):  # pragma: no cover
         par = []
         res = []
-        for et in list(self.keys()):
+        for et in self.keys():
             if not et.startswith("_") and isinstance(self[et], pd.DataFrame) and len(self[et]) > 0:
                 n_rows = self[et].shape[0]
                 if 'res_' in et:
