@@ -13,7 +13,6 @@ from   pandaict.topology.routing import is_connection_possible, __modify_multidi
 from   pandaict.topology.routing_utils import create_multidigraph, __get_nx_node_for_elt
 from   pandaict.reliability.monte_carlo import estimate_mttf_mttr
 from   pandaict import inspect
-# import pp_pict_connector as ppc
 from aenum import extend_enum
 
 def get_testnet_v1():
@@ -46,7 +45,7 @@ def get_testnet_v1():
     create_ict_link(net, name="vL3", link_type="LAN1000", from_elt=_f1, to_elt=[_md], length_km=0.01)
     create_ict_link(net, name="vL4", link_type="LAN1000", from_elt=_f2, to_elt=[_md], length_km=0.01)
     
-    conn1 = create_ict_connection(net, name="Conn1", from_app=_ma, to_app=SGa, protocol="TCP",
+    create_ict_connection(net, name="Conn1", from_app=_ma, to_app=SGa, protocol="TCP",
                         info_items=[InfoItem.ACTIVE_POWER], 
                         peers=(_ma,SGa), producer=[0], prod_freq_ms=[10000])                   
     return net
@@ -78,7 +77,7 @@ def get_testnet_v2():
     create_ict_link(net, name="vL3", link_type="LAN1000", from_elt=FE1, to_elt=[_md], length_km=0.01)
     create_ict_link(net, name="vL4", link_type="LAN1000", from_elt=FE2, to_elt=[_md], length_km=0.01)
     
-    conn1 = create_ict_connection(net, name="Conn1", from_app=_ma, to_app=SGa, protocol="TCP",
+    create_ict_connection(net, name="Conn1", from_app=_ma, to_app=SGa, protocol="TCP",
                         info_items=[InfoItem.ACTIVE_POWER], 
                         peers=(_ma,SGa), producer=[0], prod_freq_ms=[10000])                   
     return net
@@ -92,7 +91,7 @@ def _get_montecarlo_nxgraph(ict_net, conn, downstream=True, respect_iptables=Fal
     if not downstream:
         from_dev, to_dev = to_dev, from_dev
     if respect_iptables:        
-        __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)  
+        __modify_multidigraph_by_iptables(ict_net, mdg, to_dev)  
     from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
     to_nxnode = __get_nx_node_for_elt(mdg, to_dev)  
     
@@ -121,10 +120,9 @@ if __name__ == "__main__":
     net = get_testnet_v2()
     conn = net.conn.loc[0]
     G, source, target = _get_montecarlo_nxgraph(net, conn)
-    mttf, mttr = estimate_mttf_mttr(G, source, target, N=10, max_cycles=20)
+    mttf, mttr = estimate_mttf_mttr(G, source, target, N=10)
     print("MTTF:", round(mttf, 3))
     print("MTTR:", round(mttr, 3))
     print("MTBF:", round(mttf+mttr, 3))
-    #inspect(net, verbose=True)
-    #print(str(is_connection_possible(net, ('conn',0)))) 
+
     

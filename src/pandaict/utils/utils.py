@@ -494,7 +494,7 @@ def get_neighbour_elts(ict_net, elt, respect_in_service=False):
     link_idxs = get_links_at(ict_net, elt)
     if link_idxs is None:
         return None
-    neighbours = {}
+    neighbours = set({})
     for li in link_idxs: 
         l = ict_net.link.iloc[li]
         if respect_in_service and not(l.in_service): 

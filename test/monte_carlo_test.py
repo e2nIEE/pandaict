@@ -5,7 +5,8 @@ Created on 22.12.2025
 
 import unittest
 import numpy as np
-from monte_carlo_test_nets import *
+from monte_carlo_test_nets import (N6_seriell, N3_parallel, N4_11, two_sources_independent,
+                                   two_sources_shared_component, two_sources_two_targets_independent)
 from pandaict.reliability.monte_carlo import estimate_mttf_mttr, NUMBA_AVAILABLE
 
 class ReliabilityNetTest(unittest.TestCase):

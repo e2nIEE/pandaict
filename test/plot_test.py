@@ -5,7 +5,6 @@ Created on 21.03.2024
 '''
 
 
-from core_test import *
 from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1
 from pandaict.plot import create_plot, __create_g__
 import PIL
@@ -13,10 +12,7 @@ from PIL import Image, ImageChops
 import tempfile
 import os
 
- #plot net is depending on the index of the net at "create_test_ict_net" return
-
-# create_plot(net1, draw_type='dev')
-# create_plot(net1, draw_type='app')
+#plot net is depending on the index of the net at "create_test_ict_net" return
 
 class Plot_Test():    
     
@@ -68,7 +64,7 @@ class Plot_Test():
     def test_graph_dev(self, utest):
         net1 = create_testnet1()
         net1 = extend_testnet1(net1)
-        G, edge_labels = __create_g__(None, 'dev', net1)
+        G, _ = __create_g__(None, 'dev', net1)
         
         # Iterate through nodes
         for node_g, node_name in zip(G.nodes(), ['Node1', 'Node2', 'Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):
@@ -84,7 +80,7 @@ class Plot_Test():
     def test_graph_app(self, utest):
         net1 = create_testnet1()
         net1 = extend_testnet1(net1)
-        G, edge_labels = __create_g__(None, 'app', net1)
+        G, _ = __create_g__(None, 'app', net1)
         
         # Iterate through nodes
         for node_g, node_name in zip(G.nodes(), ['Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):

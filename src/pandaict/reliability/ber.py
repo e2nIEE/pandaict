@@ -23,7 +23,8 @@ def calc_ber_route(ict_net, links):
     """
     Calculate bit error rate (ber) along a route given by a list of links.    
     Links and nodes along the route are handled as a serial system and total ber is calculated accordingly.  
-    Note: the link list may be obtained from a LUP table calculation.    
+    Note: the first and last link in the list must be connected to a device by its "from" or "to" parameter.
+    Note: the link list may be obtained from a LUP table calculation.
     
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
@@ -56,7 +57,7 @@ def calc_ber_route(ict_net, links):
             if ber_link is not None:
                 ber_route *= 1-ber_link
             break            
-        else: # update total  MTBF and MTTR
+        else: # update total
             if ber_link is not None:
                 ber_route *= 1-ber_link
             if ber_node is not None:
