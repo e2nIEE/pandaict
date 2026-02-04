@@ -10,6 +10,9 @@ from pandaict.reliability.monte_carlo_numba_core import (
     simulate_numba_core,
     simulate_numba_core_norepair
 )
+from pandaict.reliability.monte_carlo_helpers import (
+    _graph_to_numba_arrays
+)
 
 # ------------------------------------------------------------------------------------------------------------------
 # Wrappers for parallel and serial code execution
@@ -243,3 +246,73 @@ def _run_serial_norepair(n_sims, TOL,
             all_critical[sim_idx, :n_crit] = crit_comp[:n_crit]
 
     return all_results, all_critical
+
+
+def _run_numba(G, sources, targets, min_connected, is_repairable,		    # Topology and connectivity
+               lam_edges, lam_nodes, mu_edges, mu_nodes,
+               N, depth, TOL,										        # number of samples
+               max_time, max_events,								        # early stoppage
+               return_samples, analyze_crit, laziness,		                # calculation method
+               parallel):
+
+    # Convert graph to arrays
+    conv = _graph_to_numba_arrays(G, sources, targets)
+
+    # get edge and node arrays
+    lam_edges_arr = np.array([lam_edges[e] for e in conv['edge_list']], dtype=np.float64)
+    lam_nodes_arr = np.array([lam_nodes[n] for n in conv['node_list']], dtype=np.float64)
+
+    if not is_repairable:
+        # non-repairable case
+        if parallel:
+            print(f"Running {N} simulations in parallel...")
+            all_results, all_critical = _run_parallel_norepair(
+                N, TOL,
+                conv['n_edges'], conv['n_nodes'],
+                conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                lam_edges_arr, lam_nodes_arr,
+                conv['source_idx'], conv['target_idx'], min_connected,
+                max_events, max_time,
+                return_samples, analyze_crit, laziness
+            )
+        else:
+            all_results, all_critical = _run_serial_norepair(
+                N, TOL,
+                conv['n_edges'], conv['n_nodes'],
+                conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                lam_edges_arr, lam_nodes_arr,
+                conv['source_idx'], conv['target_idx'], min_connected,
+                max_events, max_time,
+                return_samples, analyze_crit, laziness
+            )
+
+    else:
+        # Repairable case
+        mu_edges_arr = np.array([mu_edges[e] for e in conv['edge_list']], dtype=np.float64)
+        mu_nodes_arr = np.array([mu_nodes[n] for n in conv['node_list']], dtype=np.float64)
+
+        print(f"Running {N * depth} ({N} x {depth}) simulations {'in parallel' if parallel else ''}...")
+
+        if parallel:
+            all_results, all_critical = _run_parallel(
+                N, depth, TOL,
+                conv['n_edges'], conv['n_nodes'],
+                conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
+                conv['source_idx'], conv['target_idx'], min_connected,
+                max_events, max_time,
+                return_samples, analyze_crit, laziness
+            )
+        else:
+            all_results, all_critical = _run_serial(
+                N, depth, TOL,
+                conv['n_edges'], conv['n_nodes'],
+                conv['adj_offsets'], conv['adj_nodes'], conv['adj_edges'],
+                lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr,
+                conv['source_idx'], conv['target_idx'], min_connected,
+                max_events, max_time,
+                return_samples, analyze_crit, laziness
+            )
+
+    return all_results, all_critical
+

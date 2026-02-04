@@ -248,3 +248,17 @@ def _simulate_python_norepair(G, source, target, lam_edges, lam_nodes):
                 break
 
     return t
+
+def _run_python(G, sources, targets, is_repairable, lam_edges, lam_nodes, mu_edges, mu_nodes,
+               N, depth):
+
+    if not is_repairable:
+        res = [_simulate_python_norepair(G, sources, targets, lam_edges, lam_nodes) for _ in range(N)]
+
+    else:
+        res = [_simulate_python_repairable(G, sources, targets, lam_edges, lam_nodes,
+                                              mu_edges, mu_nodes, depth) for _ in range(N)]
+
+
+
+    return np.array(res, dtype=np.float64)
