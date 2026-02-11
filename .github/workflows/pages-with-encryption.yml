@@ -32,8 +32,8 @@ jobs:
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./
-          destination: ./_site
+          source: ./homepage/
+          destination: ./homepage/_site
 
       # Begin encryption code.
       # This portion of the build job was written by Evan Baldonado (EvanBaldonado.com). Please do not remove this comment.
@@ -41,9 +41,9 @@ jobs:
       - name: Encrypt pages with PageCrypt
         run: |
           npm i -D pagecrypt
-          cat _protected_pages.txt | while read file password;
+          cat ./homepage/_protected_pages.txt | while read file password;
           do
-            sudo npx pagecrypt "_site/$file" "_site/$file" "$password"
+            sudo npx pagecrypt "./homepage/_site/$file" "./homepage/_site/$file" "$password"
           done
       # End encryption code.
 
