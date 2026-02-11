@@ -3,7 +3,7 @@ name: Deploy Jekyll with GitHub Pages/Encryption
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
+    branches: ["homepage"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -32,8 +32,8 @@ jobs:
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./homepage/
-          destination: ./homepage/_site
+          source: ./
+          destination: ./_site
 
       # Begin encryption code.
       # This portion of the build job was written by Evan Baldonado (EvanBaldonado.com). Please do not remove this comment.
@@ -41,16 +41,14 @@ jobs:
       - name: Encrypt pages with PageCrypt
         run: |
           npm i -D pagecrypt
-          cat ./homepage/_protected_pages.txt | while read file password;
+          cat ./_protected_pages.txt | while read file password;
           do
-            sudo npx pagecrypt "./homepage/_site/$file" "./homepage/_site/$file" "$password"
+            sudo npx pagecrypt "./_site/$file" "./_site/$file" "$password"
           done
       # End encryption code.
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./homepage/_site/
+        uses: actions/upload-pages-artifact@v3        
 
   # Deployment job
   deploy:
