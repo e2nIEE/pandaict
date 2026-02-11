@@ -1,0 +1,11 @@
+main:
+  - title: "Getting Started"
+    url: /start/
+  - title: "About pandaict"
+    url: /about/
+  - title: "Documentation"
+    url: https://pandaict.readthedocs.io/en/latest/
+  - title: "References"
+    url: /references/
+  - title: "Contact"
+    url: /contact/
