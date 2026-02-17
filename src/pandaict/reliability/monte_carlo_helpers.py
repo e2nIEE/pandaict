@@ -2,13 +2,9 @@
 Created on 04.02.2026
 @author: fnuetz
 '''
-
 import networkx as nx
 import numpy as np
 
-# ----------------------------------------------------------------------------------------------------------------------
-# Helper functions TODO: maybe outsource later
-# ----------------------------------------------------------------------------------------------------------------------
 def _check_initial_connectivity(G, sources, targets, min_connected):
     """
     Checks initial connectivity for source-target pairs.

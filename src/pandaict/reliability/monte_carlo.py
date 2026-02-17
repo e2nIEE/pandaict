@@ -39,14 +39,13 @@ except ImportError:
     print("Warning: Numba not available. Using Python-only version.")
 
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Critical Component Analysis (Prototype)
 # ----------------------------------------------------------------------------------------------------------------------
 def analyze_critical_components(all_critical, G, sources, targets,
                                 lam_edges, lam_nodes,
                                 mu_edges, mu_nodes,
-                                top_n=10, plot=True, verbose=True, rate_adjustment=True):
+                                top_n=-1, plot=True, verbose=True, rate_adjustment=True):
     #TODO: validate function
     #TODO: output a plot which shows the topology and colors the critical components in red
     """
@@ -90,6 +89,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
     if top_n == 0:
         top_n = -1
 
+
     conv = _graph_to_numba_arrays(G, sources, targets)
 
     edge_list = conv['edge_list']
@@ -110,7 +110,6 @@ def analyze_critical_components(all_critical, G, sources, targets,
     else:
         mu_nodes_arr = np.array([mu_nodes[n] for n in conv['node_list']], dtype=np.float64)
 
-
     n_events = n_edges + n_nodes
 
     # Flatten and filter invalid values (-1)
@@ -127,7 +126,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
     # build array of counts (zero for components that never occurred)
     full_counts = np.zeros(n_events, dtype=np.float64)
     for idx, count in zip(unique_idx, counts):
-        if idx < n_events:
+        if idx < n_events:                              # I believe this statement is unnecessary
             full_counts[idx] = count
 
     # Normalize by expected rates (lam + mu)
@@ -155,8 +154,8 @@ def analyze_critical_components(all_critical, G, sources, targets,
     node_crit = criticality[n_edges:]
 
     # sort arrays
-    top_edge_idx = np.argsort(edge_crit)[::-1][:top_n]
-    top_node_idx = np.argsort(node_crit)[::-1][:top_n]
+    top_edge_idx = np.argsort(edge_crit)[::-1][:]   #[:top_n]
+    top_node_idx = np.argsort(node_crit)[::-1][:]   #[:top_n]
 
     # Print results
     if verbose:
@@ -168,6 +167,8 @@ def analyze_critical_components(all_critical, G, sources, targets,
         print("  > 1.0: MORE critical")
         print("  ~ 1.0: As expected")
         print("  < 1.0: LESS critical")
+
+        print("Norm:", sum(criticality))
 
         print(f"\n{'─' * 70}")
         if top_n > 0:
@@ -188,32 +189,51 @@ def analyze_critical_components(all_critical, G, sources, targets,
             print(f"  {rank:2d}. {node_list[i]}: Score={node_crit[i]:.3f}, Count={int(full_counts[n_edges + i])}")
 
     if plot:
-        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        # TODO: outsource into separate function (critical_bar_plot())
+        n_rows = max(len(top_edge_idx), len(top_node_idx)) + 1
+        _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 7))))
 
-        edges_str = [f"{u}-{v}" for u, v in [edge_list[i] for i in top_edge_idx]]
-        colors = ['red' if edge_crit[i] > 1.0 else 'gray' for i in top_edge_idx]
-        ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
-        ax1.axvline(1.0, color='black', linestyle='--', lw=2)
-        ax1.set_yticks(range(len(top_edge_idx)))
-        ax1.set_yticklabels(edges_str)
-        ax1.set_xlabel('Criticality Score')
-        if top_n > 0:
-            ax1.set_title(f'Top {top_n} Critical Edges')
-            ax2.set_title(f'Top {top_n} Critical Nodes')
+        # === EDGES ===
+        if len(top_edge_idx) > 0 and np.any(edge_crit[top_edge_idx] > 0):
+            edges_str = [f"{u}-{v}" for u, v in [edge_list[i] for i in top_edge_idx]]
+            colors = ['red' if edge_crit[i] > 1.0 else 'gray' for i in top_edge_idx]
+            ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
+
+
+            max_edge_val = np.nanmax(edge_crit[top_edge_idx])
+            ax1.set_xlim(0, max(max_edge_val * 1.2, 1.5))
+
+            ax1.axvline(1.0, color='black', linestyle='--', lw=2)
+            ax1.set_yticks(range(len(top_edge_idx)))
+            ax1.set_yticklabels(edges_str)
         else:
-            ax1.set_title('Critical Edges')
-            ax2.set_title('Critical Nodes')
+            ax1.text(0.5, 0.5, 'No critical edges', ha='center', va='center',
+                     transform=ax1.transAxes, fontsize=12, color='gray')
+            ax1.set_xlim(0, 2)  # avoids singular matrix error
 
+        ax1.set_xlabel('Criticality Score')
+        ax1.set_title('Critical Edges')
         ax1.invert_yaxis()
 
-        nodes_str = [str(node_list[i]) for i in top_node_idx]
-        colors = ['red' if node_crit[i] > 1.0 else 'gray' for i in top_node_idx]
-        ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
-        ax2.axvline(1.0, color='black', linestyle='--', lw=2)
-        ax2.set_yticks(range(len(top_node_idx)))
-        ax2.set_yticklabels(nodes_str)
-        ax2.set_xlabel('Criticality Score')
+        # === NODES ===
+        if len(top_node_idx) > 0 and np.any(node_crit[top_node_idx] > 0):
+            nodes_str = [str(node_list[i]) for i in top_node_idx]
+            colors = ['red' if node_crit[i] > 1.0 else 'gray' for i in top_node_idx]
+            ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
 
+            max_node_val = np.nanmax(node_crit[top_node_idx])
+            ax2.set_xlim(0, max(max_node_val * 1.2, 1.5))
+
+            ax2.axvline(1.0, color='black', linestyle='--', lw=2)
+            ax2.set_yticks(range(len(top_node_idx)))
+            ax2.set_yticklabels(nodes_str)
+        else:
+            ax2.text(0.5, 0.5, 'No critical nodes', ha='center', va='center',
+                     transform=ax2.transAxes, fontsize=12, color='gray')
+            ax2.set_xlim(0, 2)
+
+        ax2.set_xlabel('Criticality Score')
+        ax2.set_title('Critical Nodes')
         ax2.invert_yaxis()
 
         plt.tight_layout()
@@ -228,7 +248,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
 
 def empirical_reliability(T, samples):
     """
-    Builds an empirical reliability function R and returns its value at timepoint T: R(T)=P(t>=T).
+    Builds an empirical reliability function R and returns its value at timepoint T: R(T)=P(t>T).
 
     :INPUT:
         **T**       - float, timepoint at which the reliability will be evaluated.
@@ -256,12 +276,15 @@ def empirical_reliability(T, samples):
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
 def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
-                       N=1000, depth=1, TOL=0,
+                       N=1000, depth=200, TOL=0,
                        max_time=np.inf, max_events=-1,
-                       return_samples=False, analyze_crit=False, laziness=0,
+                       return_samples=True, analyze_crit=False, laziness=0,
                        use_numba=True, parallel=True):
     """
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
+
+    TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
+    TODO: Check if N and depth can be collapsed to one argument
 
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
@@ -312,7 +335,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         **mttf_samples**        - np.ndarray, mttf samples (None if not return_samples)
 
         **mttr_samples**        - np.ndarray, mttr samples (None if not return_samples or non-repairable)
-
         }
     """
 
@@ -320,7 +342,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         print('Warning: max_time Speedup is used. MTTF, MTTR might be meaningless.')
 
     sources, targets = _normalize_connection_pairs(sources, targets)
-    is_multi = len(sources) > 1
 
     # Catch if G is not connected at start.
     is_connected, error_msg = _check_initial_connectivity(G, sources, targets, min_connected)
@@ -330,7 +351,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         print('Please fix topology!')
         return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
 
-
     # Extract rates from graph
     lam_edges, lam_nodes, mu_edges, mu_nodes = get_lam_mu_from_graph(G)
 
@@ -338,8 +358,12 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     is_nonrepairable = (all(mu == 0 for mu in mu_edges.values()) and all(mu == 0 for mu in mu_nodes.values()))
     is_repairable = not is_nonrepairable    # TODO: do more elegantly later
 
+    # TODO: REMOVE is_nofailure
     # Check for no-failure case
     is_nofailure = (all(lam == 0 for lam in lam_edges.values()) and all(lam == 0 for lam in lam_nodes.values()))
+
+    edge_criticality = None
+    node_criticality = None
 
     # Check for no-failure case
     if is_nofailure:
@@ -356,9 +380,11 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                                                parallel)
 
         if analyze_crit and all_critical.size > 0:
-            analyze_critical_components(all_critical, G, sources, targets,
-                                        lam_edges, lam_nodes,
-                                        mu_edges, mu_nodes)
+            crit_dict = analyze_critical_components(all_critical, G, sources, targets,
+                                                    lam_edges, lam_nodes, mu_edges, mu_nodes)
+
+            edge_criticality = crit_dict['edge_criticality']
+            node_criticality = crit_dict['node_criticality']
 
     else:
         # Python fallback
@@ -385,4 +411,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     return {'mttf': mttf,
             'mttr': mttr,
             'mttf_samples': mttf_samples,
-            'mttr_samples': mttr_samples}
+            'mttr_samples': mttr_samples,
+            'edge_criticality': edge_criticality,
+            'node_criticality': node_criticality}
