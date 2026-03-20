@@ -4,6 +4,7 @@ Created on 04.02.2026
 '''
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 
 def _check_initial_connectivity(G, sources, targets, min_connected):
     """
@@ -263,3 +264,105 @@ def _filter_results(all_results, is_repairable):
         return {'mttf_samples': None, 'mttr_samples': None}
 
     return {'mttf_samples': mttf_samples, 'mttr_samples': mttr_samples}
+
+
+def _critical_bar_plot(top_edge_idx, top_node_idx,
+                       edge_crit, edge_list,
+                       node_crit, node_list):
+
+    n_rows = max(len(top_edge_idx), len(top_node_idx)) + 1
+    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 7))))
+
+    # === EDGES ===
+    if len(top_edge_idx) > 0 and np.any(edge_crit[top_edge_idx] > 0):
+        edges_str = [f"{u}-{v}" for u, v in [edge_list[i] for i in top_edge_idx]]
+        colors = ['red' if edge_crit[i] > 1.0 else 'gray' for i in top_edge_idx]
+        ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
+
+        max_edge_val = np.nanmax(edge_crit[top_edge_idx])
+        ax1.set_xlim(0, max(max_edge_val * 1.2, 1.5))
+
+        ax1.axvline(1.0, color='black', linestyle='--', lw=2)
+        ax1.set_yticks(range(len(top_edge_idx)))
+        ax1.set_yticklabels(edges_str)
+    else:
+        ax1.text(0.5, 0.5, 'No critical edges', ha='center', va='center',
+                 transform=ax1.transAxes, fontsize=12, color='gray')
+        ax1.set_xlim(0, 2)  # avoids singular matrix error
+
+    ax1.set_xlabel('Criticality Score')
+    ax1.set_title('Critical Edges')
+    ax1.invert_yaxis()
+
+    # === NODES ===
+    if len(top_node_idx) > 0 and np.any(node_crit[top_node_idx] > 0):
+        nodes_str = [str(node_list[i]) for i in top_node_idx]
+        colors = ['red' if node_crit[i] > 1.0 else 'gray' for i in top_node_idx]
+        ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
+
+        max_node_val = np.nanmax(node_crit[top_node_idx])
+        ax2.set_xlim(0, max(max_node_val * 1.2, 1.5))
+
+        ax2.axvline(1.0, color='black', linestyle='--', lw=2)
+        ax2.set_yticks(range(len(top_node_idx)))
+        ax2.set_yticklabels(nodes_str)
+    else:
+        ax2.text(0.5, 0.5, 'No critical nodes', ha='center', va='center',
+                 transform=ax2.transAxes, fontsize=12, color='gray')
+        ax2.set_xlim(0, 2)
+
+    ax2.set_xlabel('Criticality Score')
+    ax2.set_title('Critical Nodes')
+    ax2.invert_yaxis()
+
+    plt.tight_layout()
+    plt.show()
+
+
+def _print_criticality(total_observed, criticality, top_n,
+                       top_edge_idx, edge_list, edge_crit, n_edges,
+                       top_node_idx, node_list, node_crit, n_nodes,
+                       full_counts):
+
+    print("\n" + "=" * 70)
+    print("CRITICAL COMPONENT ANALYSIS")
+    print("=" * 70)
+    print(f"Total events tracked: {int(total_observed)}")
+    print("\nScore = Observed / Expected")
+    print("  > 1.0: MORE critical")
+    print("  ~ 1.0: As expected")
+    print("  < 1.0: LESS critical")
+
+    print("Norm:", sum(criticality))
+
+    print(f"\n{'─' * 70}")
+    if top_n > 0:
+        print(f"TOP {top_n} CRITICAL EDGES")
+    else:
+        print("CRITICAL EDGES")
+    print(f"{'─' * 70}")
+    for rank, i in enumerate(top_edge_idx, 1):
+        print(f"  {rank:2d}. {edge_list[i]}: Score={edge_crit[i]:.3f}, Count={int(full_counts[i])}")
+
+    print(f"\n{'─' * 70}")
+    if top_n > 0:
+        print(f"TOP {top_n} CRITICAL NODES")
+    else:
+        print("CRITICAL NODES")
+    print(f"{'─' * 70}")
+    for rank, i in enumerate(top_node_idx, 1):
+        print(f"  {rank:2d}. {node_list[i]}: Score={node_crit[i]:.3f}, Count={int(full_counts[n_edges + i])}")
+
+def _calc_criticalities(n_events, total_observed, expected_fractions, full_counts, rate_adjustment):
+    # init criticality array
+    criticality = np.zeros(n_events, dtype=np.float64)
+
+    # loop over
+    if total_observed > 0:
+        for i in range(n_events):
+            if rate_adjustment and expected_fractions[i] > 0:
+                criticality[i] = (full_counts[i] / total_observed) / expected_fractions[i]
+            elif not rate_adjustment:  # skip expected_fraction <= 0
+                criticality[i] = (full_counts[i] / total_observed)
+
+    return criticality
