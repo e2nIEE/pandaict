@@ -160,8 +160,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
     if verbose:
         _print_criticality(total_observed, criticality, top_n,
                            top_edge_idx, edge_list, edge_crit, n_edges,
-                           top_node_idx, node_list, node_crit, n_nodes,
-                           full_counts)
+                           top_node_idx, node_list, node_crit, full_counts)
 
     if plot:
         _critical_bar_plot(top_edge_idx, top_node_idx,

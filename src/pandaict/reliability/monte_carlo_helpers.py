@@ -203,64 +203,56 @@ def _graph_to_numba_arrays(G, source, target):
         'node_to_idx': node_to_idx
     }
 
+def _inf_warning(data, event_name, explanation):
+    """Return warning string if data contains inf values, else None."""
+    n_inf = int(np.sum(np.isinf(data)))
+    if n_inf > 0:
+        return (f"{n_inf} simulation(s) reached max_events without {event_name}. "
+                f"That speaks for {explanation}!")
+    return None
+
+
 def _filter_results(all_results, is_repairable):
-    """Filter out invalid results from all_results"""
-    # TODO: write less repetitive
+    """Filter out invalid results (inf/NaN) from simulation output."""
 
     if is_repairable:
-        # filter results
-        fail_inf_mask = np.isinf(all_results[:, 0])
-        repair_inf_mask = np.isinf(all_results[:, 1])
+        fail_data, repair_data = all_results[:, 0], all_results[:, 1]
+        finite_mask = np.isfinite(fail_data) & np.isfinite(repair_data)
+        n_nan = int(np.sum(np.isnan(fail_data) | np.isnan(repair_data)))
 
-        n_fail_inf = int(np.sum(fail_inf_mask))
-        n_repair_inf = int(np.sum(repair_inf_mask))
-
-        nan_mask = np.isnan(all_results[:, 0]) | np.isnan(all_results[:, 1])
-        n_nan = int(np.sum(nan_mask))
-
-        finite_mask = np.isfinite(all_results[:, 0]) & np.isfinite(all_results[:, 1])
-
+        warnings = [
+            _inf_warning(fail_data, "system failure",
+                         "a rather robust system which will likely never fail"),
+            _inf_warning(repair_data, "system repair",
+                         "a rather fragile system which likely can never be repaired"),
+        ]
         mttf_samples = all_results[finite_mask, 0]
         mttr_samples = all_results[finite_mask, 1]
 
-        if n_fail_inf > 0 or n_repair_inf > 0 or n_nan > 0:
-            msg_parts = []
-            if n_fail_inf > 0:
-                msg_parts.append(f"{n_fail_inf} simulation(s) reached max_events without system failure. "
-                                 f"That speaks for a rather robust system which will likely never fail!")
-            if n_repair_inf > 0:
-                msg_parts.append(f"{n_repair_inf} simulation(s) reached max_events without system repair. "
-                                 f"That speaks for a rather fragile system which likely can never be repaired!")
-            if n_nan > 0:
-                msg_parts.append(f"{n_nan} simulation(s) returned NaN (e.g. total_rate <= 0)")
-            print("Warning: (Monte Carlo): " + "; ".join(msg_parts) +
-                  ". These runs were excluded from MTTF/MTTR estimation.")
-
     else:
-        # Filter results
-        fail_inf_mask = np.isinf(all_results)
-        n_fail_inf = int(np.sum(fail_inf_mask))
-
-        nan_mask = np.isnan(all_results)
-        n_nan = int(np.sum(nan_mask))
-
         finite_mask = np.isfinite(all_results)
+        n_nan = int(np.sum(np.isnan(all_results)))
 
+        warnings = [
+            _inf_warning(all_results, "system failure",
+                         "a rather robust system which will likely never fail"),
+        ]
         mttf_samples = all_results[finite_mask]
         mttr_samples = None
 
-        if n_fail_inf > 0 or n_nan > 0:
-            msg_parts = []
-            if n_fail_inf > 0:
-                msg_parts.append(f"{n_fail_inf} simulation(s) reached max_events without system failure. "
-                                 f"That speaks for a rather robust system which will likely never fail!")
-            if n_nan > 0:
-                msg_parts.append(f"{n_nan} simulation(s) returned NaN (e.g. total_rate <= 0)")
-            print("Warning: (Monte Carlo): " + "; ".join(msg_parts) +
-                  ". These runs were excluded from MTTF/MTTR estimation.")
+    # NaN warning (shared for both)
+    if n_nan > 0:
+        warnings.append(f"{n_nan} simulation(s) returned NaN (e.g. total_rate <= 0)")
+
+    # Print all collected warnings in one go
+    msg_parts = [w for w in warnings if w is not None]
+    if msg_parts:
+        print("Warning: (Monte Carlo): " + "; ".join(msg_parts)
+              + ". These runs were excluded from MTTF/MTTR estimation.")
 
     if len(mttf_samples) == 0:
-        print("Warning: No valid Monte Carlo samples (all runs either NaN or max_events timeout)")
+        print("Warning: No valid Monte Carlo samples "
+              "(all runs either NaN or max_events timeout)")
         return {'mttf_samples': None, 'mttr_samples': None}
 
     return {'mttf_samples': mttf_samples, 'mttr_samples': mttr_samples}
@@ -321,8 +313,7 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
 
 def _print_criticality(total_observed, criticality, top_n,
                        top_edge_idx, edge_list, edge_crit, n_edges,
-                       top_node_idx, node_list, node_crit, n_nodes,
-                       full_counts):
+                       top_node_idx, node_list, node_crit, full_counts):
 
     print("\n" + "=" * 70)
     print("CRITICAL COMPONENT ANALYSIS")
@@ -352,6 +343,7 @@ def _print_criticality(total_observed, criticality, top_n,
     print(f"{'─' * 70}")
     for rank, i in enumerate(top_node_idx, 1):
         print(f"  {rank:2d}. {node_list[i]}: Score={node_crit[i]:.3f}, Count={int(full_counts[n_edges + i])}")
+
 
 def _calc_criticalities(n_events, total_observed, expected_fractions, full_counts, rate_adjustment):
     # init criticality array
