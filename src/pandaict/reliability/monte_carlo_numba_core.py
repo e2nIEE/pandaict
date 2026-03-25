@@ -243,6 +243,44 @@ def _apply_event(idx, n_edges, edge_state, node_state,
     return delta
 
 
+@njit
+def _lazy_connectivity_check(idx, event_count, event_threshold,
+                            critical_components, crit_idx, crit_checkpoint,
+                            analyze_crit, initial_connected,
+                            adj_offsets, adj_nodes, adj_edges,
+                            edge_state, node_state,
+                            source_idx, target_idx, min_connected):
+    """
+    1. Record event as critical candidate (if enabled).
+    2. Perform lazy connectivity check once event_threshold is reached.
+    3. On check: keep or discard the candidate window depending on whether connectivity has flipped.
+
+    :returns: (connected, event_count, crit_idx, crit_checkpoint)
+    """
+    # --- record critical candidate ---
+    if analyze_crit:
+        critical_components[crit_idx] = idx
+        crit_idx += 1
+
+    # --- lazy connectivity check ---
+    if event_count < event_threshold:
+        return initial_connected, event_count, crit_idx, crit_checkpoint
+
+    connected = check_connections(
+        adj_offsets, adj_nodes, adj_edges,
+        edge_state, node_state,
+        source_idx, target_idx, min_connected)
+
+    if analyze_crit:
+        if connected == initial_connected:
+            crit_idx = crit_checkpoint           # no transition -> discard window
+        else:
+            crit_checkpoint = crit_idx           # transition confirmed -> keep window
+
+    event_count = -1
+    return connected, event_count, crit_idx, crit_checkpoint
+
+
 # ------------------------------------------------------------------------------------------------------------------
 # Core Simulation Loops
 # ------------------------------------------------------------------------------------------------------------------
@@ -304,26 +342,14 @@ def _run_cycle(n_edges, n_nodes, edge_state, node_state,						# topology, precom
         event_count += 1
         event_idx += 1
 
-        # maybe outsource this snippet into a separate function as well
-        # --- track critical candidates ---
-        if analyze_crit:
-            critical_components[crit_idx] = idx
-            crit_idx += 1
-
-        # --- lazy connectivity check ---
-        if event_count >= event_threshold:
-            connected = check_connections(
-                adj_offsets, adj_nodes, adj_edges,
-                edge_state, node_state,
-                source_idx, target_idx, min_connected)
-
-            if analyze_crit:
-                if connected == initial_connected:
-                    crit_idx = crit_checkpoint  # no transition -> discard interval
-                else:
-                    crit_checkpoint = crit_idx  # transition -> keep interval
-
-            event_count = -1
+        # track critical components and perform lazy connectivity check
+        connected, event_count, crit_idx, crit_checkpoint = _lazy_connectivity_check(
+            idx, event_count, event_threshold,
+            critical_components, crit_idx, crit_checkpoint,
+            analyze_crit, initial_connected,
+            adj_offsets, adj_nodes, adj_edges,
+            edge_state, node_state,
+            source_idx, target_idx, min_connected)
 
     return t_cycle, critical_components[:crit_checkpoint], edge_state, node_state
 
