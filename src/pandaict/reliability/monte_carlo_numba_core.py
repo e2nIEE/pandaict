@@ -194,7 +194,7 @@ def dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
         top -= 1
         u = stack[top]
 
-        # Found target?
+        # check if target was found
         if u == target_idx:
             return True
 
@@ -215,6 +215,35 @@ def dfs_connected(adj_offsets, adj_nodes, adj_edges, edge_state, node_state,
 
 
 # ------------------------------------------------------------------------------------------------------------------
+# Core Simulation Helpers
+# ------------------------------------------------------------------------------------------------------------------
+@njit
+def _apply_event(idx, n_edges, edge_state, node_state,
+                 lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit):
+    """
+    Toggle component at *idx*, update Fenwick tree.
+    Returns the rate delta so the caller can maintain total_rate.
+    """
+    if idx < n_edges:
+        ci = idx
+        old = edge_state[ci]
+        edge_state[ci] = 1 - old
+        lam, mu = lam_edges_arr[ci], mu_edges_arr[ci]
+    else:
+        ci = idx - n_edges
+        old = node_state[ci]
+        node_state[ci] = 1 - old
+        lam, mu = lam_nodes_arr[ci], mu_nodes_arr[ci]
+
+    # UP->DOWN: old_rate=lambda, new_rate=mu  |  DOWN->UP: old_rate=mu, new_rate=lambda
+    old_rate = lam if old == 1 else mu
+    new_rate = mu if old == 1 else lam
+    delta = new_rate - old_rate
+    _bit_update(bit, idx, delta)
+    return delta
+
+
+# ------------------------------------------------------------------------------------------------------------------
 # Core Simulation Loops
 # ------------------------------------------------------------------------------------------------------------------
 @njit
@@ -224,115 +253,80 @@ def _run_cycle(n_edges, n_nodes, edge_state, node_state,						# topology, precom
                source_idx, target_idx, min_connected,							# connectivity
                max_events, max_time,											# early stoppage
 		       analyze_crit, event_threshold):
+    """
+    Run one cycle until system connectivity flips from its initial state.
 
+    Works for both failure cycles (starts UP, waits for DOWN) and repair cycles
+    (starts DOWN, waits for UP).  Also works for non-repairable systems when
+    mu arrays are all-zero.
+    """
+
+    n_events = n_edges + n_nodes
     t_cycle = 0.0
 
-    initial_connectivity = check_connections(adj_offsets, adj_nodes, adj_edges,
-                                            edge_state, node_state,
-                                            source_idx, target_idx, min_connected)
+    initial_connected = check_connections(
+        adj_offsets, adj_nodes, adj_edges,
+        edge_state, node_state,
+        source_idx, target_idx, min_connected)
+    connected = initial_connected
 
-    connected = initial_connectivity
-
-
-    # preallocate array for the identification of critical components. (-1 = invalid)
-    # array to store ids of components which failed right before network failure.
+    # Critical-component tracking
     critical_components = np.full(event_threshold + 1, -1, dtype=np.int32)
-
-
-    total_rate = _bit_prefix_sum(bit, n_edges + n_nodes - 1)
-
-    # keep track of event number (lazy connectivity)
-    event_count = -1
-
-    # keep track of event id (max_events)
-    event_idx = 0
-
-    # keep track of critical events
     crit_idx = 0
-    crit_checkpoint = 0  # position on last successful check
+    crit_checkpoint = 0  # validated write position (last confirmed transition)
 
-    while True:
+    total_rate = _bit_prefix_sum(bit, n_events - 1)
+    event_count = -1  # events since last connectivity check
+    event_idx = 0  # total events (compared against max_events)
 
-        # check connectivity
-        if connected != initial_connectivity:
-            # state transition
-            break
+    while connected == initial_connected:
 
-        if total_rate <= 0.0:
-            # nothing ever happens again
+        if total_rate <= 0.0 or event_idx >= max_events:
             t_cycle = np.inf
             break
 
-        if event_idx >= max_events:
-            # max_events reached
-            t_cycle = np.inf
-            break
-
-        # Sample time to next event
+        # --- sample next event ---
         dt = np.random.exponential(1.0 / total_rate)
         t_cycle += dt
 
-        # Sample event using Fenwick Tree (O(log n))
+        if t_cycle > max_time:
+            t_cycle = np.inf
+            break
+
         r = np.random.random() * total_rate
         idx = _bit_find_index(bit, r)
 
-        # Apply event
-        if idx < n_edges:
-            # Edge event
-            e = idx
-            old = edge_state[e]
-            new = 1 - old
-            edge_state[e] = new
+        # apply event
+        total_rate += _apply_event(
+            idx, n_edges, edge_state, node_state,
+            lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit)
 
-            # Update rate
-            old_rate = lam_edges_arr[e] if old == 1 else mu_edges_arr[e]
-            new_rate = lam_edges_arr[e] if new == 1 else mu_edges_arr[e]
-            delta = new_rate - old_rate
-
-            # Update Fenwick Tree (O(log n))
-            _bit_update(bit, idx, delta)
-            total_rate += delta
-
-        else:
-            # Node event
-            ni = idx - n_edges
-            old = node_state[ni]
-            new = 1 - old
-            node_state[ni] = new
-
-            old_rate = lam_nodes_arr[ni] if old == 1 else mu_nodes_arr[ni]
-            new_rate = lam_nodes_arr[ni] if new == 1 else mu_nodes_arr[ni]
-            delta = new_rate - old_rate
-
-            _bit_update(bit, idx, delta)
-            total_rate += delta
-
-        # increment event counters
         event_count += 1
         event_idx += 1
 
-        # store last event
+        # maybe outsource this snippet into a separate function as well
+        # --- track critical candidates ---
         if analyze_crit:
             critical_components[crit_idx] = idx
             crit_idx += 1
 
-        # Lazy connectivity check
+        # --- lazy connectivity check ---
         if event_count >= event_threshold:
-            connected = check_connections(adj_offsets, adj_nodes, adj_edges,
-                                          edge_state, node_state,
-                                          source_idx, target_idx, min_connected)
-            if analyze_crit:
-                if connected:
-                    # still connected -> not critical -> overwrite values by resetting writer
-                    crit_idx = crit_checkpoint
-                else:
-                    # disconnected -> components are critical -> update crit_checkpoint
-                    crit_checkpoint = crit_idx
+            connected = check_connections(
+                adj_offsets, adj_nodes, adj_edges,
+                edge_state, node_state,
+                source_idx, target_idx, min_connected)
 
-            # reset event_count
+            if analyze_crit:
+                if connected == initial_connected:
+                    crit_idx = crit_checkpoint  # no transition -> discard interval
+                else:
+                    crit_checkpoint = crit_idx  # transition -> keep interval
+
             event_count = -1
 
     return t_cycle, critical_components[:crit_checkpoint], edge_state, node_state
+
 
 @njit
 def simulate_numba_core(depth,															# number of samples
@@ -364,79 +358,43 @@ def simulate_numba_core(depth,															# number of samples
         **results**                             - np.ndarray of (t_fail, t_repair) for each cycle
     """
 
-    # TODO: implement max_time
-
-    # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)
     node_state = np.ones(n_nodes, dtype=np.bool_)
 
-    # get total number of possible events
     n_events = n_edges + n_nodes
-
     if max_events == -1:
-        max_events = n_events * 200  # stop loop if the whole network has changed 200 times
-
-    # Results storage
-    results = np.empty((depth, 2), dtype=np.float64)
-    cycle_idx = 0
-
+        max_events = n_events * 200
     if laziness < 0:
-        print('Choose Values in [0,1) for Laziness')
-        laziness = 0
+        print('Choose values in [0,1) for laziness')
+        laziness = 0.0
 
-    # threshold after which connectivity is checked again
     event_threshold = int(laziness * n_events)
     max_crit_per_cycle = event_threshold + 1
 
+    results = np.empty((depth, 2), dtype=np.float64)
+
     if analyze_crit:
-        # preallocate array for the identification of critical components. (-1 = invalid)
-        # array to store ids of components which failed right before network failure.
-        critical_components = np.full((depth * max_crit_per_cycle*2), -1, dtype=np.int32)
+        critical_components = np.full(depth * max_crit_per_cycle * 2, -1, dtype=np.int32)
     else:
         critical_components = np.empty(0, dtype=np.int32)
-
     crit_write_idx = 0
 
-    # Main cycle loop
-    while cycle_idx < depth:
+    for cycle_idx in range(depth):
+        for phase in range(2):  # 0 = fail, 1 = repair
+            t, crit_comps, edge_state, node_state = _run_cycle(
+                n_edges, n_nodes, edge_state, node_state,
+                adj_offsets, adj_nodes, adj_edges,
+                lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,
+                source_idx, target_idx, min_connected,
+                max_events, max_time,
+                analyze_crit, event_threshold)
 
-        # run failure cycle
-        t_fail, crit_comps_fail, edge_state, node_state = _run_cycle(n_edges, n_nodes, edge_state, node_state,
-                                                                adj_offsets, adj_nodes, adj_edges,
-                                                                lam_edges_arr, lam_nodes_arr,
-                                                                mu_edges_arr, mu_nodes_arr, bit,
-                                                                source_idx, target_idx, min_connected,
-                                                                max_events, max_time,
-		                                                        analyze_crit, event_threshold)
+            results[cycle_idx, phase] = t
 
-        # Store results
-        results[cycle_idx, 0] = t_fail
-
-        if analyze_crit:
-            n_crit_fail = crit_comps_fail.shape[0]
-            for i in range(n_crit_fail):
-                    critical_components[crit_write_idx] = crit_comps_fail[i]
+            if analyze_crit:
+                for i in range(crit_comps.shape[0]):
+                    critical_components[crit_write_idx] = crit_comps[i]
                     crit_write_idx += 1
-
-        # run repair cycle
-        t_repair, crit_comps_repair, edge_state, node_state = _run_cycle(n_edges, n_nodes, edge_state, node_state,
-                                                                  adj_offsets, adj_nodes, adj_edges,
-                                                                  lam_edges_arr, lam_nodes_arr,
-                                                                  mu_edges_arr, mu_nodes_arr, bit,
-                                                                  source_idx, target_idx, min_connected,
-                                                                  max_events, max_time,
-		                                                          analyze_crit, event_threshold)
-
-        # Store results
-        results[cycle_idx, 1] = t_repair
-
-        if analyze_crit:
-            n_crit_repair = crit_comps_repair.shape[0]
-            for i in range(n_crit_repair):
-                critical_components[crit_write_idx] = crit_comps_repair[i]
-                crit_write_idx += 1
-
-        cycle_idx += 1
 
     return results, critical_components[:crit_write_idx]
 
@@ -470,105 +428,25 @@ def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precom
     edge_state = np.ones(n_edges, dtype=np.bool_)
     node_state = np.ones(n_nodes, dtype=np.bool_)
 
-    # Build event list
     n_events = n_edges + n_nodes
-
-    # max_events default
     if max_events == -1:
-        max_events = n_events * 200  # stop loop if the whole network has changed 200 times
+        max_events = n_events * 200
+    if laziness < 0:
+        print('Choose values in [0,1) for laziness')
+        laziness = 0.0
 
-    # keep track of event id to compare against max_events
-    event_idx = 0
-
-    # keep track of event number since last connectivity check
-    event_count = -1
-
-    # threshold after which connectivity is checked again
     event_threshold = int(laziness * n_events)
 
-    if analyze_crit:
-        # preallocate array for the identification of critical components. (-1 = invalid)
-        critical_components = np.full(2*(event_threshold + 1), -1, dtype=np.int32)        # TODO: is 2* a bug ?
-    else:
-        critical_components = np.empty(0, dtype=np.int32)
+    # Non-repairable = zero repair rates -> failed components stay failed
+    mu_edges_arr = np.zeros(n_edges, dtype=np.float64)
+    mu_nodes_arr = np.zeros(n_nodes, dtype=np.float64)
 
-    crit_idx = 0
-    crit_checkpoint = 0  # position on last successful check
+    t, critical_components, _, _ = _run_cycle(
+        n_edges, n_nodes, edge_state, node_state,
+        adj_offsets, adj_nodes, adj_edges,
+        lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,
+        source_idx, target_idx, min_connected,
+        max_events, max_time,
+        analyze_crit, event_threshold)
 
-    total_rate = _bit_prefix_sum(bit, n_events - 1)
-
-    t = 0.0
-
-    # Check connectivity
-    connected = check_connections(adj_offsets, adj_nodes, adj_edges,
-                                  edge_state, node_state,
-                                  source_idx, target_idx, min_connected)
-
-    # Run until disconnected
-    while True:
-        if not connected:
-            # System failed!
-            return t, critical_components[:crit_idx]
-
-        if total_rate <= 0.0:
-            # No more failures possible => infinite lifetime
-            return np.inf, critical_components[:crit_idx]
-
-        if event_idx >= max_events:
-            # system did not fail in max_events, return MTTF=np.inf and None for critical components
-            t = np.inf
-            return t, critical_components[:crit_idx]  # failure
-
-        # Sample time to next failure
-        dt = np.random.exponential(1.0 / total_rate)
-        t += dt
-
-        if t > max_time:
-            # reached max_time
-            return np.inf, critical_components[:crit_idx]
-
-        # Sample which component fails from fenwick tree
-        r = np.random.random() * total_rate
-        idx = _bit_find_index(bit, r)
-
-        # Apply failure
-        if idx < n_edges:
-            # Edge fails
-            edge_state[idx] = 0
-            # Remove from Fenwick Tree (set rate to 0)
-            old_rate = lam_edges_arr[idx]
-            _bit_update(bit, idx, -old_rate)
-            total_rate -= old_rate
-        else:
-            # Node fails
-            ni = idx - n_edges
-            node_state[ni] = 0
-            # Remove from Fenwick Tree
-            old_rate = lam_nodes_arr[ni]
-            _bit_update(bit, idx, -old_rate)
-            total_rate -= old_rate
-
-        # increment event counters
-        event_count += 1
-        event_idx += 1
-
-        # store last event
-        if analyze_crit:
-            critical_components[crit_idx] = idx
-            crit_idx += 1
-
-        # Lazy connectivity check
-        if event_count >= event_threshold:
-            connected = check_connections(adj_offsets, adj_nodes, adj_edges,
-                                          edge_state, node_state,
-                                          source_idx, target_idx, min_connected)
-            if analyze_crit:
-                if connected:
-                    # still connected -> not critical -> overwrite values by resetting writer
-                    crit_idx = crit_checkpoint
-                else:
-                    # disconnected -> components are critical -> update crit_checkpoint
-                    crit_checkpoint = crit_idx
-
-            # reset event_count
-            event_count = -1
+    return t, critical_components
