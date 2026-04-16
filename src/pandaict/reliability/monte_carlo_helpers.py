@@ -5,6 +5,8 @@ Created on 04.02.2026
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+from pathlib import Path
 
 def _check_initial_connectivity(G, sources, targets, min_connected):
     """
@@ -358,3 +360,77 @@ def _calc_criticalities(n_events, total_observed, expected_fractions, full_count
                 criticality[i] = (full_counts[i] / total_observed)
 
     return criticality
+
+
+def _save_criticality_excel(total_observed, criticality, top_n,
+                            top_edge_idx, edge_list, edge_crit, n_edges,
+                            top_node_idx, node_list, node_crit, full_counts,
+                            excel_path=None):
+    """
+    Writes the critical-component analysis to an Excel file.
+
+    Sheets
+    ------
+    - **Summary**        : total events, score norm, interpretation key
+    - **Critical Edges** : ranked table  (Rank, Edge, Score, Count)
+    - **Critical Nodes** : ranked table  (Rank, Node, Score, Count)
+
+    The content mirrors the console output of ``_print_criticality``.
+    """
+
+    # resolve output path
+    if excel_path is None:
+        filepath = Path.cwd() / "critical_components_analysis.xlsx"
+    else:
+        filepath = Path(excel_path)
+        # if the user only gave a directory, append a default file name
+        if filepath.is_dir():
+            filepath = filepath / "critical_components_analysis.xlsx"
+
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    # how many rows to export
+    n_show_edges = top_n if top_n > 0 else len(top_edge_idx)
+    n_show_nodes = top_n if top_n > 0 else len(top_node_idx)
+
+    # Sheet 1: Summary
+    summary_rows = [
+        ("Total events tracked", int(total_observed)),
+        ("Score norm (sum)",     float(np.sum(criticality))),
+        ("",                     ""),
+        ("Score interpretation", ""),
+        ("> 1.0",               "MORE critical than expected"),
+        ("≈ 1.0",               "As expected"),
+        ("< 1.0",               "LESS critical than expected"),
+    ]
+    summary_df = pd.DataFrame(summary_rows, columns=["Parameter", "Value"])
+
+    # Sheet 2: Critical Edges
+    edge_rows = []
+    for rank, i in enumerate(top_edge_idx[:n_show_edges], 1):
+        edge_rows.append({
+            "Rank":  rank,
+            "Edge":  str(edge_list[i]),
+            "Score": round(float(edge_crit[i]), 4),
+            "Count": int(full_counts[i]),
+        })
+    edge_df = pd.DataFrame(edge_rows)
+
+    # Sheet 3: Critical Nodes
+    node_rows = []
+    for rank, i in enumerate(top_node_idx[:n_show_nodes], 1):
+        node_rows.append({
+            "Rank":  rank,
+            "Node":  str(node_list[i]),
+            "Score": round(float(node_crit[i]), 4),
+            "Count": int(full_counts[n_edges + i]),
+        })
+    node_df = pd.DataFrame(node_rows)
+
+    # write to excel
+    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+        summary_df.to_excel(writer, sheet_name="Summary",         index=False)
+        edge_df.to_excel(   writer, sheet_name="Critical Edges",  index=False)
+        node_df.to_excel(   writer, sheet_name="Critical Nodes",  index=False)
+
+    print(f"  → Excel saved: {filepath}")

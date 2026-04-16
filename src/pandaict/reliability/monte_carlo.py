@@ -5,25 +5,22 @@ Created on 22.12.2025
 
 # main API
 import numpy as np
-import matplotlib.pyplot as plt
-from pandaict.reliability.reliability_utils import get_lam_mu_from_graph
+from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
 
 # import python fallback
 from pandaict.reliability.monte_carlo_python_fallback import (
         _run_python,
-        _simulate_python_repairable,
-        _simulate_python_norepair
     )
 
 from pandaict.reliability.monte_carlo_helpers import (
         _check_initial_connectivity,
         _normalize_connection_pairs,
-        _to_index_arrays,
         _graph_to_numba_arrays,
         _filter_results,
         _critical_bar_plot,
         _print_criticality,
-        _calc_criticalities
+        _calc_criticalities,
+        _save_criticality_excel
     )
 
 # try importing wrappers for numba version
@@ -43,20 +40,24 @@ except ImportError:
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Critical Component Analysis (Prototype)
+# Critical Component Analysis
 # ----------------------------------------------------------------------------------------------------------------------
 def analyze_critical_components(all_critical, G, sources, targets,
                                 lam_edges, lam_nodes,
                                 mu_edges, mu_nodes,
-                                top_n=-1, plot=True, verbose=True, rate_adjustment=True):
-    #TODO: validate function
+                                top_n=-1, plot=False, verbose=True,
+                                rate_adjustment=True,
+                                save_excel=False, excel_path=None
+                                ):
+
     #TODO: output a plot which shows the topology and colors the critical components in red
+    # TODO: fix normalization. failure and repair counts have to be normalized differently. Maybe remove repair counts for simplicity
     """
 
     Analyze which components are disproportionately critical by calculating the expected
     :INPUT:
 
-        **all_critical**    - array of all critical components returned by monte_carlo (WIP)
+        **all_critical**    - array of all critical components returned by monte_carlo
 
         **n_edges**         - int, number of edges on graph
 
@@ -78,12 +79,15 @@ def analyze_critical_components(all_critical, G, sources, targets,
 
         **plot**            - bool, whether to plot the graph
 
-        **verbose**         - bool,
+        **verbose**         - bool, prints component criticalities to console
 
         **rate_adjustment** - bool, choose whether to adjust the counts by their rates.
                               This determines whether the network is analyzed for bare topological
                               criticalities (True) or a wholistic analysis of critical components
                               is performed, which explicitly depends on the rates of the components (False).
+
+        **save_excel**      - bool, save calculated component criticalities in an excel file for further analysis.
+        **excel_path**      - string, saving path for the excel spreadsheet. (default=current directory)
 
     :OUTPUT:
         dict with edge_criticality, node_criticality, counts, plots, etc.
@@ -129,18 +133,27 @@ def analyze_critical_components(all_critical, G, sources, targets,
     # build array of counts (zero for components that never occurred)
     full_counts = np.zeros(n_events, dtype=np.float64)
     for idx, count in zip(unique_idx, counts):
-        #if idx < n_events:                              # I believe this statement is unnecessary
         full_counts[idx] = count
 
-    # Normalize by expected rates (lam + mu)
-    expected_rates = np.concatenate([
-        lam_edges_arr + mu_edges_arr,
-        lam_nodes_arr + mu_nodes_arr
-    ])
+    lam_all = np.concatenate([lam_edges_arr, lam_nodes_arr])
+    mu_all  = np.concatenate([mu_edges_arr,  mu_nodes_arr])
+
+    sum_lam_mu = lam_all + mu_all
+
+    expected_rates = np.where(
+        sum_lam_mu > 0,
+        lam_all * mu_all / sum_lam_mu,
+        0.0
+    )
+
+    if np.sum(expected_rates) < 1e-30:
+        expected_rates = lam_all.copy()
 
     total_rate = np.sum(expected_rates)
 
-    expected_fractions = expected_rates / total_rate if total_rate > 0 else np.ones(n_events) / n_events
+    expected_fractions = (expected_rates / total_rate
+                          if total_rate > 0
+                          else np.ones(n_events) / n_events)
 
     # Criticality score
     total_observed = np.sum(full_counts)
@@ -166,6 +179,14 @@ def analyze_critical_components(all_critical, G, sources, targets,
         _critical_bar_plot(top_edge_idx, top_node_idx,
                        edge_crit, edge_list,
                        node_crit, node_list)
+
+    if save_excel:
+        _save_criticality_excel(
+            total_observed, criticality, top_n,
+            top_edge_idx, edge_list, edge_crit, n_edges,
+            top_node_idx, node_list, node_crit, full_counts,
+            excel_path,
+        )
 
     return {
         'edge_criticality': edge_crit,
@@ -280,7 +301,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
 
     # Extract rates from graph
-    lam_edges, lam_nodes, mu_edges, mu_nodes = get_lam_mu_from_graph(G)
+    lam_edges, lam_nodes, mu_edges, mu_nodes = _get_lam_mu_from_graph(G)
 
     # Check for non-repairable case
     is_nonrepairable = (all(mu == 0 for mu in mu_edges.values()) and all(mu == 0 for mu in mu_nodes.values()))
@@ -290,6 +311,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     # Check for no-failure case
     is_nofailure = (all(lam == 0 for lam in lam_edges.values()) and all(lam == 0 for lam in lam_nodes.values()))
 
+    all_critical = None
     edge_criticality = None
     node_criticality = None
 
@@ -307,12 +329,11 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                                                return_samples, analyze_crit, laziness,
                                                parallel)
 
-        if analyze_crit and all_critical.size > 0:
-            crit_dict = analyze_critical_components(all_critical, G, sources, targets,
-                                                    lam_edges, lam_nodes, mu_edges, mu_nodes)
+        #if analyze_crit and all_critical.size > 0:
+            #crit_dict = analyze_critical_components(all_critical, G, sources, targets, lam_edges, lam_nodes, mu_edges, mu_nodes)
 
-            edge_criticality = crit_dict['edge_criticality']
-            node_criticality = crit_dict['node_criticality']
+            #edge_criticality = crit_dict['edge_criticality']
+            #node_criticality = crit_dict['node_criticality']
 
     else:
         # Python fallback
@@ -341,4 +362,5 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
             'mttf_samples': mttf_samples,
             'mttr_samples': mttr_samples,
             'edge_criticality': edge_criticality,
-            'node_criticality': node_criticality}
+            'node_criticality': node_criticality,
+            'all_critical': all_critical,}
