@@ -6,9 +6,20 @@
 
 format: jb-book
 root: pandaICT_datamodel
-chapters:
-- file: pp_pict_connector_example
-- file: pandaICT_scenario_useCases
-- file: pandaICT_routing
-- file: pandaICT_reliability_metrics
-
+parts:
+- caption: Documentation
+  chapters:
+  - file: pp_pict_connector_example
+  - file: pandaICT_scenario_useCases
+  - file: pandaICT_routing
+  - file: pandaICT_reliability_metrics
+  - file: reliability-Monte-Carlo
+- caption: How-To Guides
+  chapters:
+  - file: howto/index
+    sections:
+    - file: howto/howto_MTBF_estimation
+    - file: howto/howto_MTBF_MTTR_estimation
+    - file: howto/howto_critical_components
+    - file: howto/howto_reliability_function
+    - file: howto/howto_multi_source_target
