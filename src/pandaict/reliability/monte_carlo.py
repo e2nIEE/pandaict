@@ -49,8 +49,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
                                 rate_adjustment=True,
                                 save_excel=False, excel_path=None
                                 ):
-
-    #TODO: output a plot which shows the topology and colors the critical components in red
+    # TODO: fix the arbitrary naming of the components by index. Map the indices onto the assigned names.
     # TODO: fix normalization. failure and repair counts have to be normalized differently. Maybe remove repair counts for simplicity
     """
 
@@ -96,30 +95,29 @@ def analyze_critical_components(all_critical, G, sources, targets,
     if top_n == 0:
         top_n = -1
 
-    # get converted graph datastructure (csr)
+    # get graph in csr-array format
     conv = _graph_to_numba_arrays(G, sources, targets)
 
     edge_list = conv['edge_list']
     node_list = conv['node_list']
     n_edges = len(edge_list)
     n_nodes = len(node_list)
-
-    lam_edges_arr = np.array([lam_edges[e] for e in conv['edge_list']], dtype=np.float64)
-    lam_nodes_arr = np.array([lam_nodes[n] for n in conv['node_list']], dtype=np.float64)
-
-    if mu_edges is None:
-        mu_edges_arr = np.zeros(n_edges, dtype=np.float16)
-    else:
-        mu_edges_arr = np.array([mu_edges[e] for e in conv['edge_list']], dtype=np.float64)
-
-    if mu_nodes is None:
-        mu_nodes_arr = np.zeros(n_nodes, dtype=np.float16)
-    else:
-        mu_nodes_arr = np.array([mu_nodes[n] for n in conv['node_list']], dtype=np.float64)
-
     n_events = n_edges + n_nodes
 
-    # Flatten and filter invalid values (-1)
+    lam_edges_arr = np.array([lam_edges[e] for e in edge_list], dtype=np.float64)
+    lam_nodes_arr = np.array([lam_nodes[n] for n in node_list], dtype=np.float64)
+
+    if mu_edges is None:
+        mu_edges_arr = np.zeros(n_edges, dtype=np.float64)
+    else:
+        mu_edges_arr = np.array([mu_edges[e] for e in edge_list], dtype=np.float64)
+
+    if mu_nodes is None:
+        mu_nodes_arr = np.zeros(n_nodes, dtype=np.float64)
+    else:
+        mu_nodes_arr = np.array([mu_nodes[n] for n in node_list], dtype=np.float64)
+
+    # filter events
     flat = all_critical.flatten()
     valid = flat[flat >= 0]
 
@@ -127,72 +125,100 @@ def analyze_critical_components(all_critical, G, sources, targets,
         print("No critical components tracked!")
         return None
 
-    # Count occurrences
-    unique_idx, counts = np.unique(valid, return_counts=True)
+    # Failure-Events: Indices  0 .. n_events-1
+    # Repair-Events:  Indices  n_events .. 2*n_events-1
+    failure_mask = valid < n_events
+    repair_mask = valid >= n_events
 
-    # build array of counts (zero for components that never occurred)
-    full_counts = np.zeros(n_events, dtype=np.float64)
-    for idx, count in zip(unique_idx, counts):
-        full_counts[idx] = count
+    failure_indices = valid[failure_mask]
+    repair_indices = valid[repair_mask] - n_events  # reset index
 
+    # get counts by phase
+    failure_counts = np.zeros(n_events, dtype=np.float64)
+    repair_counts = np.zeros(n_events, dtype=np.float64)
+
+    # failure and repair counts
+    if len(failure_indices) > 0:
+        f_idx, f_cnt = np.unique(failure_indices, return_counts=True)
+        for idx, cnt in zip(f_idx, f_cnt):
+            failure_counts[idx] = cnt
+
+    if len(repair_indices) > 0:
+        r_idx, r_cnt = np.unique(repair_indices, return_counts=True)
+        for idx, cnt in zip(r_idx, r_cnt):
+            repair_counts[idx] = cnt
+
+    total_failure = np.sum(failure_counts)
+    total_repair = np.sum(repair_counts)
+    total_observed = total_failure + total_repair
+
+    #
     lam_all = np.concatenate([lam_edges_arr, lam_nodes_arr])
-    mu_all  = np.concatenate([mu_edges_arr,  mu_nodes_arr])
+    mu_all = np.concatenate([mu_edges_arr, mu_nodes_arr])
 
-    sum_lam_mu = lam_all + mu_all
+    # Failure-Baseline: P(Last Straw = i | failure event) ~ λ_i
+    lam_total = np.sum(lam_all)
+    failure_fractions = (lam_all / lam_total
+                         if lam_total > 0
+                         else np.ones(n_events) / n_events)
 
-    expected_rates = np.where(
-        sum_lam_mu > 0,
-        lam_all * mu_all / sum_lam_mu,
-        0.0
-    )
+    # Repair-Baseline: P(Last Straw = i | repair event) ~ μ_i
+    mu_total = np.sum(mu_all)
+    repair_fractions = (mu_all / mu_total
+                        if mu_total > 0
+                        else np.ones(n_events) / n_events)
 
-    if np.sum(expected_rates) < 1e-30:
-        expected_rates = lam_all.copy()
+    # calculate criticality scores
+    failure_crit = _calc_criticalities(
+        n_events, total_failure, failure_fractions,
+        failure_counts, rate_adjustment)
 
-    total_rate = np.sum(expected_rates)
+    repair_crit = _calc_criticalities(
+        n_events, total_repair, repair_fractions,
+        repair_counts, rate_adjustment)
 
-    expected_fractions = (expected_rates / total_rate
-                          if total_rate > 0
-                          else np.ones(n_events) / n_events)
+    # split in edges and nodes
+    edge_fail_crit = failure_crit[:n_edges]
+    node_fail_crit = failure_crit[n_edges:]
+    edge_rep_crit = repair_crit[:n_edges]
+    node_rep_crit = repair_crit[n_edges:]
 
-    # Criticality score
-    total_observed = np.sum(full_counts)
+    # sort values
+    top_edge_fail_idx = np.argsort(edge_fail_crit)[::-1]
+    top_node_fail_idx = np.argsort(node_fail_crit)[::-1]
+    top_edge_rep_idx = np.argsort(edge_rep_crit)[::-1]
+    top_node_rep_idx = np.argsort(node_rep_crit)[::-1]
 
-    # get criticalities
-    criticality = _calc_criticalities(n_events, total_observed, expected_fractions, full_counts, rate_adjustment)
-
-    # slice array in critical edges and critical nodes
-    edge_crit = criticality[:n_edges]
-    node_crit = criticality[n_edges:]
-
-    # sort arrays
-    top_edge_idx = np.argsort(edge_crit)[::-1][:]   #[:top_n]
-    top_node_idx = np.argsort(node_crit)[::-1][:]   #[:top_n]
-
-    # Print results
     if verbose:
-        _print_criticality(total_observed, criticality, top_n,
-                           top_edge_idx, edge_list, edge_crit, n_edges,
-                           top_node_idx, node_list, node_crit, full_counts)
-
+        _print_criticality(total_observed, total_failure, total_repair, top_n,
+                           top_edge_fail_idx, top_edge_rep_idx, edge_list,
+                           edge_fail_crit, edge_rep_crit, n_edges,
+                           top_node_fail_idx, top_node_rep_idx, node_list,
+                           node_fail_crit, node_rep_crit, n_nodes,
+                           failure_counts, repair_counts)
     if plot:
-        _critical_bar_plot(top_edge_idx, top_node_idx,
-                       edge_crit, edge_list,
-                       node_crit, node_list)
+        _critical_bar_plot(top_edge_fail_idx, top_node_fail_idx,
+                           edge_fail_crit, edge_list,
+                           node_fail_crit, node_list,
+                           rate_adjustment)
 
     if save_excel:
         _save_criticality_excel(
-            total_observed, criticality, top_n,
-            top_edge_idx, edge_list, edge_crit, n_edges,
-            top_node_idx, node_list, node_crit, full_counts,
-            excel_path,
-        )
+            total_observed, failure_crit, top_n,
+            top_edge_fail_idx, edge_list, edge_fail_crit, n_edges,
+            top_node_fail_idx, node_list, node_fail_crit, failure_counts,
+            excel_path)
 
     return {
-        'edge_criticality': edge_crit,
-        'node_criticality': node_crit,
-        'full_counts': full_counts,
-        'total_observed': total_observed
+        'edge_criticality': edge_fail_crit,
+        'node_criticality': node_fail_crit,
+        'edge_repair_criticality': edge_rep_crit,
+        'node_repair_criticality': node_rep_crit,
+        'failure_counts': failure_counts,
+        'repair_counts': repair_counts,
+        'total_observed': total_observed,
+        'total_failure': total_failure,
+        'total_repair': total_repair,
     }
 
 def empirical_reliability(T, samples):
@@ -221,6 +247,7 @@ def empirical_reliability(T, samples):
 
     return reliability
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
@@ -233,7 +260,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
 
     TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
-    TODO: Check if N and depth can be collapsed to one argument
+    TODO: Check if N and depth can be collapsed to one argument => No!
 
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.

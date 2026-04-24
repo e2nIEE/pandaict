@@ -417,10 +417,15 @@ def simulate_numba_core(depth,															# number of samples
 
             results[cycle_idx, phase] = t
 
+            # Phase-Encoding on critical components
             if analyze_crit:
                 for i in range(crit_comps.shape[0]):
-                    critical_components[crit_write_idx] = crit_comps[i]
+                    val = crit_comps[i]
+                    if phase == 1 and val >= 0:
+                        val += n_events  # Repair-Offset
+                    critical_components[crit_write_idx] = val
                     crit_write_idx += 1
+            #
 
     return results, critical_components[:crit_write_idx]
 

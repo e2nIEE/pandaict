@@ -262,20 +262,24 @@ def _filter_results(all_results, is_repairable):
 
 def _critical_bar_plot(top_edge_idx, top_node_idx,
                        edge_crit, edge_list,
-                       node_crit, node_list):
+                       node_crit, node_list,
+                       rate_adjustment):
 
     n_rows = max(len(top_edge_idx), len(top_node_idx)) + 1
-    _, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 7))))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 7))))
 
     # === EDGES ===
     if len(top_edge_idx) > 0 and np.any(edge_crit[top_edge_idx] > 0):
         edges_str = [f"{u}-{v}" for u, v in [edge_list[i] for i in top_edge_idx]]
-        colors = ['red' if edge_crit[i] > 1.0 else 'gray' for i in top_edge_idx]
+        colors = ['red' if edge_crit[i] > 1.01 else 'gray' for i in top_edge_idx]
         ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
 
         max_edge_val = np.nanmax(edge_crit[top_edge_idx])
         ax1.set_xlim(0, max(max_edge_val * 1.2, 1.5))
-
+        if rate_adjustment:
+            ax1.set_xlabel('Topological Criticality Score')
+        else:
+            ax1.set_xlabel('Wholistic Criticality Score')
         ax1.axvline(1.0, color='black', linestyle='--', lw=2)
         ax1.set_yticks(range(len(top_edge_idx)))
         ax1.set_yticklabels(edges_str)
@@ -284,20 +288,24 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
                  transform=ax1.transAxes, fontsize=12, color='gray')
         ax1.set_xlim(0, 2)  # avoids singular matrix error
 
-    ax1.set_xlabel('Criticality Score')
     ax1.set_title('Critical Edges')
     ax1.invert_yaxis()
 
     # === NODES ===
     if len(top_node_idx) > 0 and np.any(node_crit[top_node_idx] > 0):
         nodes_str = [str(node_list[i]) for i in top_node_idx]
-        colors = ['red' if node_crit[i] > 1.0 else 'gray' for i in top_node_idx]
+        colors = ['red' if node_crit[i] > 1.01 else 'gray' for i in top_node_idx]
         ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
 
         max_node_val = np.nanmax(node_crit[top_node_idx])
         ax2.set_xlim(0, max(max_node_val * 1.2, 1.5))
+        if rate_adjustment:
+            ax2.set_xlabel('Topological Criticality Score')
+        else:
+            ax2.set_xlabel('Wholistic Criticality Score')
 
         ax2.axvline(1.0, color='black', linestyle='--', lw=2)
+
         ax2.set_yticks(range(len(top_node_idx)))
         ax2.set_yticklabels(nodes_str)
     else:
@@ -305,46 +313,76 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
                  transform=ax2.transAxes, fontsize=12, color='gray')
         ax2.set_xlim(0, 2)
 
-    ax2.set_xlabel('Criticality Score')
+
     ax2.set_title('Critical Nodes')
     ax2.invert_yaxis()
+
+    if rate_adjustment:
+        fig.suptitle('Topological Criticality Analysis')
+    else:
+        fig.suptitle('Wholistic Criticality Analysis')
 
     plt.tight_layout()
     plt.show()
 
 
-def _print_criticality(total_observed, criticality, top_n,
-                       top_edge_idx, edge_list, edge_crit, n_edges,
-                       top_node_idx, node_list, node_crit, full_counts):
-
+def _print_criticality(total_observed, total_failure, total_repair, top_n,
+                       top_edge_fail_idx, top_edge_rep_idx, edge_list,
+                       edge_fail_crit, edge_rep_crit, n_edges,
+                       top_node_fail_idx, top_node_rep_idx, node_list,
+                       node_fail_crit, node_rep_crit, n_nodes,
+                       failure_counts, repair_counts):
     print("\n" + "=" * 70)
     print("CRITICAL COMPONENT ANALYSIS")
     print("=" * 70)
-    print(f"Total events tracked: {int(total_observed)}")
+    print(f"Total events tracked:  {int(total_observed)}")
+    print(f"  - Failure events:   {int(total_failure)}")
+    print(f"  - Repair events:    {int(total_repair)}")
+
     print("\nScore = Observed / Expected")
-    print("  > 1.0: MORE critical")
-    print("  ~ 1.0: As expected")
-    print("  < 1.0: LESS critical")
+    print("  > 1.0: MORE critical than expected (topologically)")
+    print("  ~ 1.0: As expected from rates alone")
+    print("  < 1.0: LESS critical than expected")
 
-    print("Norm:", sum(criticality))
+    n_show = top_n if top_n > 0 else n_edges
 
+    # Failure-Critical Edges
     print(f"\n{'─' * 70}")
-    if top_n > 0:
-        print(f"TOP {top_n} CRITICAL EDGES")
-    else:
-        print("CRITICAL EDGES")
+    print("FAILURE-CRITICAL EDGES  (last straw before System Down)")
     print(f"{'─' * 70}")
-    for rank, i in enumerate(top_edge_idx, 1):
-        print(f"  {rank:2d}. {edge_list[i]}: Score={edge_crit[i]:.3f}, Count={int(full_counts[i])}")
+    for rank, i in enumerate(top_edge_fail_idx[:n_show], 1):
+        print(f"  {rank:2d}. {edge_list[i]}: "
+              f"Score={edge_fail_crit[i]:.3f}, "
+              f"Count={int(failure_counts[i])}")
 
+    # Failure-Critical Nodes
+    n_show_n = top_n if top_n > 0 else n_nodes
     print(f"\n{'─' * 70}")
-    if top_n > 0:
-        print(f"TOP {top_n} CRITICAL NODES")
-    else:
-        print("CRITICAL NODES")
+    print("FAILURE-CRITICAL NODES  (last straw before System Down)")
     print(f"{'─' * 70}")
-    for rank, i in enumerate(top_node_idx, 1):
-        print(f"  {rank:2d}. {node_list[i]}: Score={node_crit[i]:.3f}, Count={int(full_counts[n_edges + i])}")
+    for rank, i in enumerate(top_node_fail_idx[:n_show_n], 1):
+        print(f"  {rank:2d}. {node_list[i]}: "
+              f"Score={node_fail_crit[i]:.3f}, "
+              f"Count={int(failure_counts[n_edges + i])}")
+
+    if total_repair > 0:
+        # Repair-Critical Edges
+        print(f"\n{'─' * 70}")
+        print("REPAIR-CRITICAL EDGES  (last straw before System Up)")
+        print(f"{'─' * 70}")
+        for rank, i in enumerate(top_edge_rep_idx[:n_show], 1):
+            print(f"  {rank:2d}. {edge_list[i]}: "
+                  f"Score={edge_rep_crit[i]:.3f}, "
+                  f"Count={int(repair_counts[i])}")
+
+        # Repair-Critical Nodes
+        print(f"\n{'─' * 70}")
+        print("REPAIR-CRITICAL NODES  (last straw before System Up)")
+        print(f"{'─' * 70}")
+        for rank, i in enumerate(top_node_rep_idx[:n_show_n], 1):
+            print(f"  {rank:2d}. {node_list[i]}: "
+                  f"Score={node_rep_crit[i]:.3f}, "
+                  f"Count={int(repair_counts[n_edges + i])}")
 
 
 def _calc_criticalities(n_events, total_observed, expected_fractions, full_counts, rate_adjustment):
@@ -358,6 +396,12 @@ def _calc_criticalities(n_events, total_observed, expected_fractions, full_count
                 criticality[i] = (full_counts[i] / total_observed) / expected_fractions[i]
             elif not rate_adjustment:  # skip expected_fraction <= 0
                 criticality[i] = (full_counts[i] / total_observed)
+
+    # normalize
+    if not rate_adjustment:
+        crit_mask = criticality > 0
+        n_rel_comp = np.sum(crit_mask)
+        criticality *= n_rel_comp
 
     return criticality
 
@@ -433,4 +477,4 @@ def _save_criticality_excel(total_observed, criticality, top_n,
         edge_df.to_excel(   writer, sheet_name="Critical Edges",  index=False)
         node_df.to_excel(   writer, sheet_name="Critical Nodes",  index=False)
 
-    print(f"  → Excel saved: {filepath}")
+    print(f"  -> Excel saved: {filepath}")
