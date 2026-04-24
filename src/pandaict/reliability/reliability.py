@@ -13,6 +13,8 @@ from pandaict.reliability.monte_carlo import (
     analyze_critical_components as _analyze_critical_components,
     empirical_reliability
 )
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
 
 
@@ -81,23 +83,226 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
     return mdg, sources, targets
 
 
+def plot_graph(ict_net, protocol='TCP',
+               highlight_nodes=None, highlight_edges=None,
+               edge_criticality=None, node_criticality=None,
+               default_color='lightblue', highlight_color='red',
+               cmap=True, show_colorbar=True, seed=8):
+    """
+    Plot a pandaICT network as a graph with optional criticality-based color encoding.
+    Converts the given pandaICT network into a NetworkX MultiDiGraph and renders it
+    using a spring layout. When criticality scores are provided, components are
+    color-coded using a diverging colormap centered at 1 (expected criticality),
+    making it easy to visually identify over- and under-critical components.
+
+    :INPUT:
+        **ict_net** (pandaict.ICTNetwork) - pandaICT network object to be plotted.
+
+        **protocol** (str, default 'TCP') - Communication protocol used to build the
+        underlying MultiDiGraph.
+
+        **highlight_nodes** (list or None, default None) - List of node indices to
+        highlight. If None and node_criticality is provided, nodes with a score > 1
+        are highlighted automatically.
+
+        **highlight_edges** (list of tuple or None, default None) - List of edge tuples
+        to highlight. If None and edge_criticality is provided, edges with a score > 1
+        are highlighted automatically.
+
+        **edge_criticality** (array-like or None, default None) - Criticality scores
+        per edge as returned by :func:`analyze_critical_components_for_conn`. When
+        provided, edges are colored according to their score.
+
+        **node_criticality** (array-like or None, default None) - Criticality scores
+        per node as returned by :func:`analyze_critical_components_for_conn`. When
+        provided, nodes are colored according to their score.
+
+        **default_color** (str, default 'lightblue') - Node fill color when no
+        criticality scores are provided.
+
+        **highlight_color** (str, default 'red') - Color used for critical components
+        when cmap is False (binary mode).
+
+        **cmap** (bool, default True) - If True, use a diverging colormap
+        (light gray -> black -> red) centered at 1. If False, use binary coloring:
+        red if score > 1, black otherwise.
+
+        **show_colorbar** (bool, default True) - If True and cmap is True, display a
+        colorbar indicating the criticality scale. A dashed white line marks the
+        expected value of 1.
+
+        **seed** (int, default 8) - Random seed for the spring layout, ensuring
+        reproducible node positions.
+
+    :OUTPUT:
+        None. Displays the plot via matplotlib.
+
+    .. note::
+        The criticality scores can be obtained from
+        :func:`analyze_critical_components_for_conn`. A score of 1 means the
+        component fails exactly as often as expected. Scores above 1 indicate
+        disproportionately critical components (colored towards red), while
+        scores below 1 indicate less critical components (colored towards
+        light gray).
+
+    :EXAMPLE:
+        Basic network plot without criticality:
+
+        >>> plot_graph(net)
+
+        Plot with criticality color encoding from a previous analysis:
+
+        >>> result = analyze_critical_components_for_conn(
+        ...     net, [conn_a], plot=False)
+        >>> plot_graph(net,
+        ...            edge_criticality=result['edge_criticality'],
+        ...            node_criticality=result['node_criticality'])
+
+        Binary highlighting (no colormap):
+
+        >>> plot_graph(net,
+        ...            edge_criticality=result['edge_criticality'],
+        ...            node_criticality=result['node_criticality'],
+        ...            cmap=False)
+    """
+
+    # Build multidigraph once
+    G = create_multidigraph(ict_net, protocol, validate=True)
+
+    # Build label mapping: node index -> device/node name
+    labels = {}
+    for n, attr in G.nodes(data=True):
+        elt_type, elt_idx = attr['pielt']
+        labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
+
+    for u, v, key, data in G.edges(data=True, keys=True):
+        G[u][v][key]['weight'] = 1.0
+
+    # Custom diverging colormap: light gray -> black -> red
+    colors = ['lightgray', 'black', 'red']
+    colormap = mcolors.LinearSegmentedColormap.from_list('criticality', colors)
+
+    norm = None
+
+    # --- Handle edge criticality ---
+    if edge_criticality is not None:
+        edge_criticality = np.array(edge_criticality)
+
+        if cmap:
+            # Diverging colormap mode
+            max_deviation = max(abs(edge_criticality.max() - 1),
+                                abs(edge_criticality.min() - 1))
+            vmin = 1 - max_deviation
+            vmax = 1 + max_deviation
+
+            norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1, vmax=vmax)
+            edge_colors = [colormap(norm(c)) for c in edge_criticality]
+        else:
+            # Binary mode: red if > 1, black otherwise
+            edge_colors = [highlight_color if c > 1 else 'black' for c in edge_criticality]
+
+        # Determine highlight edges based on criticality > 1
+        critical_edges_mask = edge_criticality > 1
+        edges_array = np.array(list(G.edges()))
+        critical_edges = [tuple(e) for e in edges_array[critical_edges_mask]]
+        highlight_edges = critical_edges if highlight_edges is None else highlight_edges
+    else:
+        edge_colors = ['gray' for _ in G.edges()]
+
+    # --- Handle node criticality ---
+    if node_criticality is not None:
+        node_criticality = np.array(node_criticality)
+
+        if cmap:
+            # Diverging colormap mode
+            max_deviation = max(abs(node_criticality.max() - 1),
+                                abs(node_criticality.min() - 1))
+            vmin = 1 - max_deviation
+            vmax = 1 + max_deviation
+
+            node_norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1, vmax=vmax)
+            node_colors = [colormap(node_norm(c)) for c in node_criticality]
+
+            if norm is None:
+                norm = node_norm
+        else:
+            # Binary mode: red if > 1, black otherwise
+            node_colors = [highlight_color if c > 1 else 'black' for c in node_criticality]
+
+        # Determine highlight nodes based on criticality > 1
+        critical_nodes_mask = node_criticality > 1
+        nodes_array = np.array(list(G.nodes()))
+        critical_nodes = list(nodes_array[critical_nodes_mask])
+        highlight_nodes = critical_nodes if highlight_nodes is None else highlight_nodes
+    else:
+        node_colors = [default_color for _ in G.nodes()]
+
+    highlight_nodes = highlight_nodes or []
+    highlight_edges = highlight_edges or []
+
+    # --- Draw ---
+    fig, ax = plt.subplots(figsize=(5,5))
+    pos = nx.spring_layout(G, seed=seed)
+
+    nx.draw(G, pos, ax=ax,
+            node_color=node_colors,
+            edge_color=edge_colors,
+            with_labels=True,
+            labels=labels,
+            font_color='black',
+            node_size=500,
+            font_size=12,
+            width=2)
+
+    # Add colorbar (only in cmap mode)
+    if show_colorbar and cmap and norm is not None:
+        sm = plt.cm.ScalarMappable(cmap=colormap, norm=norm)
+        sm.set_array([])
+        cbar = plt.colorbar(sm, ax=ax, shrink=0.8)
+        cbar.set_label('Criticality Score', fontsize=12)
+        cbar.ax.axhline(y=1, color='white', linewidth=2, linestyle='--')
+
+    plt.tight_layout()
+    plt.show()
+
+
 def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
     """
-        Estimate MTBF (MTTR) for connections.
+    Estimate **MTBF**, **MTTF** and **MTTR** for one or more pandaICT connections.
+    Runs a Monte-Carlo simulation on the given network and connections
+    and returns the Mean Time Between Failures (MTBF = MTTF + MTTR)
+    together with the Mean Time To Failure and Mean Time To Repair.
 
-        :INPUT:
-            **ict_net**     - pandaict ICT-Network object
-            **connections** - list of pandaict connection object(s)
-            **kwargs**      - optional keywords (see pandaict.reliability.monte_carlo for more information)
+    :INPUT:
+        **ict_net** (pandaict.ICTNetwork) - pandaICT network object containing
+        topology and component reliability attributes (mtbf_h, mttr_h).
 
-        :OUTPUT:
-            {
-            'mttf': mttf,                   - float, mean time to failure
-            'mttr': mttr,                   - float, mean time to repair
-            'mttf_samples': mttf_samples,   - np.array, time to failure samples
-            'mttr_samples': mttr_samples,   - np.array, time to repair samples
-            }
+        **connections** (list of pandaict.Connection) - One or more connection objects
+        whose source/target pairs define the system-level connectivity requirement.
+
+    :OUTPUT:
+        **result** (dict) - Dictionary with the following keys:
+
+        **result['mtbf_h']** (float) - Mean Time Between Failures in hours (MTBF = MTTF + MTTR).
+
+        **result['mttf_h']** (float) - Mean Time To Failure in hours.
+
+        **result['mttr_h']** (float) - Mean Time To Repair in hours. Returns numpy.inf if the
+        system is non-repairable.
+
+    .. note::
+        This function shares optional keyword arguments with
+        :func:`analyze_critical_components_for_conn` and
+        :func:`empirical_reliability_function`.
+        See :ref:`mc_kwargs` for the full list.
+
+    :EXAMPLE:
+        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], N=50_000)
+        >>> print(f"MTBF = {result['mtbf_h']:.1f} h, MTTR = {result['mttr_h']:.1f} h")
+        MTBF = 9200.4 h, MTTR = 5.8 h
     """
+    # TODO: why is MTTF smaller for repairable systems
+
     # set default kwargs
     defaults = {
         'min_connected': -1,
@@ -132,7 +337,9 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
 
     mtbf = mttf + mttr
 
-    return {'mtbf_h': mtbf, 'mttf_h': mttf, 'mttr_h': mttr}
+    return {'mtbf_h': mtbf,
+            'mttf_h': mttf,
+            'mttr_h': res['mttr']}
 
 
 def analyze_critical_components_for_conn(ict_net, connections,
@@ -140,29 +347,99 @@ def analyze_critical_components_for_conn(ict_net, connections,
                                          rate_adjustment=True, save_excel=False,
                                          **kwargs):
     """
-    Analyze which network components are disproportionately critical for system reliability.
-
-    Runs a Monte Carlo simulation to collect critical-component data, then calls
-    analyze_critical_components with the caller's plot/verbose/rate settings.
+    Identify disproportionately critical components for pandaICT connections.
+    Runs a Monte-Carlo simulation with critical-component tracking enabled and
+    computes per-component criticality scores. A score greater than 1 means the
+    component causes system failures more often than its rates alone would predict.
+    Both failure and repair events are tracked separately.
 
     :INPUT:
-        **ict_net**           - pandaICT ICT-Network object
-        **connections**       - list of pandaICT connection object(s)
-        **top_n**             - int, number of top components to display (-1 = all)
-        **plot**              - bool, whether to plot criticality bar chart (default: True)
-        **verbose**           - bool, whether to print criticality table to console (default: True)
-        **rate_adjustment**   - bool, normalize by rates for topological criticality (default: True)
-        **kwargs**            - optional keywords forwarded to estimate_mttf_mttr
+        **ict_net** (pandaict.ICTNetwork) - pandaICT network object containing
+        topology and component reliability attributes.
+
+        **connections** (list of pandaict.Connection) - Connection object(s) defining
+        the system-level connectivity requirement.
+
+        **top_n** (int, default -1) - Number of highest-ranked components to display.
+        -1 shows all components.
+
+        **plot** (bool, default True) - If True, produce a horizontal bar chart of
+        criticality scores for edges and nodes.
+
+        **verbose** (bool, default True) - If True, print the ranked criticality
+        table to the console.
+
+        **rate_adjustment** (bool, default True) - If True, normalise observed counts
+        by expected event rates, yielding a topological criticality independent of
+        absolute failure/repair rates. If False, report raw counts.
+
+        **save_excel** (bool, default False) - If True, export the analysis results
+        to an Excel file in the current working directory.
 
     :OUTPUT:
-        dict with keys:
-            'edge_criticality' - np.ndarray, criticality scores per edge
-            'node_criticality' - np.ndarray, criticality scores per node
-            'full_counts'      - np.ndarray, raw event counts per component
-            'total_observed'   - int, total number of system-level transitions observed
-            'mttf'             - float, mean time to failure (by-product)
-            'mttr'             - float, mean time to repair (by-product)
+        **result** (dict) - Dictionary with the following keys:
+
+        **result['edge_criticality']** (np.ndarray or None) - Failure criticality score per edge.
+
+        **result['node_criticality']** (np.ndarray or None) - Failure criticality score per node.
+
+        **result['edge_repair_criticality']** (np.ndarray or None) - Repair criticality score per edge.
+
+        **result['node_repair_criticality']** (np.ndarray or None) - Repair criticality score per node.
+
+        **result['failure_counts']** (np.ndarray or None) - Raw failure event counts per component.
+
+        **result['repair_counts']** (np.ndarray or None) - Raw repair event counts per component.
+
+        **result['total_observed']** (int) - Total number of system-level events observed.
+        0 when no critical events were recorded.
+
+        **result['total_failure']** (int or None) - Total number of failure events observed.
+
+        **result['total_repair']** (int or None) - Total number of repair events observed.
+
+        **result['mtbf']** (float) - Mean Time Between Failures in hours, by-product of the simulation.
+
+        **result['mttf']** (float) - Mean Time To Failure in hours, by-product of the simulation.
+
+        **result['mttr']** (float) - Mean Time To Repair in hours, by-product of the simulation.
+
+    .. note::
+        **Relation to classical importance measures**
+
+        The criticality score is conceptually related to classical component
+        importance measures from reliability theory:
+
+        - With ``rate_adjustment=True``, the score reflects *structural importance*:
+          how much more often a component triggers a system failure than its
+          failure rate alone would predict. This is closely related to the
+          **Birnbaum importance measure**, which expresses the probability that
+          the system state is determined by a given component.
+
+        - With ``rate_adjustment=False``, the score reflects the raw failure
+          frequency of each component, which is closer to the **Criticality
+          importance measure** (Birnbaum × component unreliability).
+
+        Empirical comparisons across various network topologies show that the
+        ranking produced by this function correlates well with Birnbaum
+        importance (mean Spearman ρ ≈ 0.76), making it a practical
+        simulation-based alternative when analytical importance measures are
+        difficult to compute.
+
+    .. note::
+        This function shares optional keyword arguments with
+        :func:`estimate_mtbf_mttr_for_conn` and
+        :func:`empirical_reliability_function`.
+        See :ref:`mc_kwargs` for the full list.
+
+    :EXAMPLE:
+        >>> result = analyze_critical_components_for_conn(
+        ...     net, [conn_a], top_n=5, plot=False, N=200_000)
+        >>> result['edge_criticality'][:3]
+        array([1.42, 0.87, 1.15])
     """
+    # TODO: call plot functions (bar plot, graph plot) from here
+    # TODO: call excel function from here
     defaults = {
         'min_connected': -1,
         'N': int(1e5),
@@ -203,9 +480,9 @@ def analyze_critical_components_for_conn(ict_net, connections,
             'node_criticality': None,
             'full_counts': None,
             'total_observed': 0,
-            'mtbf': res.get('mttf') + res.get('mttr'),
-            'mttf': res.get('mttf'),
-            'mttr': res.get('mttr'),
+            'mtbf_h': res.get('mttf') + res.get('mttr'),
+            'mttf_h': res.get('mttf'),
+            'mttr_h': res.get('mttr'),
         }
 
     # Extract rates from the annotated graph
@@ -222,41 +499,85 @@ def analyze_critical_components_for_conn(ict_net, connections,
         save_excel=save_excel,
     )
 
+
+
     if crit_result is None:
         return {
             'edge_criticality': None,
             'node_criticality': None,
-            'full_counts': None,
+            'edge_repair_criticality': None,
+            'node_repair_criticality': None,
+            'failure_counts': None,
+            'repair_counts': None,
             'total_observed': 0,
+            'total_failure': None,
+            'total_repair': None,
             'mtbf': mtbf,
             'mttf': mttf,
             'mttr': mttr,
         }
-
     return {
         'edge_criticality': crit_result['edge_criticality'],
         'node_criticality': crit_result['node_criticality'],
-        'full_counts': crit_result['full_counts'],
+        'edge_repair_criticality': crit_result['edge_repair_criticality'],
+        'node_repair_criticality': crit_result['node_repair_criticality'],
+        'failure_counts': crit_result['failure_counts'],
+        'repair_counts': crit_result['repair_counts'],
         'total_observed': crit_result['total_observed'],
+        'total_failure': crit_result['total_failure'],
+        'total_repair': crit_result['total_repair'],
         'mtbf': mtbf,
         'mttf': mttf,
         'mttr': mttr,
     }
 
 
+
 def empirical_reliability_function(ict_net, connections, T, **kwargs):
     """
-    Approximate the reliability function R(T) = P(system lifetime > T)
-    from Monte Carlo failure-time samples.
+    Estimate the reliability function R(T) for pandaICT connections.
+    Approximates R(T) = P(system lifetime > T) by generating first-failure-time
+    samples via Monte-Carlo simulation and computing the empirical survival
+    fraction at one or more time points.
 
     :INPUT:
-        **ict_net**           - pandaICT ICT-Network object
-        **connections**       - list of pandaICT connection objects
-        **T**                 - float or array-like, time point(s) at which R is evaluated
-        **kwargs**            - optional keywords
+        **ict_net** (pandaict.ICTNetwork) - pandaICT network object.
+
+        **connections** (list of pandaict.Connection) - Connection object(s) defining
+        the system-level connectivity requirement.
+
+        **T** (float or array-like of float) - Time point(s) in hours at which the
+        reliability is evaluated. A scalar input returns a scalar; an array returns
+        an array of the same length.
 
     :OUTPUT:
-        If T is scalar:  float    R(T)
+        **R(T)** (float) - If T is scalar, the reliability value R(T) in [0, 1].
+
+        **R(T)** (np.ndarray) - If T is array-like, element-wise reliability values
+        of the same length as T.
+
+        Returns None if the simulation produced no valid samples.
+
+    .. note::
+        This function shares optional keyword arguments with
+        :func:`estimate_mtbf_mttr_for_conn` and
+        :func:`analyze_critical_components_for_conn`.
+        See :ref:`mc_kwargs` for the full list.
+
+    :EXAMPLE:
+        Scalar evaluation:
+
+        >>> R = empirical_reliability_function(net, [conn_a], T=8760)
+        >>> print(f"R(1 year) = {R:.4f}")
+        R(1 year) = 0.6321
+
+        Vectorised evaluation over a time axis:
+
+        >>> import numpy as np
+        >>> T = np.linspace(0, 50_000, 200)
+        >>> R = empirical_reliability_function(net, [conn_a], T=T, N=500_000)
+        >>> R.shape
+        (200,)
     """
     defaults = {
         'min_connected': -1,
