@@ -13,6 +13,7 @@ from pandaict.reliability.monte_carlo import (
     analyze_critical_components as _analyze_critical_components,
     empirical_reliability
 )
+from pandaict.reliability.monte_carlo_helpers import _critical_bar_plot
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
@@ -514,6 +515,30 @@ def analyze_critical_components_for_conn(ict_net, connections,
             'mttf': mttf,
             'mttr': mttr,
         }
+    
+    if plot:
+        # Build label mapping: node index -> device/node name
+        node_labels = {}
+        for n, attr in graph.nodes(data=True):
+            elt_type, elt_idx = attr['pielt']
+            node_labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
+
+        edge_labels = {}
+        for i, data in enumerate(graph.edges(data=True)):
+            u, v, attr = data
+            elt_type, elt_idx = attr['pielt']
+            edge_labels[i] = ict_net[elt_type].iloc[elt_idx]['name']
+
+        edge_crit = crit_result['edge_criticality'] # + crit_result['edge_repair_criticality'] TODO: add later
+        node_crit = crit_result['node_criticality'] # + crit_result['node_repair_criticality'] TODO: add later
+        
+        top_edge_fail_idx = np.argsort(edge_crit)[::-1]
+        top_node_fail_idx = np.argsort(node_crit)[::-1]
+
+        _critical_bar_plot(top_edge_fail_idx, top_node_fail_idx,
+                            edge_crit, edge_labels,
+                            node_crit, node_labels,
+                            rate_adjustment)
 
     return {
         'edge_criticality': crit_result['edge_criticality'],

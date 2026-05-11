@@ -261,16 +261,16 @@ def _filter_results(all_results, is_repairable):
 
 
 def _critical_bar_plot(top_edge_idx, top_node_idx,
-                       edge_crit, edge_list,
-                       node_crit, node_list,
+                       edge_crit, edge_labels,
+                       node_crit, node_labels,
                        rate_adjustment):
 
     n_rows = max(len(top_edge_idx), len(top_node_idx)) + 1
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 7))))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 4)))) # dynamic height based on number of critical components
 
     # === EDGES ===
     if len(top_edge_idx) > 0 and np.any(edge_crit[top_edge_idx] > 0):
-        edges_str = [f"{u}-{v}" for u, v in [edge_list[i] for i in top_edge_idx]]
+        edges_str = [edge_labels.get(i, f"Edge {i}") for i in top_edge_idx]
         colors = ['red' if edge_crit[i] > 1.01 else 'gray' for i in top_edge_idx]
         ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
 
@@ -293,7 +293,7 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
 
     # === NODES ===
     if len(top_node_idx) > 0 and np.any(node_crit[top_node_idx] > 0):
-        nodes_str = [str(node_list[i]) for i in top_node_idx]
+        nodes_str = [node_labels.get(i, f"Node {i}") for i in top_node_idx]
         colors = ['red' if node_crit[i] > 1.01 else 'gray' for i in top_node_idx]
         ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
 

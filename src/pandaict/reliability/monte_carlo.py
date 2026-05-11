@@ -196,11 +196,6 @@ def analyze_critical_components(all_critical, G, sources, targets,
                            top_node_fail_idx, top_node_rep_idx, node_list,
                            node_fail_crit, node_rep_crit, n_nodes,
                            failure_counts, repair_counts)
-    if plot:
-        _critical_bar_plot(top_edge_fail_idx, top_node_fail_idx,
-                           edge_fail_crit, edge_list,
-                           node_fail_crit, node_list,
-                           rate_adjustment)
 
     if save_excel:
         _save_criticality_excel(
