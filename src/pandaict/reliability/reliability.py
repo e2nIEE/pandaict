@@ -270,8 +270,8 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
     """
     Estimate **MTBF**, **MTTF** and **MTTR** for one or more pandaICT connections.
     Runs a Monte-Carlo simulation on the given network and connections
-    and returns the Mean Time Between Failures (MTBF = MTTF + MTTR)
-    together with the Mean Time To Failure and Mean Time To Repair.
+    and returns the **Mean Time Between Failures** (MTBF = MTTF + MTTR)
+    together with the **Mean Time To Failure** and **Mean Time To Repair**.
 
     :INPUT:
         **ict_net** (pandaict.ICTNetwork) - pandaICT network object containing
@@ -297,7 +297,7 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
         See :ref:`mc_kwargs` for the full list.
 
     :EXAMPLE:
-        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], N=50_000)
+        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], N=100_000)
         >>> print(f"MTBF = {result['mtbf_h']:.1f} h, MTTR = {result['mttr_h']:.1f} h")
         MTBF = 9200.4 h, MTTR = 5.8 h
     """
@@ -434,7 +434,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
 
     :EXAMPLE:
         >>> result = analyze_critical_components_for_conn(
-        ...     net, [conn_a], top_n=5, plot=False, N=200_000)
+        ...     net, [conn_a], plot=False)
         >>> result['edge_criticality'][:3]
         array([1.42, 0.87, 1.15])
     """
@@ -499,8 +499,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
         save_excel=save_excel,
     )
 
-
-
     if crit_result is None:
         return {
             'edge_criticality': None,
@@ -516,6 +514,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
             'mttf': mttf,
             'mttr': mttr,
         }
+
     return {
         'edge_criticality': crit_result['edge_criticality'],
         'node_criticality': crit_result['node_criticality'],
@@ -532,10 +531,10 @@ def analyze_critical_components_for_conn(ict_net, connections,
     }
 
 
-
 def empirical_reliability_function(ict_net, connections, T, **kwargs):
     """
-    Estimate the reliability function R(T) for pandaICT connections.
+    Estimate the reliability function R(T) for pandaICT connections,
+    which describes the likelyhood of system level survival longer that T.
     Approximates R(T) = P(system lifetime > T) by generating first-failure-time
     samples via Monte-Carlo simulation and computing the empirical survival
     fraction at one or more time points.
