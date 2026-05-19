@@ -139,7 +139,7 @@ def two_source_parallel_net(mtbf_h=8760, mttr_h=24):
     return net, appA, appB
 
 
-def two_source_shared_component_net():
+def two_source_shared_component_net(mttr_h=0):
     # ===========================================================
     # two_source_shared_component_net
     #
@@ -147,11 +147,11 @@ def two_source_shared_component_net():
     # node in the middle. This demonstrates how shared components
     # become critical bottlenecks.
     #
-    #              [NodeA]----[SharedNode]----[NodeB]----+
-    #            /                                          \
-    # [Alice]---+                                            +---[Bob]
-    #            \                                          /
-    #              [NodeC]--------------------------------+
+    #  [Alice]   --- (NodeA) --- +                  + --- (NodeB) --- [Bob]
+    #                            |                  |
+    #                            + --- (Shared) --- +
+    #                            |                  |
+    #  [Charlie] --- (NodeC) --- +                  + --- (NodeD) --- [Diana]
     #
     # Connections:
     #   Path 1: Alice -> NodeA -> SharedNode -> NodeB -> Bob
@@ -161,65 +161,75 @@ def two_source_shared_component_net():
     #
     # []=dev, ()=node, {}=app
     # ===========================================================
-
-    net = pi.create_empty_network('two_source_shared_component_net')
+    """
+    Returns
+    -------
+    net, [appAlice, appCharlie], [appBob, appDiana]
+    """
+    net = pi.create_empty_network(name='net')
 
     pi.create_std_type(net, {'bandwidth_Mbps': (1000, 1000), 'latency_ms': 100, 'wired': True,
-                             'protocols': ['TCP'],
-                             'mtbf_h': 8760, 'mttr_h': 24},
-                       name='ETH', element='link', overwrite=False, check_required=True)
+                             'protocols': ['TCP'], 'mtbf_h': 0, 'mttr_h': 0},
+                        name='ETH_perfect', element='link', overwrite=False, check_required=True)
 
-    pi.create_std_type(net, {'bandwidth_Mbps': (1000, 1000), 'latency_ms': 100, 'wired': True,
-                             'protocols': ['TCP'],
-                             'mtbf_h': 0, 'mttr_h': 0},
-                       name='ETH_perfect', element='link', overwrite=False, check_required=True)
+    nA = pi.create_ict_node(net, name="NodeA", mtbf_h=8760, mttr_h=mttr_h)
+    nB = pi.create_ict_node(net, name="NodeB", mtbf_h=8760, mttr_h=mttr_h)
+    nC = pi.create_ict_node(net, name="NodeC", mtbf_h=8760, mttr_h=mttr_h)
+    nD = pi.create_ict_node(net, name="NodeD", mtbf_h=8760, mttr_h=mttr_h)
+    nS = pi.create_ict_node(net, name="Shared", mtbf_h=8760, mttr_h=mttr_h)
 
-    nodeA = pi.create_ict_node(net, name='NodeA', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeC = pi.create_ict_node(net, name='NodeC', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    sharedNode = pi.create_ict_node(net, name='SharedNode', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeB = pi.create_ict_node(net, name='NodeB', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
+    # Pair 1 path: NodeA - Shared - NodeB
+    pi.create_ict_link(net, from_elt=nA, to_elt=nS, link_type='ETH_perfect')
+    pi.create_ict_link(net, from_elt=nS, to_elt=nB, link_type='ETH_perfect')
+
+    # Pair 2 path: NodeC ─ Shared ─ NodeD
+    pi.create_ict_link(net, from_elt=nC, to_elt=nS, link_type='ETH_perfect')
+    pi.create_ict_link(net, from_elt=nS, to_elt=nD, link_type='ETH_perfect')
 
     devA = pi.create_ict_device(net, name='Alice', device_type=DeviceType.SERVER)
     devB = pi.create_ict_device(net, name='Bob', device_type=DeviceType.SERVER)
+    devC = pi.create_ict_device(net, name='Charlie', device_type=DeviceType.SERVER)
+    devD = pi.create_ict_device(net, name='Diana', device_type=DeviceType.SERVER)
 
-    appA = pi.create_ict_app(net, name='Alice', app_type=AppType.CLIENT, device=devA)
-    appB = pi.create_ict_app(net, name='Bob', app_type=AppType.WEBSERVER, device=devB)
+    pi.create_ict_link(net, from_elt=devA, to_elt=nA, link_type='ETH_perfect')
+    pi.create_ict_link(net, from_elt=devB, to_elt=nB, link_type='ETH_perfect')
+    pi.create_ict_link(net, from_elt=devC, to_elt=nC, link_type='ETH_perfect')
+    pi.create_ict_link(net, from_elt=devD, to_elt=nD, link_type='ETH_perfect')
 
-    pi.create_ict_link(net, name='linkA', from_elt=devA, to_elt=nodeA, link_type='ETH_perfect')
-    pi.create_ict_link(net, name='linkC', from_elt=devA, to_elt=nodeC, link_type='ETH_perfect')
+    appA = pi.create_ict_app(net, name="Alice", app_type=AppType.CLIENT, device=devA)
+    appB = pi.create_ict_app(net, name="Bob", app_type=AppType.CLIENT, device=devB)
+    appC = pi.create_ict_app(net, name="Charlie", app_type=AppType.CLIENT, device=devC)
+    appD = pi.create_ict_app(net, name="Diana", app_type=AppType.CLIENT, device=devD)
 
-    pi.create_ict_link(net, name='linkAShared', from_elt=nodeA, to_elt=sharedNode, link_type='ETH')
-    pi.create_ict_link(net, name='linkCShared', from_elt=nodeC, to_elt=sharedNode, link_type='ETH')
+    return net, [appA, appC], [appB, appD]
 
-    pi.create_ict_link(net, name='linkSharedB', from_elt=sharedNode, to_elt=nodeB, link_type='ETH')
-
-    pi.create_ict_link(net, name='linkB', from_elt=nodeB, to_elt=devB, link_type='ETH_perfect')
-
-    return net, appA, appB
 
 def four_path_net():
     # ===========================================================
     # four_path_net
     #
     # 2 sources x 2 targets = 4 independent paths.
+    # In order to realize the 4 independent connections virtual devices have to be installed
     # Demonstrates broadcasting: when sources and targets have
     # different lengths, they are broadcast to match.
     #
-    #              [NodeA]----[NodeB]----+
-    #            /                          \
-    # [Source1]--+                            +---[NodeC]---[Target1]
-    #            \                          /
-    #              [NodeD]----[NodeE]----+
+    #              (Vdev1)---[NodeA]----[NodeB]----+
+    #             /                                 \
+    # [Source1]--+                                   +---[NodeC]---[Target1]
+    #            \                                  /
+    #              (Vdev2)---[NodeD]----[NodeE]----+
     #
-    #              [NodeF]----[NodeG]----+
-    #            /                          \
-    # [Source2]--+                            +---[NodeH]---[Target2]
-    #            \                          /
-    #              [NodeI]----[NodeJ]----+
+    #               (Vdev3)---[NodeF]----[NodeG]---+
+    #               /                               \
+    #   [Source2]--+                                 +---[NodeH]---[Target2]
+    #               \                               /
+    #               (Vdev4)---[NodeI]----[NodeJ]---+
     #
     # Connections (broadcasting):
-    #   Source1 -> Target1
-    #   Source2 -> Target2
+    #   Vdev1 -> Target1
+    #   Vdev2 -> Target1
+    #   Vdev3 -> Target2
+    #   Vdev4 -> Target2
     #
     # []=dev, ()=node, {}=app
     # ===========================================================
@@ -236,47 +246,53 @@ def four_path_net():
                              'mtbf_h': 0, 'mttr_h': 0},
                        name='ETH_perfect', element='link', overwrite=False, check_required=True)
 
-    nodeA = pi.create_ict_node(net, name='NodeA', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeB = pi.create_ict_node(net, name='NodeB', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeC = pi.create_ict_node(net, name='NodeC', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeD = pi.create_ict_node(net, name='NodeD', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeE = pi.create_ict_node(net, name='NodeE', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
+    nodeA = pi.create_ict_node(net, name='NodeA', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeB = pi.create_ict_node(net, name='NodeB', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeC = pi.create_ict_node(net, name='NodeC', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeD = pi.create_ict_node(net, name='NodeD', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeE = pi.create_ict_node(net, name='NodeE', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
 
-    nodeF = pi.create_ict_node(net, name='NodeF', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeG = pi.create_ict_node(net, name='NodeG', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeH = pi.create_ict_node(net, name='NodeH', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeI = pi.create_ict_node(net, name='NodeI', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
-    nodeJ = pi.create_ict_node(net, name='NodeJ', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=24)
+    nodeF = pi.create_ict_node(net, name='NodeF', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeG = pi.create_ict_node(net, name='NodeG', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeH = pi.create_ict_node(net, name='NodeH', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeI = pi.create_ict_node(net, name='NodeI', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
+    nodeJ = pi.create_ict_node(net, name='NodeJ', node_type=NodeType.ROUTER, mtbf_h=8760, mttr_h=0)
 
-    devS1 = pi.create_ict_device(net, name='Source1', device_type=DeviceType.SERVER)
-    devS2 = pi.create_ict_device(net, name='Source2', device_type=DeviceType.SERVER)
+    Vdev1 = pi.create_ict_device(net, name='Vdev1', device_type=DeviceType.SERVER)
+    Vdev2 = pi.create_ict_device(net, name='Vdev2', device_type=DeviceType.SERVER)
+    Vdev3 = pi.create_ict_device(net, name='Vdev3', device_type=DeviceType.SERVER)
+    Vdev4 = pi.create_ict_device(net, name='Vdev4', device_type=DeviceType.SERVER)
+
     devT1 = pi.create_ict_device(net, name='Target1', device_type=DeviceType.SERVER)
     devT2 = pi.create_ict_device(net, name='Target2', device_type=DeviceType.SERVER)
 
-    appS1 = pi.create_ict_app(net, name='Source1', app_type=AppType.CLIENT, device=devS1)
-    appS2 = pi.create_ict_app(net, name='Source2', app_type=AppType.CLIENT, device=devS2)
+    appV1 = pi.create_ict_app(net, name='appV1', app_type=AppType.CLIENT, device=Vdev1)
+    appV2 = pi.create_ict_app(net, name='appV2', app_type=AppType.CLIENT, device=Vdev2)
+    appV3 = pi.create_ict_app(net, name='appV3', app_type=AppType.CLIENT, device=Vdev3)
+    appV4 = pi.create_ict_app(net, name='appV4', app_type=AppType.CLIENT, device=Vdev4)
+
     appT1 = pi.create_ict_app(net, name='Target1', app_type=AppType.WEBSERVER, device=devT1)
     appT2 = pi.create_ict_app(net, name='Target2', app_type=AppType.WEBSERVER, device=devT2)
 
-    pi.create_ict_link(net, name='linkS1A', from_elt=devS1, to_elt=nodeA, link_type='ETH_perfect')
-    pi.create_ict_link(net, name='linkS1F', from_elt=devS1, to_elt=nodeF, link_type='ETH_perfect')
-    pi.create_ict_link(net, name='linkS2D', from_elt=devS2, to_elt=nodeD, link_type='ETH_perfect')
-    pi.create_ict_link(net, name='linkS2I', from_elt=devS2, to_elt=nodeI, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkS1A', from_elt=Vdev1, to_elt=nodeA, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkS2D', from_elt=Vdev2, to_elt=nodeD, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkS1F', from_elt=Vdev3, to_elt=nodeF, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkS2I', from_elt=Vdev4, to_elt=nodeI, link_type='ETH_perfect')
 
-    pi.create_ict_link(net, name='linkAB', from_elt=nodeA, to_elt=nodeB, link_type='ETH')
-    pi.create_ict_link(net, name='linkBC', from_elt=nodeB, to_elt=nodeC, link_type='ETH')
-    pi.create_ict_link(net, name='linkCD', from_elt=nodeC, to_elt=nodeD, link_type='ETH')
-    pi.create_ict_link(net, name='linkDE', from_elt=nodeD, to_elt=nodeE, link_type='ETH')
+    pi.create_ict_link(net, name='linkAB', from_elt=nodeA, to_elt=nodeB, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkBC', from_elt=nodeB, to_elt=nodeC, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkCD', from_elt=nodeC, to_elt=nodeE, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkDE', from_elt=nodeD, to_elt=nodeE, link_type='ETH_perfect')
 
-    pi.create_ict_link(net, name='linkFG', from_elt=nodeF, to_elt=nodeG, link_type='ETH')
-    pi.create_ict_link(net, name='linkGH', from_elt=nodeG, to_elt=nodeH, link_type='ETH')
-    pi.create_ict_link(net, name='linkHI', from_elt=nodeH, to_elt=nodeI, link_type='ETH')
-    pi.create_ict_link(net, name='linkIJ', from_elt=nodeI, to_elt=nodeJ, link_type='ETH')
+    pi.create_ict_link(net, name='linkFG', from_elt=nodeF, to_elt=nodeG, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkGH', from_elt=nodeG, to_elt=nodeH, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkHI', from_elt=nodeH, to_elt=nodeJ, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkIJ', from_elt=nodeI, to_elt=nodeJ, link_type='ETH_perfect')
 
-    pi.create_ict_link(net, name='linkCT1', from_elt=nodeE, to_elt=devT1, link_type='ETH_perfect')
-    pi.create_ict_link(net, name='linkJT2', from_elt=nodeJ, to_elt=devT2, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkCT1', from_elt=nodeC, to_elt=devT1, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='linkJT2', from_elt=nodeH, to_elt=devT2, link_type='ETH_perfect')
 
-    return net, [appS1, appS2], [appT1, appT2]
+    return net, [appV1, appV2, appV3, appV4], [appT1, appT1, appT2, appT2]
 
 
 def heterogeneous_rate_net():
@@ -732,7 +748,7 @@ def simple_repairable_net(mttr_h=24):
     -------
     net, appAlice, appBob
     """
-    net = pi.create_empty_ict_network()
+    net = pi.create_empty_network(name='simple_repairable_net')
     n1 = pi.create_ict_node(net, name="NodeA", type="generic_node",
                             mtbf_h=8760, mttr_h=mttr_h)
     n2 = pi.create_ict_node(net, name="NodeB", type="generic_node",
@@ -757,19 +773,36 @@ def simple_two_pair_net(mttr_h=0):
     -------
     net, [appAlice, appCharlie], [appBob, appDiana]
     """
-    net = pi.create_empty_ict_network()
-    nA = pi.create_ict_node(net, name="NodeA", type="generic_node",
-                            mtbf_h=8760, mttr_h=mttr_h)
-    nB = pi.create_ict_node(net, name="NodeB", type="generic_node",
-                            mtbf_h=8760, mttr_h=mttr_h)
-    nC = pi.create_ict_node(net, name="NodeC", type="generic_node",
-                            mtbf_h=8760, mttr_h=mttr_h)
-    nD = pi.create_ict_node(net, name="NodeD", type="generic_node",
-                            mtbf_h=8760, mttr_h=mttr_h)
-    pi.create_ict_link(net, from_node=nA, to_node=nB, type="perfect_link")
-    pi.create_ict_link(net, from_node=nC, to_node=nD, type="perfect_link")
-    appAlice   = pi.create_ict_app(net, name="Alice",   node=nA, type="generic_app")
-    appBob     = pi.create_ict_app(net, name="Bob",     node=nB, type="generic_app")
-    appCharlie = pi.create_ict_app(net, name="Charlie", node=nC, type="generic_app")
-    appDiana   = pi.create_ict_app(net, name="Diana",   node=nD, type="generic_app")
-    return net, [appAlice, appCharlie], [appBob, appDiana]
+    net = pi.create_empty_network(name='simple_two_pair_net')
+
+    pi.create_std_type(net, {'bandwidth_Mbps': (1000, 1000), 'latency_ms': 100, 'wired': True,
+                                               'protocols': ['TCP'],
+                                               'mtbf_h': 0, 'mttr_h': 0},
+                       name='ETH_perfect', element='link', overwrite=False, check_required=True)
+
+    nA = pi.create_ict_node(net, name="NodeA", mtbf_h=8760, mttr_h=mttr_h)
+    nB = pi.create_ict_node(net, name="NodeB", mtbf_h=8760, mttr_h=mttr_h)
+    nC = pi.create_ict_node(net, name="NodeC", mtbf_h=8760, mttr_h=mttr_h)
+    nD = pi.create_ict_node(net, name="NodeD", mtbf_h=8760, mttr_h=mttr_h)
+
+    pi.create_ict_link(net, from_elt=nA, to_elt=nB, link_type="ETH_perfect")
+    pi.create_ict_link(net, from_elt=nC, to_elt=nD, link_type="ETH_perfect")
+
+    devA = pi.create_ict_device(net, name='Alice', device_type=DeviceType.SERVER)
+    devB = pi.create_ict_device(net, name='Bob', device_type=DeviceType.SERVER)
+
+    pi.create_ict_link(net, from_elt=devA, to_elt=nA, link_type="ETH_perfect")
+    pi.create_ict_link(net, from_elt=nB, to_elt=devB, link_type="ETH_perfect")
+
+    devC = pi.create_ict_device(net, name='Charlie', device_type=DeviceType.SERVER)
+    devD = pi.create_ict_device(net, name='Diana', device_type=DeviceType.SERVER)
+
+    pi.create_ict_link(net, from_elt=devC, to_elt=nC, link_type="ETH_perfect")
+    pi.create_ict_link(net, from_elt=nD, to_elt=devD, link_type="ETH_perfect")
+
+    appA = pi.create_ict_app(net, name="Alice", app_type=AppType.CLIENT, device=devA)
+    appB = pi.create_ict_app(net, name="Bob", app_type=AppType.CLIENT, device=devB)
+    appC = pi.create_ict_app(net, name="Charlie", app_type=AppType.CLIENT, device=devC)
+    appD = pi.create_ict_app(net, name="Diana", app_type=AppType.CLIENT, device=devD)
+
+    return net, [appA, appC], [appB, appD]
