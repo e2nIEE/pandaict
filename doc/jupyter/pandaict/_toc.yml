@@ -16,10 +16,16 @@ parts:
   - file: reliability-Monte-Carlo
 - caption: How-To Guides
   chapters:
-  - file: howto/index
-    sections:
-    - file: howto/howto_MTBF_estimation
-    - file: howto/howto_MTBF_MTTR_estimation
-    - file: howto/howto_critical_components
-    - file: howto/howto_reliability_function
-    - file: howto/howto_multi_source_target
+  - file: howto/00_overview
+  - file: howto/01_getting_started
+  - file: howto/02_physical_layer
+  - file: howto/03_logical_layer
+  - file: howto/04_workflow_analysis
+  - file: howto/05_inspection_management
+  - file: howto/06_std_types
+  - file: howto/07_advanced_topics
+  - file: howto/08_howto_MTBF_estimation
+  - file: howto/09_howto_MTBF_MTTR_estimation
+  - file: howto/10_howto_critical_components
+  - file: howto/11_howto_reliability_function
+  - file: howto/12_howto_multi_source_target
