@@ -511,9 +511,9 @@ def analyze_critical_components_for_conn(ict_net, connections,
             'total_observed': 0,
             'total_failure': None,
             'total_repair': None,
-            'mtbf': mtbf,
-            'mttf': mttf,
-            'mttr': mttr,
+            'mtbf_h': mtbf,
+            'mttf_h': mttf,
+            'mttr_h': mttr,
         }
     
     if plot:
@@ -550,9 +550,9 @@ def analyze_critical_components_for_conn(ict_net, connections,
         'total_observed': crit_result['total_observed'],
         'total_failure': crit_result['total_failure'],
         'total_repair': crit_result['total_repair'],
-        'mtbf': mtbf,
-        'mttf': mttf,
-        'mttr': mttr,
+        'mtbf_h': mtbf,
+        'mttf_h': mttf,
+        'mttr_h': mttr,
     }
 
 
