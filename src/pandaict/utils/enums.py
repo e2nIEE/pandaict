@@ -71,7 +71,7 @@ def addCustomEnum(net, etype, name, value=None):
             value = 1000 if maxvalue<1000 else maxvalue+1        
         extend_enum(etype, name, value)
     else:
-        value = etype[name].value # if anready existing, still add it to net custom enums    
+        value = etype[name].value # if already existing, still add it to net custom enums
     if "custom_enums" not in net.keys():
         net.custom_enums = pd.DataFrame(columns=['name', 'type', 'value']) 
     # Check if new enum exists in net

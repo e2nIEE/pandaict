@@ -336,7 +336,7 @@ def get_values_for_links(ict_net, link_elts, valuetype):
             values += [ict_net.link.iloc[l[1]]['length_km']]
         elif ('bit_error_rate' in str(valuetype).casefold() or 'ber' in str(valuetype).casefold()):
             length = ict_net.link.iloc[l[1]]['length_km']
-            if length is None: 
+            if length is None or ltype['ber_per_km'] is None:
                 values += [None]
             else:
                 vtype = 'bit_error_rate' 
@@ -398,7 +398,7 @@ def get_bandwidth_Mbps(ict_net, link_elt):
     :EXAMPLE:
         get_bandwidth_Mbps(ict_net, ('link',2))
     """  
-    
+        
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
 
 def __get_elt_idx_by_name(ict_net, elt_name, elt_type):

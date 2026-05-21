@@ -291,7 +291,7 @@ def _evaluate_sheet(net, wb, sheetname):
                 net[_get_df_name(sheetname)].loc[idx] = conv_values                        
     return net
 
-def from_excel(xlsfilename):
+def from_excel(xlsfilename, do_inspection=True):
     wb = load_workbook(filename = xlsfilename)  
     md = _get_metadata(wb)              
     net = create_empty_network()
@@ -302,7 +302,8 @@ def from_excel(xlsfilename):
     
     for sheetname in ["Custom Enums", "Custom Linktypes", "Custom Protocoltypes", "Nodes", "Devices", "Links", "Connections", "Apps"]:
         net = _evaluate_sheet(net, wb, sheetname)    
-    passed = inspect(net, verbose=True)
+    passed = inspect(net, verbose=True) if do_inspection else True
+    
     if passed: 
         pilogger.info("Exceltools: loaded network from "+xlsfilename+", inspection passed")
     else:
@@ -324,6 +325,12 @@ def _fill_metadata(net, wb):
         elif row[0].value=="openpyxl_version":
             row[1].value=openpyxl_version
 
+def _convert_eltid_to_int(datatuple):
+    if isinstance(datatuple[1], np.int64): 
+        return (datatuple[0], int(datatuple[1]))
+    else:
+        return datatuple    
+
 def _to_xls_format(dataitem):
     if isinstance(dataitem, (AppType, NodeType, DeviceType, InfoItem)):
         return dataitem.name
@@ -331,14 +338,16 @@ def _to_xls_format(dataitem):
         return str(dataitem)        
     elif isinstance(dataitem, tuple): 
         if isinstance(dataitem[0], str):
-            return str(dataitem).replace("(","").replace(")","").replace("'","")
-        elif isinstance(dataitem[0], tuple):
+            _dataitem = _convert_eltid_to_int(dataitem)            
+            return str(_dataitem).replace("(","").replace(")","").replace("'","")
+        elif isinstance(dataitem[0], tuple):            
             return str(dataitem).replace("),",";").replace("(","").replace(")","").replace("'","")
         else:
             return str(dataitem).replace("(","").replace(")","")
     elif isinstance(dataitem, list): 
         if isinstance(dataitem[0], tuple):
-            s = str(dataitem).replace("[","").replace("]","").replace("'","")
+            _dataitem = _convert_eltid_to_int(dataitem[0])            
+            s = str(_dataitem).replace("[","").replace("]","").replace("'","")
             s = s.replace("),",";").replace("(","").replace(", ",",")
             if s[-1]==")": 
                 s = s[:-1]
@@ -383,7 +392,7 @@ def _fill_sheet(net, wb, sheetname):
 
         case "Custom Protocoltypes":
             ws = _append_customtypes(net, ws, data_to_rows[sheetname], 'protocol')
-        case _:
+        case _:    
             elt = data_to_sheet[sheetname]
             data_to_row = data_to_rows[sheetname]
             for i, ielt in net[elt].iterrows():
@@ -397,7 +406,11 @@ def _append_customtypes(net, ws, data_to_row, stype):
     i = 0
     for n, ielt in net['std_types'][stype].items():
         if 'custom' in ielt.keys():
-            row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
+            pdata = []
+            for prop in data_to_row:                
+                pdata += [_to_xls_format(ielt[prop]) if prop in ielt.keys() else None]
+            #row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
+            row_data = [i, n] + pdata
             ws.append(row_data)
             i += 1
 

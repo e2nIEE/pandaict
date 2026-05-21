@@ -34,7 +34,7 @@ def __preserve_dtypes(df, dtypes):
 
 
 def __get_free_id(df):
-    return np.int64(0) if len(df) == 0 else df.index.values.max() + 1
+    return 0 if len(df) == 0 else df.index.values.max() + 1
 
 
 class ADict(dict, MutableMapping):

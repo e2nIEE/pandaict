@@ -27,7 +27,7 @@ def __check_isnone(i, n, elt_type, sparam, passed, checkempty=False, verbose=Fal
         passed = __log_info_and_return_false(elt_type+" '" + str(n['name']) + "' (index " + str(i) + ") has no "+sparam, verbose)        
     return passed
     
-def __inspect_node(ict_net, passed, verbose):
+def __inspect_node(ict_net, passed, verbose):   
     for i, n in ict_net.node.iterrows():
         passed = __check_isnone(i, n, "node", "name", passed, verbose=verbose)
         passed = __check_isnone(i, n, "node", "type", passed, verbose=verbose)

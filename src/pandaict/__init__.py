@@ -8,7 +8,8 @@ from pandaict.file_io import *
 from pandaict.diagnosis import *
 from pandaict.topology import *
 from pandaict.reliability import *
-
+from pandaict.networks import *
+from pandaict.toolbox import *
 
 # Track which connectors have been used
 connectors_installed = [] 

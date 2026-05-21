@@ -89,7 +89,7 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
     # create nxgraph for connection and get routes        
-    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)    
+    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=False)
     from_dev = ('device', ict_net.app.iloc[conn['from']]['device'])
     to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
     if respect_iptables:
@@ -336,7 +336,7 @@ def calc_routes_for_connection(ict_net, conn_elt, verbose=False):
     """ 
     # Create the nxgraph
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
-    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=False)
     
     paths = __get_possible_routes(ict_net, mdg, conn)
     
@@ -428,7 +428,7 @@ def is_connection_possible(ict_net, conn_elt):
     """ 
     # Create the nxgraph
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
-    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=False)
     
     n1, n2 = __get_end_nxnodes_for_conn(ict_net, mdg, conn)
     down = nx.has_path(mdg, n1, n2)
