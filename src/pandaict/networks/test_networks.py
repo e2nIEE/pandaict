@@ -28,12 +28,12 @@ def create_testnet1():
     (dconv2, aconv2) = create_ict_devapp(ict_net, name="Conv2", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
     (dconv3, aconv3) = create_ict_devapp(ict_net, name="Conv3", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
     
-    (dcc, acc) = create_ict_devapp(ict_net, name="CC", device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
-    (dpq1, apq1) = create_ict_devapp(ict_net, name="PQ1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
-    (dpq2, apq2) = create_ict_devapp(ict_net, name="PQ2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
-    (dsc, asc) = create_ict_devapp(ict_net, name="SC", device_type=DeviceType.RTU, app_type=AppType.CLIENT)      
-    (dpc1, apc1) = create_ict_devapp(ict_net, name="PC1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
-    (dpc2, apc2) = create_ict_devapp(ict_net, name="PC2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)        
+    (dcc, acc)    = create_ict_devapp(ict_net, name="CC", device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
+    (dpq1, apq1)  = create_ict_devapp(ict_net, name="PQ1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
+    (dpq2, apq2)  = create_ict_devapp(ict_net, name="PQ2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
+    (dsc, asc)    = create_ict_devapp(ict_net, name="SC", device_type=DeviceType.RTU, app_type=AppType.CLIENT)      
+    (dpc1, apc1)  = create_ict_devapp(ict_net, name="PC1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
+    (dpc2, apc2)  = create_ict_devapp(ict_net, name="PC2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)        
                  
     link1 = create_ict_link(ict_net, name="CC_Node1", link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)
     link2 = create_ict_link(ict_net, name="Node1_Node2", link_type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
@@ -45,15 +45,6 @@ def create_testnet1():
     link8 = create_ict_link(ict_net, name="Conv1_PC1", link_type="LAN1000", from_elt=dconv1, to_elt=[dpc1], length_km=0.01)
     link9 = create_ict_link(ict_net, name="Conv2_PC2", link_type="RS485", from_elt=dconv2, to_elt=[dpc2], length_km=0.01)
     link10 = create_ict_link(ict_net, name="Conv3_SC", link_type="Binary", from_elt=dconv3, to_elt=[dsc], length_km=0.001)
-    
-    conn1 = create_ict_connection(ict_net, name="CC_Conv1", from_app=acc, to_app=aconv1)                   
-    conn2 = create_ict_connection(ict_net, name="Conv1_PC1", from_app=aconv1, to_app=apc1)                    
-    conn3 = create_ict_connection(ict_net, name="CC_PQ1", from_app=acc, to_app=apq1)                    
-    conn4 = create_ict_connection(ict_net, name="CC_Conv2", from_app=acc, to_app=aconv2)                    
-    conn5 = create_ict_connection(ict_net, name="Conv2_PC2", from_app=aconv2, to_app=apc2)                    
-    conn6 = create_ict_connection(ict_net, name="CC_PQ2", from_app=acc, to_app=apq2)                    
-    conn7 = create_ict_connection(ict_net, name="CC_Conv3", from_app=acc, to_app=aconv3)            
-    conn8 = create_ict_connection(ict_net, name="Conv3_SC", from_app=aconv3, to_app=asc)
             
     return ict_net  
 
@@ -137,7 +128,7 @@ def create_testnet2():
     return ict_net2
 
 def extend_testnet2(ict_net): 
-    extend_testnet1(ict_net, use_uuid=True)
+    return extend_testnet1(ict_net, use_uuid=True)
     
 def create_testnet3():
     ict_net3 = create_empty_network("Test network 3", True) 
@@ -171,25 +162,25 @@ def create_testnet3():
     return ict_net3
 
 def extend_testnet3(ict_net3):                
-        a1a = get_elt_id_by_name(ict_net3, "A1a", expected="app")
-        a1b = get_elt_id_by_name(ict_net3, "A1b", expected="app")
-        a2  = get_elt_id_by_name(ict_net3, "DA2", expected="app")
-        a3  = get_elt_id_by_name(ict_net3, "DA3", expected="app")
-        a4  = get_elt_id_by_name(ict_net3, "DA4", expected="app")
-        
-        
-        conn1      = create_ict_connection(ict_net3, name="D2_D1", from_app=a2, to_app=a1a, protocol="HTTP",
-                        info_items=[InfoItem.URL, InfoItem.WEBPAGE], 
-                        peers=(a2,a1a), producer=[1,0], prod_freq_ms=[60000, 600])
-        conn2      = create_ict_connection(ict_net3, name="D2_D4", from_app=a2, to_app=a4, protocol="HTTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
-                        peers=(a2,a4), producer=[0,1], prod_freq_ms=[3000, 10])
-        conn3      = create_ict_connection(ict_net3, name="D1_D4", from_app=a1b, to_app=a4, protocol="HTTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
-                        peers=(a1b,a4), producer=[0,1], prod_freq_ms=[3000, 40])
-        conn4      = create_ict_connection(ict_net3, name="D3_D4", from_app=a3, to_app=a4, protocol="FTP",
-                        info_items=[InfoItem.REQUEST, InfoItem.FILE], 
-                        peers=(a3,a4), producer=[1,0], prod_freq_ms=[6000, 20])
-        
-        return ict_net3
+    a1a = get_elt_id_by_name(ict_net3, "A1a", expected="app")
+    a1b = get_elt_id_by_name(ict_net3, "A1b", expected="app")
+    a2  = get_elt_id_by_name(ict_net3, "DA2", expected="app")
+    a3  = get_elt_id_by_name(ict_net3, "DA3", expected="app")
+    a4  = get_elt_id_by_name(ict_net3, "DA4", expected="app")
+    
+    
+    conn1      = create_ict_connection(ict_net3, name="D2_D1", from_app=a2, to_app=a1a, protocol="HTTP",
+                    info_items=[InfoItem.URL, InfoItem.WEBPAGE], 
+                    peers=(a2,a1a), producer=[1,0], prod_freq_ms=[60000, 600])
+    conn2      = create_ict_connection(ict_net3, name="D2_D4", from_app=a2, to_app=a4, protocol="HTTP",
+                    info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
+                    peers=(a2,a4), producer=[0,1], prod_freq_ms=[3000, 10])
+    conn3      = create_ict_connection(ict_net3, name="D1_D4", from_app=a1b, to_app=a4, protocol="HTTP",
+                    info_items=[InfoItem.REQUEST, InfoItem.RESPONSE], 
+                    peers=(a1b,a4), producer=[0,1], prod_freq_ms=[3000, 40])
+    conn4      = create_ict_connection(ict_net3, name="D3_D4", from_app=a3, to_app=a4, protocol="FTP",
+                    info_items=[InfoItem.REQUEST, InfoItem.FILE], 
+                    peers=(a3,a4), producer=[1,0], prod_freq_ms=[6000, 20])
+    
+    return ict_net3
     

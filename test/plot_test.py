@@ -6,7 +6,7 @@ Created on 21.03.2024
 
 
 from core_test import *
-from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1
+from pandaict.networks.test_networks import create_testnet1, extend_testnet1
 from pandaict.plot import create_plot, __create_g__
 import PIL
 from PIL import Image, ImageChops

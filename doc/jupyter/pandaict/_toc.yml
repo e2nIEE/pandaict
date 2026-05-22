@@ -10,7 +10,7 @@ parts:
 - caption: Documentation
   chapters:
   - file: pp_pict_connector_example
-  - file: pandaICT_scenario_useCases
+  - file: pandaICT_scenario
   - file: pandaICT_routing
   - file: pandaICT_reliability_metrics
   - file: reliability-Monte-Carlo
