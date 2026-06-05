@@ -84,11 +84,12 @@ def __to_type(df, dfkey, totype, dflist=""):
                 else:
                     # CH: work out core tests by coeecting bug here
                     # Then integrate all extend_testnet<x> into the create_testnet<x> and remove the former
-                    # Finally change extension routine in pp_pict_connector such that it modifies existing conns 
-                    try:
-                        df.at[i,dfkey] = tuple([totype(e) for e in s])
-                    except:
-                        print("A")
+                    # Finally change extension routine in pp_pict_connector such that it modifies existing conns     
+                        if (isinstance(s[0], list) or isinstance(s[0], tuple)):
+                            df.at[i,dfkey] = tuple([totype(e) for e in s])
+                        else:
+                            df.at[i,dfkey] = totype(s)                                            
+                   
             else:
                 df.at[i,dfkey] = totype(s)
     return df

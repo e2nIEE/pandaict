@@ -377,7 +377,7 @@ def _fill_sheet(net, wb, sheetname):
     data_to_rows = _update_data_to_rows(data_to_sheet, data_to_rows)
     col_names = _get_col_names(ws)
 
-    row_data = []
+    row_data = []  
     match sheetname:
         case "Custom Enums":
             i = 0

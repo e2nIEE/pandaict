@@ -167,7 +167,7 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
 
     __preserve_dtypes(ict_net.node, dtypes)
     
-    return ruuid if use_uuid else ('node', index)
+    return ruuid if use_uuid else ('node', int(index))
 
 def __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid):
     
@@ -260,7 +260,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
 
     __preserve_dtypes(ict_net.link, dtypes)
 
-    return ruuid if use_uuid else ('link', index)
+    return ruuid if use_uuid else ('link', int(index))
 
 def __create_device_check(ict_net, device_type, uid):
     
@@ -318,7 +318,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
 
     __preserve_dtypes(ict_net.device, dtypes)
 
-    return ruuid if use_uuid else ('device', index)
+    return ruuid if use_uuid else ('device', int(index))
      
 def __create_app_check_conversion(ict_net, cn, name):
     if not isinstance(cn, tuple):
@@ -403,7 +403,7 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
 
     __preserve_dtypes(ict_net.app, dtypes)
 
-    return ruuid if use_uuid else ('app', index)
+    return ruuid if use_uuid else ('app', int(index))
 
 def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_service=True, use_uuid=False,            
                       conversions=None, mtbf_h=0, mttr_h=0 ):
@@ -582,5 +582,5 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     
     __preserve_dtypes(ict_net.conn, dtypes)
 
-    return ruuid if use_uuid else ('conn', index)
+    return ruuid if use_uuid else ('conn', int(index))
 
