@@ -49,8 +49,6 @@ def analyze_critical_components(all_critical, G, sources, targets,
                                 rate_adjustment=True,
                                 save_excel=False, excel_path=None
                                 ):
-    # TODO: fix the arbitrary naming of the components by index. Map the indices onto the assigned names.
-    # TODO: fix normalization. failure and repair counts have to be normalized differently. Maybe remove repair counts for simplicity
     """
 
     Analyze which components are disproportionately critical by calculating the expected
@@ -340,7 +338,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     # Check for no-failure case
     if is_nofailure:
         # TODO!
-        print('not implemented')
+        print('All failure rates are zero. Please adjust!')
         return {'mttf':np.inf, 'mttr':0.0, 'mttf_samples':None, 'mttr_samples':None}
 
     if use_numba and NUMBA_AVAILABLE:
@@ -371,12 +369,21 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     valid_results = _filter_results(all_results, is_repairable)
 
     # unpack results
-    mttf_samples = valid_results['mttf_samples']
-    mttr_samples = valid_results['mttr_samples']
+    mttf_clean_samples = valid_results['mttf_samples']
+    mttr_clean_samples = valid_results['mttr_samples']
 
     # calc mean values
-    mttf = 0.0 if mttf_samples is None else float(np.mean(mttf_samples))
-    mttr = np.inf if mttr_samples is None else float(np.mean(mttr_samples))
+    mttf = 0.0 if mttf_clean_samples is None else float(np.mean(mttf_clean_samples))
+    mttr = np.inf if mttr_clean_samples is None else float(np.mean(mttr_clean_samples))
+
+    
+    if is_repairable:
+        mttf_samples = all_results[:, 0]
+        mttr_samples = all_results[:, 1]
+
+    else:
+        mttf_samples = all_results
+        mttr_samples = None
 
     # return everything
     return {'mttf': mttf,
@@ -386,3 +393,4 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
             'edge_criticality': edge_criticality,
             'node_criticality': node_criticality,
             'all_critical': all_critical,}
+

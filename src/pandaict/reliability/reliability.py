@@ -166,7 +166,7 @@ def plot_graph(ict_net, protocol='TCP',
         ...            node_criticality=result['node_criticality'],
         ...            cmap=False)
     """
-
+    # TODO: Fix plot for unidirectional graphs
     # Build multidigraph once
     G = create_multidigraph(ict_net, protocol, validate=True)
 
@@ -340,7 +340,8 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
 
     return {'mtbf_h': mtbf,
             'mttf_h': mttf,
-            'mttr_h': res['mttr']}
+            'mttr_h': res['mttr'],
+            'samples': res.get('mttf_samples')}
 
 
 def analyze_critical_components_for_conn(ict_net, connections,
