@@ -19,7 +19,7 @@ import numpy as np
 from pandaict.create import create_ict_app
 from pandaict.topology.ip_address import IP_address
 from pandaict.topology.ip_support import init_extend_network, assign_ipaddr_to_elt, assign_ipaddr_to_elts, set_static_iptable_entry, update_iptables
-from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1, extend_testnet3
+from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet3  
 from pandaict.toolbox.exceltools import from_excel, to_excel 
 
 class Core_Test():
@@ -132,9 +132,8 @@ class Core_Test():
         utest.assertRaises(UserWarning, pi.create_ict_connection, ict_net, name="CC_Conv1", use_uuid=True, from_app=acc, to_app=asc, peers=(acc, acc))
         
     def test_create_ict_net(self, utest):        
-    
+      
         ict_net  = create_testnet1()
-        ict_net = extend_testnet1(ict_net)
         ict_net2 = create_testnet2()
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net2))   
@@ -152,7 +151,7 @@ class Core_Test():
     
     def test_inspect_ict_net(self, utest):        
         
-        ict_net = create_testnet1()           
+        ict_net  = create_testnet1()
         utest.assertTrue(pi.inspect(ict_net, verbose=False))   
         return 
     
@@ -164,7 +163,7 @@ class Core_Test():
     def test_lup_table_calc(self, utest):
     
         ict_net = create_testnet3()
-        extend_testnet3(ict_net)
+        ict_net = extend_testnet3(ict_net)
         link_bw = {}
         for i, _ in ict_net['conn'].iterrows():
             # TODO: what if connection is not at all possible? 
