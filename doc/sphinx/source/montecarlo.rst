@@ -35,9 +35,6 @@ All three functions above accept the following optional keyword arguments:
        *(int, default* ``200`` *)*
      - Depth in which each Monte-Carlo sample path is traversed.
        Not available in :func:`empirical_reliability_function` (forced to ``1``).
-   * - **TOL** *(__WIP__, not available yet)*
-       *(float, default* ``0`` *)*
-     - Tolerance parameter passed to the simulation kernel.
    * - **max_time**
        *(float, default* ``numpy.inf`` *)*
      - Simulation horizon per sample path in hours. In
