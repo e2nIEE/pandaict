@@ -1,10 +1,8 @@
-doc/.ipynb_checkpoints/
 doc/sphinx/Makefile
 doc/sphinx/make.bat
 doc/sphinx/build
-doc/.ipynb_checkpoints
 doc/jupyter/build/
-doc/jupyter/pandaict/.ipynb_checkpoints
+*/.ipynb_checkpoints/
 pandaict_orig/__pycache__/
 pandaict_orig/outage/__pycache__/
 pandaict_orig/plotting/__pycache__/
