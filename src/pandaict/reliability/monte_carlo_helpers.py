@@ -209,12 +209,12 @@ def _inf_warning(data, event_name, explanation):
     """Return warning string if data contains inf values, else None."""
     n_inf = int(np.sum(np.isinf(data)))
     if n_inf > 0:
-        return (f"{n_inf} simulation(s) reached max_events without {event_name}. "
-                f"That speaks for {explanation}!")
+        return (f"{n_inf} simulation(s) reached max_events without {event_name}. \n"
+                f"         That speaks for {explanation}!")
     return None
 
 
-def _filter_results(all_results, is_repairable):
+def _filter_results(all_results, is_repairable, max_time):
     """Filter out invalid results (inf/NaN) from simulation output."""
 
     if is_repairable:
@@ -248,13 +248,20 @@ def _filter_results(all_results, is_repairable):
 
     # Print all collected warnings in one go
     msg_parts = [w for w in warnings if w is not None]
-    if msg_parts:
-        print("Warning: (Monte Carlo): " + "; ".join(msg_parts)
-              + ". These runs were excluded from MTTF/MTTR estimation.")
 
-    if len(mttf_samples) == 0:
+    # only warn if max_time speedup is *not* used!
+    if msg_parts and max_time == np.inf:
+        print("Warning: " + "; ".join(msg_parts)+ " \n"
+              "         These runs were excluded from MTTF/MTTR estimation.")
+
+    if len(mttf_samples) == 0 and max_time == np.inf:
         print("Warning: No valid Monte Carlo samples "
               "(all runs either NaN or max_events timeout)")
+        return {'mttf_samples': None, 'mttr_samples': None}
+    
+    elif len(mttf_samples) == 0 and max_time < np.inf:
+        print("Info: No finite samples were collected "
+              "(all runs either reached T or max_events timeout)")
         return {'mttf_samples': None, 'mttr_samples': None}
 
     return {'mttf_samples': mttf_samples, 'mttr_samples': mttr_samples}

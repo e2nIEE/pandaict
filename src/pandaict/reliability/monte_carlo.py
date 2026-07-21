@@ -17,7 +17,6 @@ from pandaict.reliability.monte_carlo_helpers import (
         _normalize_connection_pairs,
         _graph_to_numba_arrays,
         _filter_results,
-        _critical_bar_plot,
         _print_criticality,
         _calc_criticalities,
         _save_criticality_excel
@@ -74,7 +73,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
 
         **top_n**           - int, number of most critical components to be displayed
 
-        **plot**            - bool, whether to plot the graph
+        **plot**            - bool, whether to plot the graph NOTE: !deprecated: moved to reliabilty.py!
 
         **verbose**         - bool, prints component criticalities to console
 
@@ -154,13 +153,13 @@ def analyze_critical_components(all_critical, G, sources, targets,
     lam_all = np.concatenate([lam_edges_arr, lam_nodes_arr])
     mu_all = np.concatenate([mu_edges_arr, mu_nodes_arr])
 
-    # Failure-Baseline: P(Last Straw = i | failure event) ~ λ_i
+    # Failure-Baseline: P(Last Straw = i | failure event) ~ lambda_i
     lam_total = np.sum(lam_all)
     failure_fractions = (lam_all / lam_total
                          if lam_total > 0
                          else np.ones(n_events) / n_events)
 
-    # Repair-Baseline: P(Last Straw = i | repair event) ~ μ_i
+    # Repair-Baseline: P(Last Straw = i | repair event) ~ mu_i
     mu_total = np.sum(mu_all)
     repair_fractions = (mu_all / mu_total
                         if mu_total > 0
@@ -306,10 +305,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         **mttr_samples**        - np.ndarray, mttr samples (None if not return_samples or non-repairable)
         }
     """
-
-    if max_time < np.inf:
-        print('Warning: max_time Speedup is used. MTTF, MTTR might be meaningless.')
-
     sources, targets = _normalize_connection_pairs(sources, targets)
 
     # Catch if G is not connected at start.
@@ -325,19 +320,17 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
     # Check for non-repairable case
     is_nonrepairable = (all(mu == 0 for mu in mu_edges.values()) and all(mu == 0 for mu in mu_nodes.values()))
-    is_repairable = not is_nonrepairable    # TODO: do more elegantly later
-
-    # TODO: REMOVE is_nofailure
-    # Check for no-failure case
-    is_nofailure = (all(lam == 0 for lam in lam_edges.values()) and all(lam == 0 for lam in lam_nodes.values()))
+    is_repairable = not is_nonrepairable
 
     all_critical = None
     edge_criticality = None
     node_criticality = None
 
+    # Check if all rates are zero and warn
+    is_nofailure = (all(lam == 0 for lam in lam_edges.values()) and all(lam == 0 for lam in lam_nodes.values()))
+
     # Check for no-failure case
     if is_nofailure:
-        # TODO!
         print('All failure rates are zero. Please adjust!')
         return {'mttf':np.inf, 'mttr':0.0, 'mttf_samples':None, 'mttr_samples':None}
 
@@ -348,12 +341,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                                                max_time, max_events,
                                                return_samples, analyze_crit, laziness,
                                                parallel)
-
-        #if analyze_crit and all_critical.size > 0:
-            #crit_dict = analyze_critical_components(all_critical, G, sources, targets, lam_edges, lam_nodes, mu_edges, mu_nodes)
-
-            #edge_criticality = crit_dict['edge_criticality']
-            #node_criticality = crit_dict['node_criticality']
 
     else:
         # Python fallback
@@ -366,7 +353,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         all_results = _run_python(G, sources, targets, is_repairable, lam_edges, lam_nodes, mu_edges, mu_nodes, N, depth)
 
     # filter results
-    valid_results = _filter_results(all_results, is_repairable)
+    valid_results = _filter_results(all_results, is_repairable, max_time)
 
     # unpack results
     mttf_clean_samples = valid_results['mttf_samples']

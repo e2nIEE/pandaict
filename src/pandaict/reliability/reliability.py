@@ -11,7 +11,7 @@ from pandaict.topology.routing_utils    import create_multidigraph, __get_nx_nod
 from pandaict.reliability.monte_carlo import (
     estimate_mttf_mttr,
     analyze_critical_components as _analyze_critical_components,
-    empirical_reliability
+    empirical_reliability as _empirical_reliability
 )
 from pandaict.reliability.monte_carlo_helpers import _critical_bar_plot
 import matplotlib.pyplot as plt
@@ -302,8 +302,6 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
         >>> print(f"MTBF = {result['mtbf_h']:.1f} h, MTTR = {result['mttr_h']:.1f} h")
         MTBF = 9200.4 h, MTTR = 5.8 h
     """
-    # TODO: why is MTTF smaller for repairable systems
-
     # set default kwargs
     defaults = {
         'min_connected': -1,
@@ -325,6 +323,9 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
 
     # overwrite values not permitted for change
     config = {**defaults, **kwargs, **protected}
+
+    if config.get('max_time') < np.inf:
+        print('Info: max_time Speedup is used. MTTF, MTTR might be meaningless.')
 
     # get networkX graph and source/target lists
     graph, sources, targets = _pandaict_to_mcnxgraph(ict_net, connections)
@@ -420,11 +421,11 @@ def analyze_critical_components_for_conn(ict_net, connections,
 
         - With ``rate_adjustment=False``, the score reflects the raw failure
           frequency of each component, which is closer to the **Criticality
-          importance measure** (Birnbaum × component unreliability).
+          importance measure** (Birnbaum x component unreliability).
 
         Empirical comparisons across various network topologies show that the
         ranking produced by this function correlates well with Birnbaum
-        importance (mean Spearman ρ ≈ 0.76), making it a practical
+        importance (mean Spearman: 0.76), making it a practical
         simulation-based alternative when analytical importance measures are
         difficult to compute.
 
@@ -440,7 +441,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
         >>> result['edge_criticality'][:3]
         array([1.42, 0.87, 1.15])
     """
-    # TODO: call plot functions (bar plot, graph plot) from here
+    # TODO: call plot functions (graph plot) from here
     # TODO: call excel function from here
     defaults = {
         'min_connected': -1,
@@ -537,9 +538,9 @@ def analyze_critical_components_for_conn(ict_net, connections,
         top_node_fail_idx = np.argsort(node_crit)[::-1]
 
         _critical_bar_plot(top_edge_fail_idx, top_node_fail_idx,
-                            edge_crit, edge_labels,
-                            node_crit, node_labels,
-                            rate_adjustment)
+                           edge_crit, edge_labels,
+                           node_crit, node_labels,
+                           rate_adjustment)
 
     return {
         'edge_criticality': crit_result['edge_criticality'],
@@ -644,6 +645,6 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     # Handle scalar and array input uniformly
     T_arr = np.atleast_1d(np.asarray(T, dtype=np.float64))
 
-    R = np.array([empirical_reliability(t, samples) for t in T_arr])
+    R = np.array([_empirical_reliability(t, samples) for t in T_arr])
 
     return float(R[0]) if scalar_input else R
