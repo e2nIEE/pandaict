@@ -13,9 +13,9 @@ parts:
   - file: pp_pict_connector_example
   - file: pandaICT_scenario
   
-#- caption: How-To Guides
-#  chapters:
-#  - file: howto/00_overview
+- caption: How-To Guides
+  chapters:
+  - file: howto/00_overview
 #  - file: howto/01_getting_started
 #  - file: howto/02_physical_layer
 #  - file: howto/03_logical_layer
