@@ -30,6 +30,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
         **ict_net** (pandaictNet) - The pandaict network
         **data** (dict) - dictionary of standard type parameters (without the name)
         **name** (string) - name of the standard type as string
+                            NOTE: if a standard type with this already exists, it is overwritten.
         **element** (string, default "link" - Element type, may be "link" or "protocol"
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
@@ -66,6 +67,7 @@ def create_std_types(ict_net, data, element="link", overwrite=True, custom=True,
     :INPUT:
         **ict_net** (pandaictNet) - The pandaict network
         **data** (dict) - dictionary of standard type parameters (including type names)
+                          NOTE: if a standard type with given name already exists, it is overwritten.
         **element** (string, default "link" - Element type, may be "link" or "protocol"
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 

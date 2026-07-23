@@ -62,7 +62,7 @@ def _get_default_values(sheetname):
     conv_values = {'Nodes': ["", NodeType.ROUTER,True,None,None,"all",None,None,None],
                    'Devices': ["",DeviceType.RTU,True,None,None,None],
                    'Links': ["",None,True,None,None,None,0],
-                   'Connections': ["",True,None,None,None,"",[],None,[],[]],
+                   'Connections': ["",True,None,None,None,"",[],None,[],None],
                    'Apps': ["",AppType.CLIENT,True,None,None,None]}    
     return conv_values[sheetname] or None    
 
@@ -120,8 +120,10 @@ def _get_converted_value(rvalue, ctype, cname):
             rconv = _convert_info_item(rconv, rvalue)
         elif cname in ["producer","payload_size_byte"]:
             rconv = _convert_prod_payload(rconv, rvalue)
-        elif cname in ["prod_freq_ms", "bandwidth_Mbps", "latency_ms"]:
-            rconv = _convert_prodfreq_bw_lat(ctype, rconv, rvalue)
+        elif cname in ["prod_freq_ms"]:
+            rconv = _convert_prodfreq(ctype, rconv, rvalue)
+        elif cname in ["bandwidth_Mbps", "latency_ms"]:
+            rconv = _convert_bw_lat(ctype, rconv, rvalue)
         elif cname in ["peers"]:
             speer1 = rvalue.split(";")[0].strip()
             speer2 = rvalue.split(";")[1].strip()
@@ -136,12 +138,22 @@ def _get_converted_value(rvalue, ctype, cname):
     return rconv
 
 
-def _convert_prodfreq_bw_lat(ctype, rconv, rvalue):
+def _convert_bw_lat(ctype, rconv, rvalue):
     if isinstance(rvalue, (int, float)):
         rconv = ctype([rvalue])
     else:
         rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])
     return rconv
+
+def _convert_prodfreq(ctype, rconv, rvalue):
+    if isinstance(rvalue, (int, float)):
+        rconv = ctype([rvalue])
+    else:
+        rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])
+    if rconv==[]: 
+        return None
+    else:
+        return rconv
 
 
 def _convert_prod_payload(rconv, rvalue):

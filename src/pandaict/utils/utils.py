@@ -39,7 +39,7 @@ def uuid2elt(ict_net, uid):
     for et in elt_types:
         try:
             idx = np.nonzero(ict_net[et]['uuid']==uid)[0][0]
-            return (et, idx)
+            return (et, int(idx))
         except:
             pass            
     return None
@@ -404,7 +404,7 @@ def get_bandwidth_Mbps(ict_net, link_elt):
 def __get_elt_idx_by_name(ict_net, elt_name, elt_type):
     if elt_name in ict_net[elt_type]['name'].values:
         elt_id = ict_net[elt_type].loc[ict_net[elt_type]['name'] == elt_name].index.values[0]
-        return elt_id 
+        return int(elt_id) 
     else:
         return None
 
