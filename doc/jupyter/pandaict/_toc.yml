@@ -16,12 +16,12 @@ parts:
 - caption: How-To Guides
   chapters:
   - file: howto/00_overview
-#  - file: howto/01_getting_started
-#  - file: howto/02_physical_layer
-#  - file: howto/03_logical_layer
-#  - file: howto/04_workflow_analysis
-#  - file: howto/05_inspection_management
-#  - file: howto/06_std_types
+  - file: howto/01_getting_started
+  - file: howto/02_physical_layer
+  - file: howto/03_logical_layer
+  - file: howto/04_workflow_analysis
+  - file: howto/05_inspection_management
+  - file: howto/06_std_types
 #  - file: howto/07_advanced_topics
 #  - file: howto/08_howto_MTBF_estimation
 #  - file: howto/09_howto_MTBF_MTTR_estimation

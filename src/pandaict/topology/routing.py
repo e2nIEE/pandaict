@@ -375,7 +375,7 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
                 the usage probability. Also, the lists contain the values that the links were sorted by. 
         
         :EXAMPLE:
-            calc_routes_for_connection(ict_net, ('conn',0))            
+            calc_sorted_links_by_connection(ict_net, ('conn',0))            
 
     """
     down_links = []
