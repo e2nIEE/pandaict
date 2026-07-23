@@ -56,7 +56,7 @@ def _normalize_connection_pairs(source, target):
     Supported Formats:
         1. single nodes: source="S", target="T" -> [idx_S], [idx_T]
         2. lists of same length: source=["S1","S2"], target=["T","T"] -> [idx_S1,idx_S2], [idx_T,idx_T]
-        3. broadcast: source=["S1","S2"], target="T" → [idx_S1,idx_S2], [idx_T,idx_T]
+        3. broadcast: source=["S1","S2"], target="T" -> [idx_S1,idx_S2], [idx_T,idx_T]
 
     :OUTPUT:
         **(source_indices, target_indices)**    - np.ndarray(dtype=int64)
@@ -256,12 +256,12 @@ def _filter_results(all_results, is_repairable, max_time):
 
     if len(mttf_samples) == 0 and max_time == np.inf:
         print("Warning: No valid Monte Carlo samples "
-              "(all runs either NaN or max_events timeout)")
+              "(all runs either NaN or max_events timeout without outage)")
         return {'mttf_samples': None, 'mttr_samples': None}
     
     elif len(mttf_samples) == 0 and max_time < np.inf:
         print("Info: No finite samples were collected "
-              "(all runs either reached T or max_events timeout)")
+              "(all runs either reached T or max_events timeout without outage)")
         return {'mttf_samples': None, 'mttr_samples': None}
 
     return {'mttf_samples': mttf_samples, 'mttr_samples': mttr_samples}
