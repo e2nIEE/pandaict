@@ -4,7 +4,7 @@ Created on 6.03.2024
 @author: gbanerjee
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 """
 
 import networkx as nx

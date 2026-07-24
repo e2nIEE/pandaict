@@ -1,15 +1,10 @@
 '''
 Created on 8.02.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 import numpy as np 
@@ -39,8 +34,8 @@ def uuid2elt(ict_net, uid):
     for et in elt_types:
         try:
             idx = np.nonzero(ict_net[et]['uuid']==uid)[0][0]
-            return (et, idx)
-        except (TypeError, KeyError, IndexError, ValueError):
+            return (et, int(idx))
+        except:
             pass            
     return None
     
@@ -336,7 +331,7 @@ def get_values_for_links(ict_net, link_elts, valuetype):
             values += [ict_net.link.iloc[l[1]]['length_km']]
         elif ('bit_error_rate' in str(valuetype).casefold() or 'ber' in str(valuetype).casefold()):
             length = ict_net.link.iloc[l[1]]['length_km']
-            if length is None: 
+            if length is None or ltype['ber_per_km'] is None:
                 values += [None]
             else:
                 vtype = 'bit_error_rate' 
@@ -398,13 +393,13 @@ def get_bandwidth_mbps(ict_net, link_elt):
     :EXAMPLE:
         get_bandwidth_mbps(ict_net, ('link',2))
     """  
-    
+        
     return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
 
 def __get_elt_idx_by_name(ict_net, elt_name, elt_type):
     if elt_name in ict_net[elt_type]['name'].values:
         elt_id = ict_net[elt_type].loc[ict_net[elt_type]['name'] == elt_name].index.values[0]
-        return elt_id 
+        return int(elt_id) 
     else:
         return None
 

@@ -1,11 +1,16 @@
 '''
 Created on 22.12.2025
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import random
 import statistics
 import numpy as np
+from pandaict.pilogger import pilogger
+
 
 # =====================================================================================
 # PYTHON-ONLY Fallback (Union-Find)
@@ -103,7 +108,7 @@ def _simulate_python_repairable(G, source, target,
                 break
 
             if total_rate == 0:
-                print("lambda, mu are all 0. Please define rates.")
+                pilogger.warning("lambda, mu are all 0. Please define rates.")
                 return None
 
             dt = random.expovariate(total_rate)
@@ -247,3 +252,17 @@ def _simulate_python_norepair(G, source, target, lam_edges, lam_nodes):
                 break
 
     return t
+
+def _run_python(G, sources, targets, is_repairable, lam_edges, lam_nodes, mu_edges, mu_nodes,
+               N, depth):
+
+    if not is_repairable:
+        res = [_simulate_python_norepair(G, sources, targets, lam_edges, lam_nodes) for _ in range(N)]
+
+    else:
+        res = [_simulate_python_repairable(G, sources, targets, lam_edges, lam_nodes,
+                                              mu_edges, mu_nodes, depth) for _ in range(N)]
+
+
+
+    return np.array(res, dtype=np.float64)

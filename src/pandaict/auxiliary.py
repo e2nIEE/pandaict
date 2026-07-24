@@ -1,11 +1,8 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 30.01.2024
 
-@author: jringelstein
-'''
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause'''
 
 from collections.abc import MutableMapping
 from pandaict import __version__
@@ -29,7 +26,7 @@ def __preserve_dtypes(df, dtypes):
 
 
 def __get_free_id(df):
-    return np.int64(0) if len(df) == 0 else df.index.values.max() + 1
+    return 0 if len(df) == 0 else df.index.values.max() + 1
 
 
 class ADict(dict, MutableMapping):

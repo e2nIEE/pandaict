@@ -1,15 +1,9 @@
 '''
 Created on 10.09.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 from pandaict.utils.utils import get_elts_any
@@ -52,15 +46,15 @@ def __check_lup_prob_sum_lt_one(lup_table, downstream):
         return False 
     return True 
 
-def get_lam_mu_from_graph(G):
+def _get_lam_mu_from_graph(G):
     """Extract failure and repair rates from graph attributes"""
     lam_edges, mu_edges = {}, {}
     lam_nodes, mu_nodes = {}, {}
 
     for e in G.edges(data=True):
         u, v, edata = e
-        mtbf_h = edata.get('mtbf_h', 0)
-        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
+        mttf_h = edata.get('mttf_h', 0)
+        lam = 0 if mttf_h == 0 else 1 / mttf_h
         lam_edges[(u, v)] = lam
 
         mttr_h = edata.get('mttr_h', 0)
@@ -69,8 +63,8 @@ def get_lam_mu_from_graph(G):
 
     for n in G.nodes(data=True):
         u, ndata = n
-        mtbf_h = ndata.get('mtbf_h', 0)
-        lam = 0 if mtbf_h == 0 else 1 / mtbf_h
+        mttf_h = ndata.get('mttf_h', 0)
+        lam = 0 if mttf_h == 0 else 1 / mttf_h
         lam_nodes[u] = lam
 
         mttr_h = ndata.get('mttr_h', 0)

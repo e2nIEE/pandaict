@@ -4,8 +4,8 @@ Created on 21.03.2024
 @author: gbanerjee
 '''
 
-
-from pandaict.networks.test_networks import create_testnet1, create_testnet2, create_testnet3, extend_testnet1
+from core_test import *
+from pandaict.networks.test_networks import create_testnet1
 from pandaict.plot import create_plot, __create_g__
 import PIL
 from PIL import Image, ImageChops
@@ -16,11 +16,9 @@ import os
 
 class Plot_Test():    
     
-    # NOTE: all function names to be executed by unittest MUST START with "test" !     
-        
+    # NOTE: all function names to be executed by unittest MUST START with "test" !             
     def test_plot_dev(self, utest):
         net1 = create_testnet1()
-        net1 = extend_testnet1(net1)
         plt = create_plot(net1, draw_type='dev')
 
         
@@ -42,7 +40,6 @@ class Plot_Test():
            
     def test_plot_app(self, utest):
         net1 = create_testnet1()
-        net1 = extend_testnet1(net1)
         plt = create_plot(net1, draw_type='app')
 
         # plt.savefig(r'C:\Users\gbanerjee\GIt_Hub_Lab\pandaict\test\plt_app.png')
@@ -63,8 +60,7 @@ class Plot_Test():
     
     def test_graph_dev(self, utest):
         net1 = create_testnet1()
-        net1 = extend_testnet1(net1)
-        G, _ = __create_g__(None, 'dev', net1)
+        G, edge_labels = __create_g__(None, 'dev', net1)
         
         # Iterate through nodes
         for node_g, node_name in zip(G.nodes(), ['Node1', 'Node2', 'Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):
@@ -74,13 +70,11 @@ class Plot_Test():
         for edge, edge_compare in zip(G.edges(), [('Node1', 'CC'), ('Node1', 'Node2'), ('Node2', 'Conv1'),
                                     ('Node2', 'Conv2'), ('Node2', 'Conv3'), ('Node2', 'PQ1'), 
                                     ('Node2', 'PQ2'), ('Conv1', 'PC1'), ('Conv2', 'PC2'), ('Conv3', 'SC')]):
-           utest.assertTrue(edge == edge_compare)
-           
+           utest.assertTrue(edge == edge_compare)        
     
     def test_graph_app(self, utest):
         net1 = create_testnet1()
-        net1 = extend_testnet1(net1)
-        G, _ = __create_g__(None, 'app', net1)
+        G, edge_labels = __create_g__(None, 'app', net1)
         
         # Iterate through nodes
         for node_g, node_name in zip(G.nodes(), ['Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):

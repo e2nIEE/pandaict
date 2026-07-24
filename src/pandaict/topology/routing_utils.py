@@ -1,6 +1,9 @@
 '''
 Created on 30.01.2024
-@author: gbanerjee
+@author: jringelstein
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import networkx as nx
@@ -90,8 +93,8 @@ def __add_edges_to_multidigraph(mdg, nxn1, nxn2, weight, bidir, pielt):
             continue     
         mdg.add_edge(nxn1, n2, pielt = pielt, weight = weight[0] if weight is not None else None)            
         if bidir:
-            mdg.add_edge(n2, nxn1, pielt = pielt, weight = weight[1] if weight is not None else None)    
-        
+            mdg.add_edge(n2, nxn1, pielt = pielt, weight = weight[1] if weight is not None else None)
+            
 def create_multidigraph(ict_net, protocol, in_service_only = True, weights = None, validate = False):
     
     mdg = nx.MultiDiGraph()

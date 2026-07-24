@@ -1,15 +1,9 @@
 '''
 Created on 2.02.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import uuid
@@ -17,7 +11,7 @@ from pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
 
 
-def create_std_type(ict_net, data, name, element="link", overwrite=True, check_required=True):
+def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=True, check_required=True):
     """
     Creates type data in the type dict. The following mandatory parameters have to be at least contained in data:
     
@@ -30,6 +24,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
         **ict_net** (pandaictNet) - The pandaict network
         **data** (dict) - dictionary of standard type parameters (without the name)
         **name** (string) - name of the standard type as string
+                            NOTE: if a standard type with this already exists, it is overwritten.
         **element** (string, default "link" - Element type, may be "link" or "protocol"
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
@@ -54,16 +49,19 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
                 raise UserWarning("%s is required as %s type parameter" % (par, element))
     stdict = ict_net.std_types[element]
     if overwrite or name not in stdict:
+        if custom:
+            data.update({'custom': True})
         stdict.update({name: data})
 
 
-def create_std_types(ict_net, data, element="link", overwrite=True, check_required=True):
+def create_std_types(ict_net, data, element="link", overwrite=True, custom=True, check_required=True):
     """
     Creates multiple standard types in the type dict.
 
     :INPUT:
         **ict_net** (pandaictNet) - The pandaict network
         **data** (dict) - dictionary of standard type parameters (including type names)
+                          NOTE: if a standard type with given name already exists, it is overwritten.
         **element** (string, default "link" - Element type, may be "link" or "protocol"
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
@@ -71,7 +69,7 @@ def create_std_types(ict_net, data, element="link", overwrite=True, check_requir
     """
     for name, typdata in data.items():
         create_std_type(ict_net, data=typdata, name=name, element=element, overwrite=overwrite,
-                        check_required=check_required)
+                        custom=custom, check_required=check_required)
 
 
 def __controller_area_linktypes():
@@ -301,7 +299,7 @@ def add_basic_std_types(ict_net):
     linktypes = __basic_link_std_types()
     protocols = __basic_protocol_std_types()
 
-    create_std_types(ict_net, data=linktypes, element="link")
-    create_std_types(ict_net, data=protocols, element="protocol")  
+    create_std_types(ict_net, data=linktypes, element="link", custom=False)
+    create_std_types(ict_net, data=protocols, element="protocol", custom=False)  
         
     return linktypes    

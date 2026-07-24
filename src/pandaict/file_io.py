@@ -1,7 +1,9 @@
 '''
 Created on 8.03.2024
 @author: jringelstein
-@note: file_io is not threadsave through the use of copy.deepcopy 
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 
 '''
 
@@ -12,7 +14,7 @@ import uuid
 from math import isnan
 from pandaict import create_empty_network
 from pandaict import __version__
-from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem, add_custom_enum
+from pandaict.utils.enums import NodeType, DeviceType, AppType, InfoItem, addCustomEnum
 from pandaict.pilogger import pilogger
 from json import JSONDecodeError
 from aenum import extend_enum
@@ -78,7 +80,10 @@ def __to_type(df, dfkey, totype, dflist=""):
                 elif dflist=="list":
                     df.at[i,dfkey] = [totype(e) for e in s]                        
                 else:
-                    df.at[i,dfkey] = tuple(totype(e) for e in s)
+                        if (isinstance(s[0], list) or isinstance(s[0], tuple)):
+                            df.at[i,dfkey] = tuple([totype(e) for e in s])
+                        else:
+                            df.at[i,dfkey] = totype(s)                                                            
             else:
                 df.at[i,dfkey] = totype(s)
     return df
@@ -117,7 +122,7 @@ def __json_to_enum(ict_net, df):
     str_to_type = {'NodeType': NodeType, 'DeviceType': DeviceType, 'AppType':AppType, 'InfoItem': InfoItem}
     for i, e in df.iterrows():        
         etype = str_to_type[e['type']]
-        add_custom_enum(ict_net, etype, e['name'], e['value'])
+        addCustomEnum(ict_net, etype, e['name'], e['value'])
     return df
                 
 def __json_to_df(df, elt_type):

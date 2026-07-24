@@ -1,15 +1,9 @@
 '''
 Created on 30.01.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 from pandaict.auxiliary import pandaICTNet
@@ -106,8 +100,8 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
         if isinstance(geodata, dict):
             if "type" not in geodata.keys() or "coordinates" not in geodata.keys():
                 raise UserWarning("geodata must contain 'type' and 'coordinates' keys") 
-        elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
-            raise UserWarning("geodata must be (float, float) tuple or geojson")                 
+        elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):
+            raise UserWarning("geodata must be (float, float) tuple or geojson")
     __create_std_type_check(ict_net, link_types, (str), 'link', allow_list=True)
     __check_uuid(ict_net, uid) 
 
@@ -137,7 +131,8 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
         
         **geodata** ((x,y)-tuple or GeoJSON Point, default None) - coordinates used for plotting
         
-        **link_types** (aenum, default None) - link types supported by the node. Standard link types can be used. 
+        **link_types** (aenum, default None) - link types supported by the node. Standard link types can be used. \
+            None means that all link types are supported.
        
         **ber** (float, 0) - Bit error rate for this node, in p.u.
 
@@ -166,7 +161,7 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
 
     __preserve_dtypes(ict_net.node, dtypes)
     
-    return ruuid if use_uuid else ('node', index)
+    return ruuid if use_uuid else ('node', int(index))
 
 def __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid):
     
@@ -259,7 +254,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
 
     __preserve_dtypes(ict_net.link, dtypes)
 
-    return ruuid if use_uuid else ('link', index)
+    return ruuid if use_uuid else ('link', int(index))
 
 def __create_device_check(ict_net, device_type, uid):
     
@@ -317,7 +312,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
 
     __preserve_dtypes(ict_net.device, dtypes)
 
-    return ruuid if use_uuid else ('device', index)
+    return ruuid if use_uuid else ('device', int(index))
      
 def __create_app_check_conversion(ict_net, cn, name):
     if not isinstance(cn, tuple):
@@ -402,7 +397,7 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
 
     __preserve_dtypes(ict_net.app, dtypes)
 
-    return ruuid if use_uuid else ('app', index)
+    return ruuid if use_uuid else ('app', int(index))
 
 def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_service=True, use_uuid=False,            
                       conversions=None, mtbf_h=0, mttr_h=0 ):
@@ -439,7 +434,7 @@ def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_se
             notation is used, otherwise uuids are returned.
 
     :EXAMPLE:
-        create_ict_app(net, name = "PowerMeterApp1", device=0)
+        create_ict_devapp(net, name = "PowerMeter1")
     """
     
     dev = create_ict_device(ict_net, name=name, device_type=device_type, in_service=in_service, use_uuid=use_uuid, mtbf_h=mtbf_h, mttr_h=mttr_h)    
@@ -581,5 +576,5 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     
     __preserve_dtypes(ict_net.conn, dtypes)
 
-    return ruuid if use_uuid else ('conn', index)
+    return ruuid if use_uuid else ('conn', int(index))
 

@@ -1,6 +1,9 @@
 '''
 Created on 30.01.2024
-@author: gbanerjee
+@author: jringelstein
+
+SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import networkx as nx
@@ -80,7 +83,7 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
     # create nxgraph for connection and get routes        
-    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=True)    
+    mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=False)
     from_dev = ('device', ict_net.app.iloc[conn['from']]['device'])
     to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
     if respect_iptables:
@@ -327,7 +330,7 @@ def calc_routes_for_connection(ict_net, conn_elt, verbose=False):
     """ 
     # Create the nxgraph
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
-    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=False)
     
     paths = __get_possible_routes(ict_net, mdg, conn)
     
@@ -366,7 +369,7 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
                 the usage probability. Also, the lists contain the values that the links were sorted by. 
         
         :EXAMPLE:
-            calc_routes_for_connection(ict_net, ('conn',0))            
+            calc_sorted_links_by_connection(ict_net, ('conn',0))            
 
     """
     down_links = []
@@ -419,7 +422,7 @@ def is_connection_possible(ict_net, conn_elt):
     """ 
     # Create the nxgraph
     conn = get_elts_any(ict_net, conn_elt, expected=['conn'])
-    mdg = create_multidigraph(ict_net, conn['protocol'], validate=True)
+    mdg = create_multidigraph(ict_net, conn['protocol'], validate=False)
     
     n1, n2 = __get_end_nxnodes_for_conn(ict_net, mdg, conn)
     down = nx.has_path(mdg, n1, n2)

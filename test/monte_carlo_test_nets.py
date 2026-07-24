@@ -7,20 +7,20 @@ import networkx as nx
 # Implementation of some basic network topologies to run
 # ----------------------------------------------------------------------------------------------------------------------
 # 4Net_11:
-def N4_11(mtbf_h_nodes, mtbf_h_edges, mttr_h_nodes, mttr_h_edges):
+def N4_11(mttf_h_nodes, mttf_h_edges, mttr_h_nodes, mttr_h_edges):
 
     G = nx.Graph()
     G.add_nodes_from([
-        ("S", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("A", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("B", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("T", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes})
+        ("S", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("A", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("B", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("T", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes})
     ])
     G.add_edges_from([
-        ("S", "A", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("A", "T", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("S", "B", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("B", "T", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges})
+        ("S", "A", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("A", "T", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("S", "B", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("B", "T", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges})
     ])
 
     return G
@@ -79,45 +79,45 @@ def N4_22():
 def N4_31():
     G = nx.Graph()
     G.add_nodes_from([
-        ("S", {'mtbf_h': 1, 'mttr_h': 10}),
-        ("A", {'mtbf_h': 1, 'mttr_h': 10}),
-        ("B", {'mtbf_h': 1, 'mttr_h': 10}),
-        ("T", {'mtbf_h': 1, 'mttr_h': 10})
+        ("S", {'mttf_h': 1, 'mttr_h': 10}),
+        ("A", {'mttf_h': 1, 'mttr_h': 10}),
+        ("B", {'mttf_h': 1, 'mttr_h': 10}),
+        ("T", {'mttf_h': 1, 'mttr_h': 10})
     ])
 
     G.add_edges_from([
-        ("S", "A", {'mtbf_h': 0.1, 'mttr_h': 1}),
-        ("A", "T", {'mtbf_h': 0.1, 'mttr_h': 1}),
-        ("S", "B", {'mtbf_h': 0.1, 'mttr_h': 1}),
-        ("B", "T", {'mtbf_h': 0.1, 'mttr_h': 1}),
-        ("S", "T", {'mtbf_h': 0.1, 'mttr_h': 1}),
-        ("A", "B", {'mtbf_h': 0.1, 'mttr_h': 1})
+        ("S", "A", {'mttf_h': 0.1, 'mttr_h': 1}),
+        ("A", "T", {'mttf_h': 0.1, 'mttr_h': 1}),
+        ("S", "B", {'mttf_h': 0.1, 'mttr_h': 1}),
+        ("B", "T", {'mttf_h': 0.1, 'mttr_h': 1}),
+        ("S", "T", {'mttf_h': 0.1, 'mttr_h': 1}),
+        ("A", "B", {'mttf_h': 0.1, 'mttr_h': 1})
     ])
 
     return G
 
 # 6N-seriell
-def N6_seriell(mtbf_h_nodes, mtbf_h_edges, mttr_h_nodes, mttr_h_edges):
+def N6_seriell(mttf_h_nodes, mttf_h_edges, mttr_h_nodes, mttr_h_edges):
 
     G = nx.Graph()
 
     G.add_nodes_from([
-        ("S", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("1", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("2", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("3", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("4", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("5", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("T", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes})
+        ("S", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("1", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("2", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("3", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("4", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("5", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("T", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes})
     ])
 
     G.add_edges_from([
-        ("S", "1", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("1", "2", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("2", "3", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("3", "4", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("4", "5", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("5", "T", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges})
+        ("S", "1", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("1", "2", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("2", "3", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("3", "4", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("4", "5", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("5", "T", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges})
     ])
 
     return G
@@ -138,23 +138,23 @@ def oneNet():
     return G, mtbf_h, mttr_h
 
 #
-def N3_parallel(mtbf_h_nodes, mtbf_h_edges, mttr_h_nodes, mttr_h_edges):
+def N3_parallel(mttf_h_nodes, mttf_h_edges, mttr_h_nodes, mttr_h_edges):
 
     G = nx.Graph()
     G.add_nodes_from([
-        ("S", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("A", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("B", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("C", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes}),
-        ("T", {'mtbf_h': mtbf_h_nodes, 'mttr_h': mttr_h_nodes})
+        ("S", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("A", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("B", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("C", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes}),
+        ("T", {'mttf_h': mttf_h_nodes, 'mttr_h': mttr_h_nodes})
     ])
     G.add_edges_from([
-        ("S", "A", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("A", "T", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("S", "B", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("B", "T", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("S", "C", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges}),
-        ("C", "T", {'mtbf_h': mtbf_h_edges, 'mttr_h': mttr_h_edges})
+        ("S", "A", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("A", "T", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("S", "B", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("B", "T", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("S", "C", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges}),
+        ("C", "T", {'mttf_h': mttf_h_edges, 'mttr_h': mttr_h_edges})
     ])
 
     return G
@@ -199,7 +199,7 @@ def pp_pi_connector():
     return G, mtbf_h, mttr_h
 
 
-def two_sources_independent(mtbf_n, mtbf_e, mttr_n, mttr_e):
+def two_sources_independent(mttf_n, mttf_e, mttr_n, mttr_e):
     """
     Two independent sources and paths to one target.
 
@@ -212,24 +212,24 @@ def two_sources_independent(mtbf_n, mtbf_e, mttr_n, mttr_e):
     G = nx.Graph()
 
     # unfailing nodes
-    G.add_node("S1", mtbf_h=0, mttr_h=0)
-    G.add_node("S2", mtbf_h=0, mttr_h=0)
-    G.add_node("T", mtbf_h=0, mttr_h=0)
+    G.add_node("S1", mttf_h=0, mttr_h=0)
+    G.add_node("S2", mttf_h=0, mttr_h=0)
+    G.add_node("T", mttf_h=0, mttr_h=0)
 
     # nodes on path
-    G.add_node("A", mtbf_h=mtbf_n, mttr_h=mttr_n)
-    G.add_node("B", mtbf_h=mtbf_n, mttr_h=mttr_n)
+    G.add_node("A", mttf_h=mttf_n, mttr_h=mttr_n)
+    G.add_node("B", mttf_h=mttf_n, mttr_h=mttr_n)
 
     # edges
-    G.add_edge("S1", "A", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e1
-    G.add_edge("A", "T", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e2
-    G.add_edge("S2", "B", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e3
-    G.add_edge("B", "T", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e4
+    G.add_edge("S1", "A", mttf_h=mttf_e, mttr_h=mttr_e)  # e1
+    G.add_edge("A", "T", mttf_h=mttf_e, mttr_h=mttr_e)  # e2
+    G.add_edge("S2", "B", mttf_h=mttf_e, mttr_h=mttr_e)  # e3
+    G.add_edge("B", "T", mttf_h=mttf_e, mttr_h=mttr_e)  # e4
 
     return G
 
 
-def two_sources_shared_component(mtbf_n, mtbf_e, mttr_n, mttr_e):
+def two_sources_shared_component(mttf_n, mttf_e, mttr_n, mttr_e):
     """
     Two paths with shared component C.
 
@@ -243,26 +243,26 @@ def two_sources_shared_component(mtbf_n, mtbf_e, mttr_n, mttr_e):
     G = nx.Graph()
 
     # unfailing nodes
-    G.add_node("S1", mtbf_h=0, mttr_h=0)
-    G.add_node("S2", mtbf_h=0, mttr_h=0)
-    G.add_node("T", mtbf_h=0, mttr_h=0)
+    G.add_node("S1", mttf_h=0, mttr_h=0)
+    G.add_node("S2", mttf_h=0, mttr_h=0)
+    G.add_node("T", mttf_h=0, mttr_h=0)
 
     # nodes on path
-    G.add_node("A", mtbf_h=mtbf_n, mttr_h=mttr_n)
-    G.add_node("B", mtbf_h=mtbf_n, mttr_h=mttr_n)
-    G.add_node("C", mtbf_h=mtbf_n, mttr_h=mttr_n)  # Shared!
+    G.add_node("A", mttf_h=mttf_n, mttr_h=mttr_n)
+    G.add_node("B", mttf_h=mttf_n, mttr_h=mttr_n)
+    G.add_node("C", mttf_h=mttf_n, mttr_h=mttr_n)  # Shared!
 
     # edges
-    G.add_edge("S1", "A", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e1
-    G.add_edge("S2", "B", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e2
-    G.add_edge("A", "C", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e3
-    G.add_edge("B", "C", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e4
-    G.add_edge("C", "T", mtbf_h=mtbf_e, mttr_h=mttr_e)  # e5
+    G.add_edge("S1", "A", mttf_h=mttf_e, mttr_h=mttr_e)  # e1
+    G.add_edge("S2", "B", mttf_h=mttf_e, mttr_h=mttr_e)  # e2
+    G.add_edge("A", "C", mttf_h=mttf_e, mttr_h=mttr_e)  # e3
+    G.add_edge("B", "C", mttf_h=mttf_e, mttr_h=mttr_e)  # e4
+    G.add_edge("C", "T", mttf_h=mttf_e, mttr_h=mttr_e)  # e5
 
     return G
 
 
-def two_sources_two_targets_independent(mtbf_n, mtbf_e, mttr_n, mttr_e):
+def two_sources_two_targets_independent(mttf_n, mttf_e, mttr_n, mttr_e):
     """
     4 independent paths
 
@@ -277,32 +277,32 @@ def two_sources_two_targets_independent(mtbf_n, mtbf_e, mttr_n, mttr_e):
     G = nx.Graph()
 
     # Source nodes
-    G.add_node("S1", mtbf_h=0, mttr_h=0)
-    G.add_node("S2", mtbf_h=0, mttr_h=0)
+    G.add_node("S1", mttf_h=0, mttr_h=0)
+    G.add_node("S2", mttf_h=0, mttr_h=0)
 
     # individual target nodes for each path to avoid cross-connections
-    G.add_node("T1_a", mtbf_h=0, mttr_h=0)  # S1's T1
-    G.add_node("T2_a", mtbf_h=0, mttr_h=0)  # S1's T2
-    G.add_node("T1_b", mtbf_h=0, mttr_h=0)  # S2's T1
-    G.add_node("T2_b", mtbf_h=0, mttr_h=0)  # S2's T2
+    G.add_node("T1_a", mttf_h=0, mttr_h=0)  # S1's T1
+    G.add_node("T2_a", mttf_h=0, mttr_h=0)  # S1's T2
+    G.add_node("T1_b", mttf_h=0, mttr_h=0)  # S2's T1
+    G.add_node("T2_b", mttf_h=0, mttr_h=0)  # S2's T2
 
     #  nodes
-    G.add_node("A", mtbf_h=mtbf_n, mttr_h=mttr_n)
-    G.add_node("B", mtbf_h=mtbf_n, mttr_h=mttr_n)
-    G.add_node("C", mtbf_h=mtbf_n, mttr_h=mttr_n)
-    G.add_node("D", mtbf_h=mtbf_n, mttr_h=mttr_n)
+    G.add_node("A", mttf_h=mttf_n, mttr_h=mttr_n)
+    G.add_node("B", mttf_h=mttf_n, mttr_h=mttr_n)
+    G.add_node("C", mttf_h=mttf_n, mttr_h=mttr_n)
+    G.add_node("D", mttf_h=mttf_n, mttr_h=mttr_n)
 
     # Edges - completely isolated paths
-    G.add_edge("S1", "A", mtbf_h=mtbf_e, mttr_h=mttr_e)
-    G.add_edge("A", "T1_a", mtbf_h=mtbf_e, mttr_h=mttr_e)
+    G.add_edge("S1", "A", mttf_h=mttf_e, mttr_h=mttr_e)
+    G.add_edge("A", "T1_a", mttf_h=mttf_e, mttr_h=mttr_e)
 
-    G.add_edge("S1", "B", mtbf_h=mtbf_e, mttr_h=mttr_e)
-    G.add_edge("B", "T2_a", mtbf_h=mtbf_e, mttr_h=mttr_e)
+    G.add_edge("S1", "B", mttf_h=mttf_e, mttr_h=mttr_e)
+    G.add_edge("B", "T2_a", mttf_h=mttf_e, mttr_h=mttr_e)
 
-    G.add_edge("S2", "C", mtbf_h=mtbf_e, mttr_h=mttr_e)
-    G.add_edge("C", "T1_b", mtbf_h=mtbf_e, mttr_h=mttr_e)
+    G.add_edge("S2", "C", mttf_h=mttf_e, mttr_h=mttr_e)
+    G.add_edge("C", "T1_b", mttf_h=mttf_e, mttr_h=mttr_e)
 
-    G.add_edge("S2", "D", mtbf_h=mtbf_e, mttr_h=mttr_e)
-    G.add_edge("D", "T2_b", mtbf_h=mtbf_e, mttr_h=mttr_e)
+    G.add_edge("S2", "D", mttf_h=mttf_e, mttr_h=mttr_e)
+    G.add_edge("D", "T2_b", mttf_h=mttf_e, mttr_h=mttr_e)
 
     return G

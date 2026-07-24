@@ -406,7 +406,7 @@ class ReliabilityNetTest(unittest.TestCase):
         """
         Test: Shared component, min_connected=-1 (repairable).
 
-        Availability = A_n³ * A_e⁵
+        Availability = A_n**3 * A_e**5
         """
         def availability_require_all():
             return self.A_n ** 3 * self.A_e ** 5
