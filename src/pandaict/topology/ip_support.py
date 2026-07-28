@@ -20,7 +20,7 @@ pd.set_option('display.expand_frame_repr', False)
 
 def init_extend_network(ict_net):    
     """
-    Prepares extending existing pandaICT network by IP-specific information by adding additional data to nodes and devices \
+    Prepares extending existing pandaict network by IP-specific information by adding additional data to nodes and devices, \
         and adding a new data structure ("iptables") for the routing tables.  
 
     :INPUT:
@@ -167,32 +167,32 @@ def _get_cur_last_ip(start_ip, end_ip, ip_range, netmask):
     
 def assign_ipaddr_to_elts(ict_net, eltlist, start_ip=None, end_ip=None, netmask=None, ip_range=None):
     """
-    Subsequently assigns IP addresses to nodes and devices in eltlist using given address range  
-    Elements need to be router-type nodes or devices. Other element types are ignored. 
+    Subsequently assigns IP addresses to nodes and devices in eltlist using given address range.  
+    Elements must be router-type nodes or devices. Other element types are ignored. 
     The IP address range to be used can be given explicitly (start end end IP address) or using CIDR notation.
         
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **eltlist** (list of tuple) - list of elements in pandaICT elements notation. Elements other than devices or nodes are ignored.  
+        **eltlist** (list of tuple) - list of elements in pandaict elements notation. Elements other than devices or nodes are ignored.  
         
         **start_ip** (string) - IP to assign to the first element in eltlist. May use CIDR notation, where mask is used as netmask \
-            overriding the netmask parameter. 
+            overriding the **netmask** parameter. 
             
     :OPTIONAL:    
         **end_ip** (string) - Last IP in usable address range. May use CIDR notation but mask is ignored. Only respected \
             if start_ip is used. If start_ip contains a mask (cidr notation), end_ip is ignored but the ip range comprises \
-            start_ip to the highest host ip in the same IP network
+            start_ip to the highest host ip in the same IP network.
         
         **ip_range** (string) - Alternative option for IP address range. IP in CIDR notation. The address range comprises the whole IP subnet \
             indicated by this. E.g. ip_range=10.0.0.1/24 translates to start_ip=10.0.0.1, end_ip=10.0.0.254
             
-        **netmask** (string) - Netmask, which is also assigned to elements. If start_ip is given in CIDR notation or ip_range is used, \
+        **netmask** (string) - Netmask, which is also assigned to elements. If **start_ip** is given in CIDR notation or **ip_range** is used, \
             this parameter will be ignored but instead the mask from start_ip/ip_range is used. 
                             
     :OUTPUT:
-        **(complete, next_free_ip)** (boolean, string) - If complete is True, all elements in the list (except invalid ones) were assigned an IP. If False, \
-            the IP address range was insufficient for that. next_free_ip is the next IP within the address range that was not assigned to an element. \
+        **(complete, next_free_ip)** (boolean, string) - If **complete** is True, all elements in the list (except invalid ones) were assigned an IP. If False, \
+            the IP address range was insufficient for that. **next_free_ip** is the next IP within the address range that was not assigned to an element. \
             It is None if the address range was fully used.    
 
     :EXAMPLE:
@@ -395,16 +395,27 @@ def set_static_iptable_entry(ict_net, node_elt, destination, gateway, netmask = 
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **node_elt** (str, int) -pandaict identifier of a node in ict_net
-                            
-    :OUTPUT:
-        **iptable** (DataFrame) - The IP table of the node, or None if there are no IP table entries for this node. 
+        **node_elt** (str, int) -pandaict identifier of a router-type node in ict_net
+        
+        **destination** (str) - destination IP address 
+        
+        **gateway** (str) - IP address of gateway for the static route
+        
+    :OPTIONAL:
+    
+        **netmask** (str, default None) - Netmask for static iptable entry
+    
+        **link_idx** (int, default None) - Index of router link that connects to the gateway. If None, it is determined automatically. 
+        
+        **metric** (int, default 0) - Routing metric for static iptable entry                            
 
     :EXAMPLE:
-        get_iptable(ict_net, ('node',2))
+        set_static_iptable_entry(ict_net, ('node',0), "192.168.4.1", "10.1.3.0", link_idx=1, metric=10)
     
-    Note: this function does not yet check if the gateway IP is in the same network as the node IP. \
-        Also it does not check for existence of destination and gateway ip. Use the inspect package to check the latter.
+    Notes: 
+        - There is no output to this, but **ict_net.iptable** is modified. 
+        - This function does not yet check if the gateway IP is in the same network as the node IP, or if \
+         destination and gateway ip's exist. Use the inspect package to check the latter.
     
     """
     if (node_elt[0]!="node" or node_elt[1] > len(ict_net.node)):

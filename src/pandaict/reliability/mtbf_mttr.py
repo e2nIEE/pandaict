@@ -64,10 +64,10 @@ def calc_mtbf_route(ict_net, links, include_end_app=False):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **links** (list of tuple) - list of links that define the route, in pandaICT element notation            
+        **links** (list of tuple) - list of links that define the route, in pandaict element notation            
                             
     :OUTPUT:
-        **mtbf_total** (float) - MTBF of serial system consisting of links and nodes along the route 
+        **mtbf_total_h** (float) - MTBF of serial system consisting of links and nodes along the route, in hours 
 
     :EXAMPLE:
         calc_mtbf_route(ict_net, [('link',1),('link',8),('link',0)])
@@ -130,10 +130,10 @@ def calc_mtbf_mttr_route(ict_net, links, include_end_app=False):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **links** (list of tuple) - list of links that define the route, in pandaICT element notation            
+        **links** (list of tuple) - list of links that define the route, in pandaict element notation            
                             
     :OUTPUT:
-        **(mtbf_total, mttr_total)** (tuple of float) - MTBF and MTBR of serial system consisting of links and nodes along the route 
+        **(mtbf_total_h, mttr_total_h)** (tuple of float) - MTBF and MTTR of serial system consisting of links and nodes along the route, in hours 
 
     :EXAMPLE:
         calc_mtbf_mttr_route(ict_net, [('link',1),('link',8),('link',0)])
@@ -183,7 +183,7 @@ def calc_mtbf_mttr_by_lup(ict_net, lup_table, downstream=True, include_end_app=F
         **downstream** (boolean) - output is calculated for the downstream direction on connection level if True, upstream if False            
                             
     :OUTPUT:
-        **(mtbf_conn_total, mttr_conn_total)** (tuple of float) - total MTBF and MTBR  
+        **(mtbf_conn_total_h, mttr_conn_total_h)** (tuple of float) - total MTBF and MTTR, in hours  
 
     :EXAMPLE:
         Note: this calculates the total MTBF and MTTR for connection id 1 in the upstream direction.

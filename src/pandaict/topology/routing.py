@@ -123,7 +123,7 @@ def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respe
 
 def calc_lup_table(ict_net, conn_elt, routing_type, include_hops=False, respect_iptables=True):
     """
-    Calculate link usage probability table.
+    Calculate link usage probability table. \
     NOTE: currently only RoutingType.LOWEST_TOTAL_LATENCY supported 
 
     :INPUT:
@@ -208,7 +208,7 @@ def calc_app_vol_mbyte(ict_net, app_elt, time_delta):
 
     :OUTPUT:
         **res** (dictionary) - Data volume used by app per connection in its downstream and upstream direction 
-        and total datavolume transferred summing all the connections for 1 day [MB]
+        and total data volume transferred summing all the connections [MB]
 
     :EXAMPLE:
         calc_conn_vol_mbyte(ict_net, ('app', 2), 86400)
@@ -258,7 +258,7 @@ def calc_link_bandwidth_mbps(ict_net, lup_table):
 def add_link_bandwidth_mbps(ict_net, link_bw, lup_table):
     """
     Calculate link bandwidths resulting from a specific link usage probability, and add them up to already existing link bandwidths. 
-    The latter needs to be given as lup table which was calculated for a specific connection. 
+    A lup table which was calculated for a specific connection needs to be given. 
     To be used in conjunction with calc_lup_table to calculate link bandwidths for a given connection and routing method. 
     The add feature can be used to calculate the total link bandwidth usage for multiple connections by daisy-chaining       
     calc_lup_table and add_link_bandwidth_Mbps (see example below).
@@ -364,8 +364,8 @@ def calc_sorted_links_by_connection(ict_net, conn_elt, routing_type=RoutingType.
             **ascending** (boolean) - Links are sorted in ascending value order if True, descending if False.       
         
         :OUTPUT: 
-            **(down_links, up_links)** (tuple of list of dict) - Sorted Links for downstream and upstream connection. 
-                If there are multiple routes used by the routing type, the lists contain all of them, including 
+            **sorted_links** (tuple of list of dict) - Sorted Links for downstream and upstream connection. \
+                If there are multiple routes used by the routing type, the lists contain all of them, including \
                 the usage probability. Also, the lists contain the values that the links were sorted by. 
         
         :EXAMPLE:

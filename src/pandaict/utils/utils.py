@@ -76,7 +76,7 @@ def to_elt(ict_net, any_id):
         **elt_id** ((str, int) tuple) - The element in pandapower element notation.  
 
     :EXAMPLES:
-        to_elt(ict_net, ('device',2))
+        to_elt(ict_net, ('device',2))  \
         to_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """ 
     if isinstance(any_id, uuid.UUID): 
@@ -90,7 +90,8 @@ def check_all_uuid(ids, allow_list=True):
     Raises UserWarning if this is not the case.
 
     :INPUT:
-        **ids** (any) - Parameter to be checked
+        **ids** (any) - Parameter to be checked  \
+        
         **allow_list** (boolean) - If True, lists are allowed and checked element-wise. If False, lists are considered non-uuid.              
                             
     :OUTPUT:
@@ -117,7 +118,7 @@ def get_elt(ict_net, elt):
         **elt** (str, int) -pandaict identifier of an element that exists in ict_net     
                             
     :OUTPUT:
-        **elt** (dict) - The pandaict element. 
+        **elt** (dict) - The pandaict element. Returns None if element not found in ict_net. 
 
     :EXAMPLE:
         get_elt(ict_net, ('device',2))
@@ -135,7 +136,7 @@ def get_elt_by_uuid(ict_net, uid):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **elt** (dict) -pandaict identifier of an element that exists in ict_net     
+        **uid** (UUID4) - UUID of an element that exists in ict_net          
                             
     :OUTPUT:
         **elt** (dict) - The pandaict element. 
@@ -158,7 +159,7 @@ def get_elts_any(ict_net, elt_ids, expected=None):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **elt_ids** (tuple, uuid or list) - pandaict identifier(s) of an element that exists in ict_net
+        **elt_ids** (tuple, uuid or list) - pandaict identifier(s) of one or multiple elements that exists in ict_net
         
     :OPTIONAL:
         **expected** (list of string, default None) - list of element types expected in the output. None means any types allowed. \
@@ -168,7 +169,7 @@ def get_elts_any(ict_net, elt_ids, expected=None):
         **elt** (dict or list of dict) - The pandaict element(s). 
 
     :EXAMPLES:
-        get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
+        get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))  \
         get_elt(ict_net, [('device', 0), ('node, 3)], expected=['device', 'node'])
     """
     if isinstance(elt_ids, list):

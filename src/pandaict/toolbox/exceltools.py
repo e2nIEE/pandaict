@@ -12,7 +12,7 @@ from openpyxl.cell import MergedCell
 import os
 import uuid
 import numpy as np
-from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType, addCustomEnum
+from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType, add_custom_enum
 from pandaict.pilogger import pilogger
 from pandaict.create_empty_net import create_empty_network
 from pandaict.create import create_ict_node, create_ict_link, create_ict_app, create_ict_connection
@@ -151,7 +151,9 @@ def _convert_prodfreq(ctype, rconv, rvalue):
 
 
 def _convert_prod_payload(rvalue):
-    if isinstance(rvalue, int):
+    if rvalue is None: 
+        return None
+    elif isinstance(rvalue, int):
         rconv = [rvalue]
     else:
         rconv = [int(ii.strip()) for ii in rvalue.split(",")]
@@ -227,7 +229,7 @@ def _convert_area(row_values, col_names, sheetname):
 def _add_enums(net, row_values):
     allowed_classes = {"InfoItem": InfoItem, "NodeType": NodeType, "DeviceType": DeviceType, "AppType": AppType}
     if row_values[0] in allowed_classes.keys():
-        addCustomEnum(net, allowed_classes[row_values[0]], row_values[1])
+        add_custom_enum(net, allowed_classes[row_values[0]], row_values[1])
 
 def _add_linktypes(net, row_values, col_names):
     data = dict(zip(col_names, row_values))
@@ -299,6 +301,19 @@ def _evaluate_sheet(net, wb, sheetname):
 
 
 def from_excel(xlsfilename, do_inspection=True):
+    """
+    Load a pandaict network from an XLSX file.    
+
+    :INPUT:
+        **xlsfilename** (string or file) - The absolute or relative path to and name of the input file or file-like object
+
+    :OUTPUT:
+        **do_inspection** (boolean, default True) - If True, an inspection is done on the loaded network; if False, inspection is omitted. 
+        
+    :EXAMPLE:
+        ict_net = from_excel("example.xlsx")
+        
+    """    
     wb = load_workbook(filename = xlsfilename)  
     md = _get_metadata(wb)              
     net = create_empty_network()
@@ -427,7 +442,27 @@ def _update_data_to_rows(data_to_sheet, data_to_rows):
         data_to_rows.update({s: rdata})
     return data_to_rows
 
-def to_excel(net, xlsfilename, template_path=None):
+def to_excel(ict_net, xlsfilename, template_path=None):
+    """
+        Saves a pandaict Network in XLSX format.
+        Note that, in contrast to the JSON format, built-in std_types and enums are not saved, but custom std_types and enums are always saved in the XLSX. 
+
+        :INPUT:
+            **ict_net** (dict) - The pandaict network
+
+            **xlsfilename** (string or file) - The absolute or relative path to and name of the output file or file-like object
+
+        :OPTIONAL:
+            **template_path** (string, default None) - Absolute path to the XLSX template file ("template.xlsx") 
+            
+            **save_std_types** (boolean, default False) - If True, saves all non-custom std_types. If False, does not save any of them.  
+            
+            **save_custom_std_types** (boolean, default True) - If True, saves custom std_types regardless of save_std_types value. If False, no custom std_types are saved.  
+        
+        :EXAMPLE:
+            to_excel(ict_net, "example.xlsx")
+
+    """        
     if template_path==None:
         template_path = os.path.dirname(__file__).replace("\\","/")+"/"
     elif template_path != '' and template_path[-1]!='/':
@@ -439,10 +474,10 @@ def to_excel(net, xlsfilename, template_path=None):
         pilogger.error(msg)
         raise UserWarning(msg)
 
-    _fill_metadata(net, wb)
+    _fill_metadata(ict_net, wb)
     passed = False
     for sheetname in ["Custom Enums", "Custom Linktypes", "Custom Protocoltypes", "Nodes", "Devices", "Links", "Connections", "Apps"]:
-        passed = _fill_sheet(net, wb, sheetname)
+        passed = _fill_sheet(ict_net, wb, sheetname)
         if not passed:
             msg = "Exceltools: problem while filling out "+sheetname+", network can not be saved to xlsx"
             pilogger.error(msg)

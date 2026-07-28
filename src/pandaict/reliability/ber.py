@@ -23,7 +23,7 @@ def calc_ber_route(ict_net, links):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **links** (list of tuple) - list of links that define the route, in pandaICT element notation            
+        **links** (list of tuple) - list of links that define the route, in pandaict element notation            
                             
     :OUTPUT:
         **ber_total** (float) - ber of serial system consisting of links and nodes along the route 
@@ -83,8 +83,11 @@ def calc_ber_by_lup(ict_net, lup_table, downstream=True):
     :EXAMPLE:
         Note: this calculates the total ber for connection id 1 in the upstream direction.
         
-        lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
-        calc_ber_by_lup(ict_net, lup_table, downstream=False)
+        ::  
+      
+            lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
+            calc_ber_by_lup(ict_net, lup_table, downstream=False)
+        
     """
     
     ber_conn_total = 0
