@@ -52,7 +52,7 @@ if os.name=='nt':
     input_dirs = ['.\\', '.\\howto\\']
 else:
     output_dirs = ['doc/jupyter/pandaict/images', 'doc/jupyter/pandaict/howto/images']
-    input_dirs = ['doc/jupyter/pandaict/', 'doc/jupyter/pandaict/howto']
+    input_dirs = ['doc/jupyter/pandaict/', 'doc/jupyter/pandaict/howto/']
 
 for i in range(0, len(input_dirs)):
     for direntry in os.scandir(input_dirs[i]):
