@@ -9,7 +9,7 @@ import base64
 import os
 
 
-def _convert_images_in_attachments(cell, attachments):
+def _convert_images_in_attachments(cell, attachments, output_dir):
     for attachment_name, attachment_content in attachments.items():
         for mime, data in attachment_content.items(): 
             cs = cell.source
@@ -21,7 +21,7 @@ def _convert_images_in_attachments(cell, attachments):
                     img_file.write(img_data)
                 # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                                          
                 cs = cell.source.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
-        return cs
+    return cs
 
 def convert_attachments_to_files(notebook_path, output_dir):
     # Lade das Notebook
@@ -38,7 +38,7 @@ def convert_attachments_to_files(notebook_path, output_dir):
             if cell['attachments']=={}: 
                 cell.pop('attachments')
             else:
-                cell.source = _convert_images_in_attachments(cell, attachments)
+                cell.source = _convert_images_in_attachments(cell, attachments, output_dir)
                         		
     
     # Speichere das angepasste Notebook
@@ -47,11 +47,17 @@ def convert_attachments_to_files(notebook_path, output_dir):
 
 
 # Pfad zum Notebook und Ausgabeverzeichnis
-output_dir = 'doc/jupyter/pandaict/images'
-input_dir = 'doc/jupyter/pandaict/'
+if os.name=='nt':
+    output_dirs = ['.\\images', '.\\howto\\images']
+    input_dirs = ['.\\', '.\\howto\\']
+else:
+    output_dirs = ['doc/jupyter/pandaict/images', 'doc/jupyter/pandaict/howto/images']
+    input_dirs = ['doc/jupyter/pandaict/', 'doc/jupyter/pandaict/howto']
 
-for direntry in os.scandir(input_dir):
-    fname = direntry.name 
-    if fname.endswith('ipynb'):        
-        convert_attachments_to_files(input_dir+fname, output_dir)
+for i in range(0, len(input_dirs)):
+    for direntry in os.scandir(input_dirs[i]):
+        fname = direntry.name 
+        if fname.endswith('ipynb'):        
+            # if 'connector' in fname:
+            convert_attachments_to_files(input_dirs[i]+fname, output_dirs[i])
         
