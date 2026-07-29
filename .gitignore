@@ -26,7 +26,6 @@ build/
 *.json
 
 .idea/
-public/jupyter/_build/
+public/jupyter
 doc/jupyter/pandaict/.ipynb_checkpoints
 doc/jupyter/pandaict/images/
-public/
