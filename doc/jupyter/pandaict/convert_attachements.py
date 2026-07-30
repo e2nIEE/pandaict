@@ -9,7 +9,7 @@ import base64
 import os
 
 
-def _convert_images_in_attachments(cell, attachments, output_dir):
+def _convert_images_in_attachments(cell, attachments, output_dir, notebook_path):
     for attachment_name, attachment_content in attachments.items():
         for mime, data in attachment_content.items(): 
             cs = cell.source
@@ -21,6 +21,9 @@ def _convert_images_in_attachments(cell, attachments, output_dir):
                     img_file.write(img_data)
                 # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                                          
                 cs = cell.source.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
+                print(f"Attachment {attachment_name} in {os.path.basename(notebook_path)} saved to {img_filename}")
+                ref = ("images/"+attachment_name).replace("\\","/")
+                print(f" Replaced in cell by reference {ref}")
     return cs
 
 def convert_attachments_to_files(notebook_path, output_dir):
@@ -38,7 +41,7 @@ def convert_attachments_to_files(notebook_path, output_dir):
             if cell['attachments']=={}: 
                 cell.pop('attachments')
             else:
-                cell.source = _convert_images_in_attachments(cell, attachments, output_dir)
+                cell.source = _convert_images_in_attachments(cell, attachments, output_dir, notebook_path)
                         		
     
     # Speichere das angepasste Notebook
