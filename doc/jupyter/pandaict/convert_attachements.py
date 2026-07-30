@@ -10,9 +10,9 @@ import os
 
 
 def _convert_images_in_attachments(cell, attachments, output_dir, notebook_path):
-    for attachment_name, attachment_content in attachments.items():
-        for mime, data in attachment_content.items(): 
-            cs = cell.source
+    cs = cell.source
+    for attachment_name, attachment_content in attachments.items():        
+        for mime, data in attachment_content.items():             
             if mime.startswith('image'):
                 # Decodiere das Bild und speichere es als Datei
                 img_data = base64.b64decode(data)
@@ -20,7 +20,7 @@ def _convert_images_in_attachments(cell, attachments, output_dir, notebook_path)
                 with open(img_filename, 'wb') as img_file:
                     img_file.write(img_data)
                 # Ersetze die Anhangsreferenz durch die Bilddatei-Referenz                                          
-                cs = cell.source.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
+                cs = cs.replace(f'attachment:{attachment_name}', "images/"+attachment_name).replace("\\","/")
                 print(f"Attachment {attachment_name} in {os.path.basename(notebook_path)} saved to {img_filename}")
                 ref = ("images/"+attachment_name).replace("\\","/")
                 print(f" Replaced in cell by reference {ref}")
@@ -42,6 +42,7 @@ def convert_attachments_to_files(notebook_path, output_dir):
                 cell.pop('attachments')
             else:
                 cell.source = _convert_images_in_attachments(cell, attachments, output_dir, notebook_path)
+                cell.pop('attachments')
                         		
     
     # Speichere das angepasste Notebook
@@ -61,6 +62,6 @@ for i in range(0, len(input_dirs)):
     for direntry in os.scandir(input_dirs[i]):
         fname = direntry.name 
         if fname.endswith('ipynb'):        
-            # if 'connector' in fname:
+            #if 'reliability-Monte' in fname:
             convert_attachments_to_files(input_dirs[i]+fname, output_dirs[i])
         
