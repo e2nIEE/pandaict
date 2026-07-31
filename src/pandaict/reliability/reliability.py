@@ -39,7 +39,7 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
     targets = []
 
     # Get protocol of first connection
-    protocol = ict_net['conn']['protocol'][0]
+    protocol = ict_net['conn']['protocol'][0] if ict_net['conn']['protocol'][0] is not None else 'TCP'
 
     # Build multidigraph once
     mdg = create_multidigraph(ict_net, protocol, validate=True)
@@ -390,23 +390,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
 
         **result['node_repair_criticality']** (np.ndarray or None) - Repair criticality score per node.
 
-        **result['failure_counts']** (np.ndarray or None) - Raw failure event counts per component.
-
-        **result['repair_counts']** (np.ndarray or None) - Raw repair event counts per component.
-
-        **result['total_observed']** (int) - Total number of system-level events observed.
-        0 when no critical events were recorded.
-
-        **result['total_failure']** (int or None) - Total number of failure events observed.
-
-        **result['total_repair']** (int or None) - Total number of repair events observed.
-
-        **result['mtbf']** (float) - Mean Time Between Failures in hours, by-product of the simulation.
-
-        **result['mttf']** (float) - Mean Time To Failure in hours, by-product of the simulation.
-
-        **result['mttr']** (float) - Mean Time To Repair in hours, by-product of the simulation.
-
     .. note::
         **Relation to classical importance measures**
 
@@ -441,7 +424,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
         >>> result['edge_criticality'][:3]
         array([1.42, 0.87, 1.15])
     """
-    # TODO: call plot functions (graph plot) from here
     # TODO: call excel function from here
     defaults = {
         'min_connected': -1,
@@ -508,14 +490,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
             'node_criticality': None,
             'edge_repair_criticality': None,
             'node_repair_criticality': None,
-            'failure_counts': None,
-            'repair_counts': None,
-            'total_observed': 0,
-            'total_failure': None,
-            'total_repair': None,
-            'mtbf_h': mtbf,
-            'mttf_h': mttf,
-            'mttr_h': mttr,
         }
     
     if plot:
@@ -547,14 +521,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
         'node_criticality': crit_result['node_criticality'],
         'edge_repair_criticality': crit_result['edge_repair_criticality'],
         'node_repair_criticality': crit_result['node_repair_criticality'],
-        'failure_counts': crit_result['failure_counts'],
-        'repair_counts': crit_result['repair_counts'],
-        'total_observed': crit_result['total_observed'],
-        'total_failure': crit_result['total_failure'],
-        'total_repair': crit_result['total_repair'],
-        'mtbf_h': mtbf,
-        'mttf_h': mttf,
-        'mttr_h': mttr,
     }
 
 
