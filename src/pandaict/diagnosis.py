@@ -70,7 +70,7 @@ def __inspect_device(ict_net, passed, verbose):
         apps = get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps == []:
             passed = __log_info_and_return_false(" device '" + str(d['name']) + "' (index " + str(i) + ") does not run any apps", verbose)            
-        if any(ict_net.app.iloc[a]['type'] == AppType.CONVERTER for a in apps):
+        if any(ict_net.app.loc[a]['type'] == AppType.CONVERTER for a in apps):
             l = get_links_at(ict_net, ('device', i))
             if len(l) < 2:
                 passed = __log_info_and_return_false(" device '" + str(d['name']) + "' (index " + str(i) + ") is running converter type app(s) but has less than two links", verbose)                
@@ -92,8 +92,8 @@ def __inspect_app(ict_net, passed, verbose):
             d = a.device 
             if not isinstance(d, int):
                 passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' has non-int device index '"+str(d)+"'", verbose)
-            elif ict_net.device.iloc[d]['type'] != DeviceType.CONVERTER:
-                passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.iloc[d]['name'])+"'", verbose)                            
+            elif ict_net.device.loc[d]['type'] != DeviceType.CONVERTER:
+                passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.loc[d]['name'])+"'", verbose)                            
     
     return passed
 

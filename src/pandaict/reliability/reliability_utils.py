@@ -15,7 +15,9 @@ def __get_next_hop(ict_net, l, lni):
         if isinstance(nni, list):
             nni = nni[0]           
     else:            
-        nni = l['from']            
+        nni = l['from']  
+    if nni==lni: # to capture the last device on a reverse route
+        nni = l['from']
     nn = get_elts_any(ict_net, nni)
     return nn, nni 
 
@@ -24,6 +26,9 @@ def __check_calc_route(ict_net, links, caller_string): # caller_strring: calc_be
         pilogger.warn(caller_string+" links parameter must be list")
         return False
     for li in links:
+        if li[0]!='link':
+            pilogger.warn(caller_string+" link list must only contain links")
+            return False
         l = get_elts_any(ict_net, li)
         if isinstance(l['to'], list) and len(l['to'])>1: 
             pilogger.warn(caller_string+" currently doesn't support routes with multicast")
@@ -34,6 +39,24 @@ def __check_calc_route(ict_net, links, caller_string): # caller_strring: calc_be
         pilogger.warn(caller_string+" first and last link must be connected to devices")
         return False
     return True 
+
+def __get_end_devices_route(ict_net, links):    
+    start_dev = None 
+    end_dev = None
+    
+    lf = get_elts_any(ict_net, links[0]) # first link
+    if lf['from'][0]=="device":
+        start_dev = lf['from']
+    elif lf['to'][0][0]=="device":
+        start_dev = lf['to'][0]
+    
+    ll = get_elts_any(ict_net, links[-1]) # last link
+    if ll['from'][0]=="device":
+        end_dev = ll['from']
+    elif ll['to'][0][0]=="device":
+        end_dev = ll['to'][0]
+    
+    return (start_dev, end_dev)     
 
 def __check_lup_prob_sum_lt_one(lup_table, downstream):
     pr_sum = 0    

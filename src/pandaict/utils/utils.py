@@ -313,7 +313,7 @@ def get_values_for_links(ict_net, link_elts, valuetype):
             values += [None]
             pilogger.warn("link_elts contains an element which is not a link")
             continue                 
-        ltype = ict_net.std_types['link'][ict_net.link.iloc[l[1]]['type']]
+        ltype = ict_net.std_types['link'][ict_net.link.loc[l[1]]['type']]
         vtype = None
         
         if ('latency' in str(valuetype).casefold()):            
@@ -329,9 +329,9 @@ def get_values_for_links(ict_net, link_elts, valuetype):
             values += [ltype[vtype]]
         elif ('length' in str(valuetype).casefold()):
             vtype = 'length_km'
-            values += [ict_net.link.iloc[l[1]]['length_km']]
+            values += [ict_net.link.loc[l[1]]['length_km']]
         elif ('bit_error_rate' in str(valuetype).casefold() or 'ber' in str(valuetype).casefold()):
-            length = ict_net.link.iloc[l[1]]['length_km']
+            length = ict_net.link.loc[l[1]]['length_km']
             if length is None or ltype['ber_per_km'] is None:
                 values += [None]
             else:
@@ -377,7 +377,7 @@ def get_supported_protocols(ict_net, link_elt):
         get_supported_protocols(ict_net, ('link',2))
     """
     
-    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['protocols']  
+    return ict_net.std_types['link'][ict_net.link.loc[link_elt[1]]['type']]['protocols']  
 
 def get_bandwidth_mbps(ict_net, link_elt):
     """
@@ -395,7 +395,7 @@ def get_bandwidth_mbps(ict_net, link_elt):
         get_bandwidth_mbps(ict_net, ('link',2))
     """  
         
-    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
+    return ict_net.std_types['link'][ict_net.link.loc[link_elt[1]]['type']]['bandwidth_Mbps']
 
 def __get_elt_idx_by_name(ict_net, elt_name, elt_type):
     if elt_name in ict_net[elt_type]['name'].values:
@@ -492,7 +492,7 @@ def get_neighbour_elts(ict_net, elt, respect_in_service=False):
         return None
     neighbours = set({})
     for li in link_idxs: 
-        l = ict_net.link.iloc[li]
+        l = ict_net.link.loc[li]
         if respect_in_service and not(l.in_service): 
             continue        
         neighbours.add(l['from'])

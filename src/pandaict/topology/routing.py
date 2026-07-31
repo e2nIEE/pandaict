@@ -21,7 +21,7 @@ def __modify_multidigraph_by_iptables(ict_net, mdg, to_dev):
     if "iptables" not in ict_net.keys() or ict_net.iptables.empty:
         return mdg
     # We need the destination IP
-    to_ip = ict_net.device.iloc[to_dev[1]].ip_addr
+    to_ip = ict_net.device.loc[to_dev[1]].ip_addr
      
     for _, iptable_entry in ict_net.iptables[ict_net.iptables.destination==to_ip].iterrows():
         if iptable_entry.type!="static":
@@ -32,7 +32,7 @@ def __modify_multidigraph_by_iptables(ict_net, mdg, to_dev):
         gw_nxnode = __get_nx_node_for_elt(mdg, gw_elt)
         # delete all outgoing links of my_nxnode except the one to gw_nxnode 
         if not mdg.has_edge(my_nxnode, gw_nxnode): # make sure there actually is a link remaining
-            pilogger.warning("Could not respect static route for node "+str(ict_net.node.iloc[iptable_entry.node_idx]['name'])+" - no link to gateway")
+            pilogger.warning("Could not respect static route for node "+str(ict_net.node.loc[iptable_entry.node_idx]['name'])+" - no link to gateway")
             continue 
         edges_to_remove = []
         for e in mdg.out_edges(my_nxnode):
@@ -63,9 +63,9 @@ def __get_pilinks_lowest_weight(ict_net, mdg, routes):
             raise UserWarning("Internal error: calculated link is invalid - pielt type does not fit")
         
         # Check which direction our pi link is loaded
-        if from_pinode == ict_net.link.iloc[edge_lowest[1]]['from'] and to_pinode in ict_net.link.iloc[edge_lowest[1]]['to']:
+        if from_pinode == ict_net.link.loc[edge_lowest[1]]['from'] and to_pinode in ict_net.link.loc[edge_lowest[1]]['to']:
             pilinks += [{'link': edge_lowest[1], 'downstream': True}]
-        elif from_pinode in ict_net.link.iloc[edge_lowest[1]]['to'] and to_pinode == ict_net.link.iloc[edge_lowest[1]]['from']:
+        elif from_pinode in ict_net.link.loc[edge_lowest[1]]['to'] and to_pinode == ict_net.link.loc[edge_lowest[1]]['from']:
             pilinks += [{'link': edge_lowest[1], 'downstream': False}]
         else:
             raise UserWarning("Internal error: calculated link is invalid")
@@ -79,13 +79,13 @@ def __get_pihops(mdg, route):
     return pihops 
 
 def __calc_lup_table_lowest_latency(ict_net, conn_elt, include_hops=False, respect_iptables=True): 
-    # TODO: this gives different results for different respect_iptables settings when ict_net does not contain iptables. Investigate??                  
+    # TODO: this gives different results for different respect_iptables settings when ict_net does not contain iptables.                  
     lup_table = LUP_table(ict_net, conn_elt)
     conn = lup_table.conn
     # create nxgraph for connection and get routes        
     mdg = create_multidigraph(ict_net, conn['protocol'], weights="latency", validate=False)
-    from_dev = ('device', ict_net.app.iloc[conn['from']]['device'])
-    to_dev = ('device', ict_net.app.iloc[conn['to']]['device'])
+    from_dev = ('device', ict_net.app.loc[conn['from']]['device'])
+    to_dev = ('device', ict_net.app.loc[conn['to']]['device'])
     if respect_iptables:
         mdg_orig = mdg.copy()
         __modify_multidigraph_by_iptables(ict_net, mdg, to_dev)

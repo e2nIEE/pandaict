@@ -179,8 +179,7 @@ def __create_graph__(draw_type, images, net):
 
 def __get_icons__(custom_icons):
     icons = {}
-    if custom_icons is not None:
-    # hier relative Pfade BR ToDo
+    if custom_icons is not None:    
         icons = custom_icons
     else:
         import os

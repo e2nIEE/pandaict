@@ -49,14 +49,14 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
 
     for conn_tuple in connections:
         ind = conn_tuple[1]
-        conn_data = ict_net['conn'].iloc[ind]
+        conn_data = ict_net['conn'].loc[ind]
 
         # Check protocol consistency
         if conn_data['protocol'] != protocol:
             raise ValueError('Protocols of connections must be identical.')
 
-        from_dev = ('device', ict_net.app.iloc[conn_data['from']]['device'])
-        to_dev   = ('device', ict_net.app.iloc[conn_data['to']]['device'])
+        from_dev = ('device', ict_net.app.loc[conn_data['from']]['device'])
+        to_dev   = ('device', ict_net.app.loc[conn_data['to']]['device'])
 
         if not downstream:
             from_dev, to_dev = to_dev, from_dev
@@ -177,7 +177,7 @@ def plot_graph(ict_net, protocol='TCP',
     labels = {}
     for n, attr in G.nodes(data=True):
         elt_type, elt_idx = attr['pielt']
-        labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
+        labels[n] = ict_net[elt_type].loc[elt_idx]['name']
 
     for u, v, key, data in G.edges(data=True, keys=True):
         G[u][v][key]['weight'] = 1.0
@@ -527,13 +527,13 @@ def analyze_critical_components_for_conn(ict_net, connections,
         node_labels = {}
         for n, attr in graph.nodes(data=True):
             elt_type, elt_idx = attr['pielt']
-            node_labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
+            node_labels[n] = ict_net[elt_type].loc[elt_idx]['name']
 
         edge_labels = {}
         for i, data in enumerate(graph.edges(data=True)):
             u, v, attr = data
             elt_type, elt_idx = attr['pielt']
-            edge_labels[i] = ict_net[elt_type].iloc[elt_idx]['name']
+            edge_labels[i] = ict_net[elt_type].loc[elt_idx]['name']
 
         edge_crit = crit_result['edge_criticality'] # + crit_result['edge_repair_criticality'] TODO: add later
         node_crit = crit_result['node_criticality'] # + crit_result['node_repair_criticality'] TODO: add later

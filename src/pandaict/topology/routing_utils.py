@@ -38,8 +38,8 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
         if pilink[0] != 'link':
             passed = __log_debug_and_return_false("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")            
         else:
-            pifrom = ict_net.link.iloc[pilink[1]]['from']
-            pito = ict_net.link.iloc[pilink[1]]['to']                            
+            pifrom = ict_net.link.loc[pilink[1]]['from']
+            pito = ict_net.link.loc[pilink[1]]['to']                            
             
             if not((pinode1==pifrom and pinode2 in pito) or (is_bidirectional(ict_net, pilink) and pinode2==pifrom and pinode1 in pito)):
                 passed = __log_debug_and_return_false("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")                
@@ -156,8 +156,8 @@ def __get_pict_paths(mdg, nfrom, nto):
 def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
     # Fetch devices used by the connection
     try:
-        dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
-        dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
+        dev1 = ("device", ict_net.app.loc[conn['from']]['device'])
+        dev2 = ("device", ict_net.app.loc[conn['to']]['device'])
     except (KeyError, IndexError, TypeError, AttributeError):
         pilogger.debug("Failed to obtain from or to device for conn "+str(conn['name']))        
             
