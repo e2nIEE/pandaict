@@ -46,7 +46,8 @@ def analyze_critical_components(all_critical, G, sources, targets,
                                 mu_edges, mu_nodes,
                                 top_n=-1, plot=False, verbose=True,
                                 rate_adjustment=True,
-                                save_excel=False, excel_path=None
+                                save_excel=False, excel_path=None,
+                                edge_labels=None, node_labels=None
                                 ):
     """
 
@@ -192,14 +193,16 @@ def analyze_critical_components(all_critical, G, sources, targets,
                            edge_fail_crit, edge_rep_crit, n_edges,
                            top_node_fail_idx, top_node_rep_idx, node_list,
                            node_fail_crit, node_rep_crit, n_nodes,
-                           failure_counts, repair_counts)
+                           failure_counts, repair_counts,
+                           edge_labels, node_labels)
 
     if save_excel:
         _save_criticality_excel(
             total_observed, failure_crit, top_n,
             top_edge_fail_idx, edge_list, edge_fail_crit, n_edges,
             top_node_fail_idx, node_list, node_fail_crit, failure_counts,
-            excel_path)
+            excel_path,
+            edge_labels, node_labels)
 
     return {
         'edge_criticality': edge_fail_crit,

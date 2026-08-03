@@ -39,7 +39,7 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
     targets = []
 
     # Get protocol of first connection
-    protocol = ict_net['conn']['protocol'][0] if ict_net['conn']['protocol'][0] is not None else 'TCP'
+    protocol = ict_net['conn']['protocol'][0]
 
     # Build multidigraph once
     mdg = create_multidigraph(ict_net, protocol, validate=True)
@@ -424,7 +424,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
         >>> result['edge_criticality'][:3]
         array([1.42, 0.87, 1.15])
     """
-    # TODO: call excel function from here
+
     defaults = {
         'min_connected': -1,
         'N': int(1e5),
@@ -463,15 +463,29 @@ def analyze_critical_components_for_conn(ict_net, connections,
         return {
             'edge_criticality': None,
             'node_criticality': None,
-            'full_counts': None,
-            'total_observed': 0,
-            'mtbf_h': res.get('mttf') + res.get('mttr'),
-            'mttf_h': res.get('mttf'),
-            'mttr_h': res.get('mttr'),
+            'edge_repair_criticality': None,
+            'node_repair_criticality': None,
+            'edge_names': None,
+            'node_names': None,
+            'edge_elements': None,
+            'node_elements': None,
         }
 
     # Extract rates from the annotated graph
     lam_edges, lam_nodes, mu_edges, mu_nodes = _get_lam_mu_from_graph(graph)
+
+    # Build name/element-maps
+    edge_names, edge_elements, node_names, node_elements = {}, {}, {}, {}
+    for i, (u, v, attr) in enumerate(graph.edges(data=True)):
+        elt_type, elt_idx = attr['pielt']
+        edge_elements[i] = (elt_type, elt_idx)
+        edge_names[i] = ict_net[elt_type].iloc[elt_idx]['name']
+
+    for i, (n, attr) in enumerate(graph.nodes(data=True)):
+        elt_type, elt_idx = attr['pielt']
+        node_elements[i] = (elt_type, elt_idx)
+        node_names[i] = ict_net[elt_type].iloc[elt_idx]['name']
+
 
     # Run the full analysis with the caller's display/analysis settings
     crit_result = _analyze_critical_components(
@@ -482,6 +496,8 @@ def analyze_critical_components_for_conn(ict_net, connections,
         verbose=verbose,
         rate_adjustment=rate_adjustment,
         save_excel=save_excel,
+        edge_labels=edge_names,
+        node_labels=node_names
     )
 
     if crit_result is None:
@@ -490,21 +506,13 @@ def analyze_critical_components_for_conn(ict_net, connections,
             'node_criticality': None,
             'edge_repair_criticality': None,
             'node_repair_criticality': None,
+            'edge_names': None,
+            'node_names': None,
+            'edge_elements': None,
+            'node_elements': None,
         }
     
     if plot:
-        # Build label mapping: node index -> device/node name
-        node_labels = {}
-        for n, attr in graph.nodes(data=True):
-            elt_type, elt_idx = attr['pielt']
-            node_labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
-
-        edge_labels = {}
-        for i, data in enumerate(graph.edges(data=True)):
-            u, v, attr = data
-            elt_type, elt_idx = attr['pielt']
-            edge_labels[i] = ict_net[elt_type].iloc[elt_idx]['name']
-
         edge_crit = crit_result['edge_criticality'] # + crit_result['edge_repair_criticality'] TODO: add later
         node_crit = crit_result['node_criticality'] # + crit_result['node_repair_criticality'] TODO: add later
         
@@ -512,8 +520,8 @@ def analyze_critical_components_for_conn(ict_net, connections,
         top_node_fail_idx = np.argsort(node_crit)[::-1]
 
         _critical_bar_plot(top_edge_fail_idx, top_node_fail_idx,
-                           edge_crit, edge_labels,
-                           node_crit, node_labels,
+                           edge_crit, edge_names,
+                           node_crit, node_names,
                            rate_adjustment)
 
     return {
@@ -521,6 +529,10 @@ def analyze_critical_components_for_conn(ict_net, connections,
         'node_criticality': crit_result['node_criticality'],
         'edge_repair_criticality': crit_result['edge_repair_criticality'],
         'node_repair_criticality': crit_result['node_repair_criticality'],
+        'edge_names': [edge_names[i] for i in range(len(edge_names))],
+        'node_names': [node_names[i] for i in range(len(node_names))],
+        'edge_elements': [edge_elements[i] for i in range(len(edge_elements))],
+        'node_elements': [node_elements[i] for i in range(len(node_elements))],
     }
 
 

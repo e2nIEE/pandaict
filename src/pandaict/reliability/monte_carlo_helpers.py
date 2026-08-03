@@ -338,7 +338,8 @@ def _print_criticality(total_observed, total_failure, total_repair, top_n,
                        edge_fail_crit, edge_rep_crit, n_edges,
                        top_node_fail_idx, top_node_rep_idx, node_list,
                        node_fail_crit, node_rep_crit, n_nodes,
-                       failure_counts, repair_counts):
+                       failure_counts, repair_counts,
+                       edge_labels=None, node_labels=None):
     print("\n" + "=" * 70)
     print("CRITICAL COMPONENT ANALYSIS")
     print("=" * 70)
@@ -358,7 +359,7 @@ def _print_criticality(total_observed, total_failure, total_repair, top_n,
     print("FAILURE-CRITICAL EDGES  (last straw before System Down)")
     print(f"{'─' * 70}")
     for rank, i in enumerate(top_edge_fail_idx[:n_show], 1):
-        print(f"  {rank:2d}. {edge_list[i]}: "
+        print(f"  {rank:2d}. {edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i])}: "
               f"Score={edge_fail_crit[i]:.3f}, "
               f"Count={int(failure_counts[i])}")
 
@@ -368,7 +369,7 @@ def _print_criticality(total_observed, total_failure, total_repair, top_n,
     print("FAILURE-CRITICAL NODES  (last straw before System Down)")
     print(f"{'─' * 70}")
     for rank, i in enumerate(top_node_fail_idx[:n_show_n], 1):
-        print(f"  {rank:2d}. {node_list[i]}: "
+        print(f"  {rank:2d}. {node_labels.get(i, str(node_list[i])) if node_labels else str(node_list[i])}: "
               f"Score={node_fail_crit[i]:.3f}, "
               f"Count={int(failure_counts[n_edges + i])}")
 
@@ -378,7 +379,7 @@ def _print_criticality(total_observed, total_failure, total_repair, top_n,
         print("REPAIR-CRITICAL EDGES  (last straw before System Up)")
         print(f"{'─' * 70}")
         for rank, i in enumerate(top_edge_rep_idx[:n_show], 1):
-            print(f"  {rank:2d}. {edge_list[i]}: "
+            print(f"  {rank:2d}. {edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i])}: "
                   f"Score={edge_rep_crit[i]:.3f}, "
                   f"Count={int(repair_counts[i])}")
 
@@ -387,7 +388,7 @@ def _print_criticality(total_observed, total_failure, total_repair, top_n,
         print("REPAIR-CRITICAL NODES  (last straw before System Up)")
         print(f"{'─' * 70}")
         for rank, i in enumerate(top_node_rep_idx[:n_show_n], 1):
-            print(f"  {rank:2d}. {node_list[i]}: "
+            print(f"  {rank:2d}. {node_labels.get(i, str(node_list[i])) if node_labels else str(node_list[i])}: "
                   f"Score={node_rep_crit[i]:.3f}, "
                   f"Count={int(repair_counts[n_edges + i])}")
 
@@ -416,7 +417,8 @@ def _calc_criticalities(n_events, total_observed, expected_fractions, full_count
 def _save_criticality_excel(total_observed, criticality, top_n,
                             top_edge_idx, edge_list, edge_crit, n_edges,
                             top_node_idx, node_list, node_crit, full_counts,
-                            excel_path=None):
+                            excel_path=None,
+                            edge_labels=None, node_labels=None):
     """
     Writes the critical-component analysis to an Excel file.
 
@@ -451,7 +453,7 @@ def _save_criticality_excel(total_observed, criticality, top_n,
         ("",                     ""),
         ("Score interpretation", ""),
         ("> 1.0",               "MORE critical than expected"),
-        ("≈ 1.0",               "As expected"),
+        ("~ 1.0",               "As expected"),
         ("< 1.0",               "LESS critical than expected"),
     ]
     summary_df = pd.DataFrame(summary_rows, columns=["Parameter", "Value"])
@@ -461,7 +463,7 @@ def _save_criticality_excel(total_observed, criticality, top_n,
     for rank, i in enumerate(top_edge_idx[:n_show_edges], 1):
         edge_rows.append({
             "Rank":  rank,
-            "Edge":  str(edge_list[i]),
+            "Edge":  edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i]),
             "Score": round(float(edge_crit[i]), 4),
             "Count": int(full_counts[i]),
         })
@@ -472,7 +474,7 @@ def _save_criticality_excel(total_observed, criticality, top_n,
     for rank, i in enumerate(top_node_idx[:n_show_nodes], 1):
         node_rows.append({
             "Rank":  rank,
-            "Node":  str(node_list[i]),
+            "Node":  node_labels.get(i, str(node_list[i])) if node_labels else str(node_list[i]),
             "Score": round(float(node_crit[i]), 4),
             "Count": int(full_counts[n_edges + i]),
         })
