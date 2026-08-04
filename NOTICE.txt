@@ -1,0 +1,17 @@
+This project is using following third-party licenses: 
+
+numpy
+- Version: <2.0.0
+- Copyright: 
+- Author: 
+- License: Apache License 2.0
+- License text: 
+
+x
+- Version: 
+- Copyright: 
+- Author: 
+- License: Apache License 2.0
+- License text: 
+
+
