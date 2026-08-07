@@ -5,7 +5,7 @@
 
 title: pandaict documentation
 author: The pandaict team
-copyright: 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+copyright: 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved
 logo: pict.png
 
 # Force re-execution of notebooks on each build.

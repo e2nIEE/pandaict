@@ -25,17 +25,19 @@ Change Log
 -------------------------------
 - [FIXED] Compatibility to pp_pict_connector
 
-[1.1.2] - 2026-07-27
+[1.2.0] - 2026-08-07
 -------------------------------
 - [ADDED] Monte-Carlo based reliability analysis 
 - [ADDED] ICT network saving and loading from/to Excel file format
 - [ADDED] Verbose mode for diagnosis.inspect()
 - [ADDED] Jupyter notebook HowTos
+- [ADDED] Analytic reliability functions can now optionally include end devices
 - [CHANGED] Reliability: calc_MTBF_route, calc_MTBF_MTTR_route and calc_MTBF_MTTR_by_lup renamed to calc_mtbf_route, calc_mtbf_mttr_route and calc_mtbf_mttr_by_lup
 - |CHANGED] Renamed addCustomEnum() to add_custom_enum()
 - [CHANGED] Differentiation between built-in and custom std_types and enums
 - [CHANGED] Adapted JSON file saving for custom std_types and enums
-- [FIXED] Corrected Sphinx and Jupyter documentation
+- [FIXED] Tagging variables with physical units
+- [FIXED] Corrected and updated Sphinx and Jupyter documentation
 - [FIXED] Saving of nets with std_type
 
    
