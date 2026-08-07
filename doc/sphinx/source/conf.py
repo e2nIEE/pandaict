@@ -8,7 +8,7 @@
 project = 'pandaICT'
 copyright = '2024-2026 by Fraunhofer IEE, Kassel. All rights reserved'
 author = 'Fraunhofer IEE'
-release = '1.2.0'
+release = '1.2.1preview'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
