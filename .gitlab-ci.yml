@@ -54,7 +54,7 @@ sonarqube-check:
 
 unit-test:
     image: python:3.12.2
-    stage: test       
+    stage: test
     script:
      - pip install -r requirements.txt
      - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
@@ -123,3 +123,5 @@ create_artifact_gitlab_nexus:
   artifacts:
     paths:
       - dist/*.whl
+
+
