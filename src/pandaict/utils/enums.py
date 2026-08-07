@@ -1,9 +1,9 @@
 '''
 Created on 30.01.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 
 '''
 
@@ -48,10 +48,7 @@ class AppType(Enum):
     RESTCLIENT     = 7
     
 class RoutingType(Enum):  
-    # RANDOM_ROUNDROBIN       = 1                            
-    # FLOODING                = 2
-    LOWEST_TOTAL_LATENCY      = 3 
-    # BALANCED_BANDWITH_USAGE = 4
+    LOWEST_TOTAL_LATENCY      = 3
     
 class SortType(Enum):  
     USAGE           = 1
@@ -59,23 +56,26 @@ class SortType(Enum):
     BIT_ERROR_RATE  = 3 
     BANDWIDTH       = 4
     
-def addCustomEnum(net, etype, name, value=None):    
+def add_custom_enum(net, etype, name, value=None):    
     """
-    Adds a custom enum to net at runtime. Enums defined herewith are assigned values of 1000 or higher, and added to 
-    an internal list that tags them as custom. They are saved to JSON and Excel files. 
+    Adds a custom enum to net at runtime. Enums defined herewith are assigned values of 1000 or higher by default. They are added to a 
+    **net.custom_enums** dataframe to track and tag them as custom. They are saved to JSON and Excel files. 
     
     If a custom enum is added with the same name as an existing one, the existing will be retained and not be assigned a new value.
 
     :INPUT:
         **net** (pandaictNet) - The pandaict network to which the enum is added. 
         
-        **etype** (String) - One of the predefined enum types, i.e. "NodeType", "DeviceType", "AppType", "InfoItem", "RoutingType", and "SortType"    
-
-    :OPTIONAL:
+        **etype** (aenum) - One of the predefined enum types, i.e. NodeType, DeviceType, AppType, InfoItem, RoutingType, and SortType    
+        
         **name** (string, default None) - the name for the new enum
 
+    :OPTIONAL:
+        **value** (int, default None) - fixed value for this enum. Note: if an already existing value is used, the custom enum 
+        is *not* created. 
+
     :EXAMPLE:
-        addCustomEnum(net, "NodeType", "REPEATER")
+        add_custom_enum(net, NodeType, "REPEATER")
     """
     
     if name not in [m.name for m in etype.__members__.values()]:  # if enum doesn't exist           

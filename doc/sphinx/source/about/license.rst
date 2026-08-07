@@ -10,5 +10,5 @@ License
 
 pandapower is published under the following 3-clause BSD license:
 
-    .. literalinclude:: ../../../../LICENSES/BSD-3-Clause-No-Military-License.txt
+    .. literalinclude:: ../../../../LICENSES/BSD-3-Clause.txt
 

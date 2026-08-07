@@ -1,10 +1,14 @@
 '''
 Created on 22.12.2025
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 # main API
 import numpy as np
+from pandaict.pilogger import pilogger
 from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
 
 # import python fallback
@@ -35,7 +39,7 @@ try:
 
 except ImportError:
     NUMBA_AVAILABLE = False
-    print("Warning: Numba not available. Using Python-only version.")
+    pilogger.warning("Warning: Numba not available. Using Python-only version.")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -120,7 +124,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
     valid = flat[flat >= 0]
 
     if len(valid) == 0:
-        print("No critical components tracked!")
+        pilogger.info("No critical components tracked!")
         return None
 
     # Failure-Events: Indices  0 .. n_events-1
@@ -314,8 +318,8 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     is_connected, error_msg = _check_initial_connectivity(G, sources, targets, min_connected)
 
     if not is_connected:
-        print(f'Initial connectivity check failed: {error_msg}')
-        print('Please fix topology!')
+        pilogger.warning(f'Initial connectivity check failed: {error_msg}')
+        pilogger.warning('Please fix topology!')
         return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
 
     # Extract rates from graph
@@ -334,7 +338,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
     # Check for no-failure case
     if is_nofailure:
-        print('All failure rates are zero. Please adjust!')
+        pilogger.warning('All failure rates are zero. Please adjust!')
         return {'mttf':np.inf, 'mttr':0.0, 'mttf_samples':None, 'mttr_samples':None}
 
     if use_numba and NUMBA_AVAILABLE:
@@ -347,8 +351,8 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
     else:
         # Python fallback
-        print("Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
-        print(f"Using Python fallback ({G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
+        pilogger.warning("Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
+        pilogger.warning(f"Using Python fallback ({G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
 
         sources = sources[0]
         targets = targets[0]
@@ -383,4 +387,5 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
             'edge_criticality': edge_criticality,
             'node_criticality': node_criticality,
             'all_critical': all_critical,}
+
 

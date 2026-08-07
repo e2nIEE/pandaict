@@ -1,15 +1,9 @@
 '''
 Created on 2.02.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import uuid
@@ -27,12 +21,18 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
     The standard type is saved into the pandaict dict of the given network by default.
 
     :INPUT:
+    
         **ict_net** (pandaictNet) - The pandaict network
+    
         **data** (dict) - dictionary of standard type parameters (without the name)
+    
         **name** (string) - name of the standard type as string
                             NOTE: if a standard type with this already exists, it is overwritten.
+    
         **element** (string, default "link" - Element type, may be "link" or "protocol"
+    
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
+    
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
     
     """
@@ -47,7 +47,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
         if element == "link":
             required = ["bandwidth_Mbps", "latency_ms", "wired"]
         elif element == "protocol":
-            required = ["info_items"]
+            required = ["base_package_size_byte", "info_items"]
         else:
             raise ValueError("Unkown element type %s" % element)
         for par in required:
@@ -66,10 +66,14 @@ def create_std_types(ict_net, data, element="link", overwrite=True, custom=True,
 
     :INPUT:
         **ict_net** (pandaictNet) - The pandaict network
+       
         **data** (dict) - dictionary of standard type parameters (including type names)
                           NOTE: if a standard type with given name already exists, it is overwritten.
+       
         **element** (string, default "link" - Element type, may be "link" or "protocol"
+       
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
+       
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
 
     """
@@ -249,7 +253,7 @@ def __application_protocoltypes():
         }
     return pt  
 
-def __MODBUS_protocoltypes():
+def __modbus_protocoltypes():
     return {"MODBUS-TCP": {        
                 "base_package_size_byte": 1024,
                 "info_items":
@@ -275,7 +279,7 @@ def __basic_protocol_std_types():
     protocoltypes = __simple_protocoltypes()
     protocoltypes.update(__transmission_protocoltypes())
     protocoltypes.update(__application_protocoltypes())   
-    protocoltypes.update(__MODBUS_protocoltypes())                      
+    protocoltypes.update(__modbus_protocoltypes())
     return protocoltypes
 
 
@@ -287,14 +291,12 @@ def __basic_std_types():
     
 def add_basic_std_types(ict_net):
     """Adds basic standard types of the pandaict library to the ict_net provided. These standard types
-    are the same types that are available with output of `pandapower.create_empty_network()` and
-    `pandapower.create_empty_network(add_stdtypes=True)` respectively.
+    are automatically available with output of `create_empty_network()`.
 
     :INPUT:
         **ict_net** - pandaICT net which should receive the basic standard types
 
-    :OUTPUT:
-    
+    :OUTPUT:    
         **std_types** (tuple of dict) - standard types as dictionaries which have been added to the ict_net.
     """
 
@@ -308,4 +310,4 @@ def add_basic_std_types(ict_net):
     create_std_types(ict_net, data=linktypes, element="link", custom=False)
     create_std_types(ict_net, data=protocols, element="protocol", custom=False)  
         
-    return linktypes    
+    return linktypes, protocols    

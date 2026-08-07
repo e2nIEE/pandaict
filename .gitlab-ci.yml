@@ -45,10 +45,9 @@ sonarqube-check:
     paths:
       - .sonar/cache
   before_script:
-    - echo "${SONAR_CRT}" | base64 -d > sonar.crt
-    - keytool -v -importcert -noprompt -alias sonar -file sonar.crt -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
+    - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
   script:
-    - sonar-scanner
+    - sonar-scanner -X
   allow_failure: true
   only:
     - develop
@@ -86,8 +85,9 @@ pages:
   - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
   - pip install -U sphinx
   - pip install -r requirements.txt
-  - sphinx-build -b html doc/sphinx/source public/pandaict
-  - pip install jupyter-book==1.0.4post1
+  - sphinx-build -b html doc/sphinx/source public/sphinx
+  - pip install "jupyter-book<2.0"
+  - pip install pandapower
   - python doc/jupyter/pandaict/convert_attachements.py
   - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/  
   after_script:
@@ -95,12 +95,18 @@ pages:
   artifacts:
     paths:
     - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
 
-
-create_artifact_gitlab_nexus::
+create_artifact_gitlab_nexus:
   image: python:3.9
   tags: 
    - leitwarte_iee
+  only:
+    - tags # only runs if version is tagged
+  except:
+    - branches # not on branches
   stage: deploy
   script:    
     - pip install virtualenv

@@ -1,10 +1,14 @@
 '''
 Created on 22.12.2025
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import numpy as np
 from numba import njit, prange
+from pandaict.pilogger import pilogger
 from pandaict.reliability.monte_carlo_numba_core import (
     _build_rates_and_bit,
     simulate_numba_core,
@@ -37,7 +41,6 @@ def _run_parallel(n_sims, depth, TOL,
 
     # Build event list
     n_events = n_edges + n_nodes
-    rates = np.empty(n_events, dtype=np.float64)
 
     # prebuild fenwick tree
     bit_template = _build_rates_and_bit(n_edges, n_nodes,
@@ -265,7 +268,7 @@ def _run_numba(G, sources, targets, min_connected, is_repairable,		    # Topolog
     if not is_repairable:
         # non-repairable case
         if parallel:
-            print(f"Running {N} simulations in parallel...")
+            pilogger.info(f"Running {N} simulations in parallel...")
             all_results, all_critical = _run_parallel_norepair(
                 N, TOL,
                 conv['n_edges'], conv['n_nodes'],
@@ -291,7 +294,7 @@ def _run_numba(G, sources, targets, min_connected, is_repairable,		    # Topolog
         mu_edges_arr = np.array([mu_edges[e] for e in conv['edge_list']], dtype=np.float64)
         mu_nodes_arr = np.array([mu_nodes[n] for n in conv['node_list']], dtype=np.float64)
 
-        print(f"Running {N * depth} ({N} x {depth}) simulations {'in parallel' if parallel else ''}...")
+        pilogger.info(f"Running {N * depth} ({N} x {depth}) simulations {'in parallel' if parallel else ''}...")
 
         if parallel:
             all_results, all_critical = _run_parallel(

@@ -1,16 +1,8 @@
 '''
 Created on 30.01.2024
-@author: gbanerjee
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-'''
+SPDX-License-Identifier: BSD-3-Clause'''
 
 from collections.abc import MutableMapping
 from pandaict import __version__
@@ -21,7 +13,7 @@ from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
 
 def __preserve_dtypes(df, dtypes):
-    for item, dtype in list(dtypes.items()):
+    for item, dtype in dtypes.items():
         if df.dtypes.at[item] != dtype:
             if (dtype == bool or dtype == np.bool_) and np.any(df[item].isnull()):
                 raise UserWarning(f"Encountered NaN value(s) in a boolean column {item}! "
@@ -61,10 +53,6 @@ class ADict(dict, MutableMapping):
         self.update(mapping)
         self.__setattr('_allow_invalid_attributes', allow_invalid_attributes)
 
-    @classmethod
-    def __constructor(cls, mapping):
-        return cls(mapping)
-
     # --- taken from MutableAttr
 
     def __setattr(self, key, value):
@@ -81,9 +69,6 @@ class ADict(dict, MutableMapping):
                     cls=self.__class__.__name__
                 )
             )
-
-    def __delattr(self, key):
-        super(MutableMapping, self).__delattr__(key)
 
     def __delattr__(self, key, force=False):
         if self.__valid_name(key):
@@ -176,7 +161,7 @@ class pandaICTNet(ADict):
     def __repr__(self):  # pragma: no cover
         par = []
         res = []
-        for et in list(self.keys()):
+        for et in self.keys():
             if not et.startswith("_") and isinstance(self[et], pd.DataFrame) and len(self[et]) > 0:
                 n_rows = self[et].shape[0]
                 if 'res_' in et:
@@ -213,10 +198,10 @@ class pandaICTNet(ADict):
             **other** (pandaICTNet) - pandaict network to compare to.           
             
         :OPTIONAL:
-            **include_std_types** (default=False) - If true, std_types are saved too. If False, they're not. 
+            **include_std_types** (default=False) - If True, std_types are saved too. If False, they're not. 
         
         :OUTPUT:
-            **equals** (boolean) - True if networks are equal excluding uuids and standard types, False else.  
+            **equals** (boolean) - True if networks are equal, False else.  
         
         """
         keys = list(self.keys())
@@ -272,7 +257,7 @@ class pandaICTNet(ADict):
             typedict = {}     
             for i,e in self[tf].iterrows():
                 if e['name'] in typedict.keys():
-                    logger.warn("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
+                    pilogger.warn("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
                     print("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
                 typedict.update({e['name']: (tf, i)})
             alldict.update({tf: typedict})

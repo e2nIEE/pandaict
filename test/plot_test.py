@@ -4,7 +4,6 @@ Created on 21.03.2024
 @author: gbanerjee
 '''
 
-
 from core_test import *
 from pandaict.networks.test_networks import create_testnet1
 from pandaict.plot import create_plot, __create_g__
@@ -13,16 +12,12 @@ from PIL import Image, ImageChops
 import tempfile
 import os
 
- #plot net is depending on the index of the net at "create_test_ict_net" return
-
-# create_plot(net1, draw_type='dev')
-# create_plot(net1, draw_type='app')
+#plot net is depending on the index of the net at "create_test_ict_net" return
 
 class Plot_Test():    
     
-    # NOTE: all function names to be executed by unittest MUST START with "test" !     
-        
-    def test_plot_dev(self, utest):        
+    # NOTE: all function names to be executed by unittest MUST START with "test" !             
+    def test_plot_dev(self, utest):
         net1 = create_testnet1()
         plt = create_plot(net1, draw_type='dev')
 
@@ -43,7 +38,7 @@ class Plot_Test():
             utest.assertTrue(diff.getbbox() is None)
         
            
-    def test_plot_app(self, utest):        
+    def test_plot_app(self, utest):
         net1 = create_testnet1()
         plt = create_plot(net1, draw_type='app')
 
@@ -63,7 +58,7 @@ class Plot_Test():
             utest.assertTrue(diff.getbbox() is None)
 
     
-    def test_graph_dev(self, utest):        
+    def test_graph_dev(self, utest):
         net1 = create_testnet1()
         G, edge_labels = __create_g__(None, 'dev', net1)
         
@@ -75,10 +70,9 @@ class Plot_Test():
         for edge, edge_compare in zip(G.edges(), [('Node1', 'CC'), ('Node1', 'Node2'), ('Node2', 'Conv1'),
                                     ('Node2', 'Conv2'), ('Node2', 'Conv3'), ('Node2', 'PQ1'), 
                                     ('Node2', 'PQ2'), ('Conv1', 'PC1'), ('Conv2', 'PC2'), ('Conv3', 'SC')]):
-           utest.assertTrue(edge == edge_compare)
-           
+           utest.assertTrue(edge == edge_compare)        
     
-    def test_graph_app(self, utest):        
+    def test_graph_app(self, utest):
         net1 = create_testnet1()
         G, edge_labels = __create_g__(None, 'app', net1)
         

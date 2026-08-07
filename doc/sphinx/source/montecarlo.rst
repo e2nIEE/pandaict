@@ -2,7 +2,10 @@
 
 
 Monte Carlo based reliability
-==============================
+=============================
+
+Reliability analysis
+--------------------
 
 .. autofunction:: pandaict.reliability.reliability.estimate_mtbf_mttr_for_conn
 
@@ -14,7 +17,7 @@ Monte Carlo based reliability
 .. _mc_kwargs:
 
 Shared Keyword Arguments
--------------------------
+------------------------
 
 All three functions above accept the following optional keyword arguments:
 
