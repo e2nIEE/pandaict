@@ -1,8 +1,8 @@
 '''
 Created on 22.07.2025
-@author: jringelstein
+@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
 
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 
 '''

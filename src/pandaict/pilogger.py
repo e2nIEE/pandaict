@@ -1,3 +1,11 @@
+'''
+Created on 30.01.2024
+@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
+'''
+
 import logging
 
 # Create logger

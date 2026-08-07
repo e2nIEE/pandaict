@@ -1,7 +1,8 @@
 '''
-@author: brequardt
+@author: brequardt, jringelstein
 
-SPDX-FileCopyrightText: 2024 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import nbformat
