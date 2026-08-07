@@ -43,7 +43,7 @@ class ReliabilityTest(unittest.TestCase):
         ]
 
         # sample counts
-        cls.N_nonrep    = int(1e6)
+        cls.N_nonrep    = int(1e7)
         cls.N_rep       = int(1e4)
         cls.depth       = 200
         cls.N_rel       = cls.N_nonrep
