@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 
-from test_networks_pi import build_test_ict_network
-from reference import reference_values
+from reliability_tests.test_networks_pi import build_test_ict_network
+from reliability_tests.reference import reference_values
 from pandaict.reliability.monte_carlo import NUMBA_AVAILABLE   
 from pandaict.reliability.reliability import (
     estimate_mtbf_mttr_for_conn,
@@ -18,7 +18,7 @@ from pandaict.reliability.reliability import (
 )
 
 
-class ReliabiltyTest(unittest.TestCase):
+class ReliabilityTest(unittest.TestCase):
     """Compare MC results against analytical reference values."""
 
     @classmethod

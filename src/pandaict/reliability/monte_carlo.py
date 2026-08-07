@@ -258,9 +258,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     """
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
 
-    TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
-    TODO: Check if N and depth can be collapsed to one argument => No!
-
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
 
@@ -312,6 +309,10 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         **mttr_samples**        - np.ndarray, mttr samples (None if not return_samples or non-repairable)
         }
     """
+    
+    # TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
+    # TODO: Check if N and depth can be collapsed to one argument => No!
+    
     sources, targets = _normalize_connection_pairs(sources, targets)
 
     # Catch if G is not connected at start.

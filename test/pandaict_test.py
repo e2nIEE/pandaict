@@ -6,7 +6,7 @@ Created on 8.03.2024
 import unittest
 from core_test import Core_Test
 from plot_test import Plot_Test
-from monte_carlo_test import ReliabilityNetTest
+from reliability_tests.reliability_test import ReliabilityTest
 
 class PandaICT_Test(unittest.TestCase):    
     
