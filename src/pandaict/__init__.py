@@ -1,4 +1,4 @@
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 from pandaict.create_empty_net import *
 from pandaict.create import *
 from pandaict.auxiliary import *
@@ -8,7 +8,8 @@ from pandaict.file_io import *
 from pandaict.diagnosis import *
 from pandaict.topology import *
 from pandaict.reliability import *
-
+from pandaict.networks import *
+from pandaict.toolbox import *
 
 # Track which connectors have been used
 connectors_installed = [] 

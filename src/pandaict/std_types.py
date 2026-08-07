@@ -1,18 +1,17 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 2.02.2024
+@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
 
-@author: jringelstein
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import uuid
-from   pandaict.utils.enums import InfoItem
+from pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
 
 
-def create_std_type(ict_net, data, name, element="link", overwrite=True, check_required=True):
+def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=True, check_required=True):
     """
     Creates type data in the type dict. The following mandatory parameters have to be at least contained in data:
     
@@ -22,11 +21,18 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
     The standard type is saved into the pandaict dict of the given network by default.
 
     :INPUT:
+    
         **ict_net** (pandaictNet) - The pandaict network
+    
         **data** (dict) - dictionary of standard type parameters (without the name)
+    
         **name** (string) - name of the standard type as string
+                            NOTE: if a standard type with this already exists, it is overwritten.
+    
         **element** (string, default "link" - Element type, may be "link" or "protocol"
+    
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
+    
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
     
     """
@@ -41,7 +47,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
         if element == "link":
             required = ["bandwidth_Mbps", "latency_ms", "wired"]
         elif element == "protocol":
-            required = ["info_items"]
+            required = ["base_package_size_byte", "info_items"]
         else:
             raise ValueError("Unkown element type %s" % element)
         for par in required:
@@ -49,24 +55,31 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, check_r
                 raise UserWarning("%s is required as %s type parameter" % (par, element))
     stdict = ict_net.std_types[element]
     if overwrite or name not in stdict:
+        if custom:
+            data.update({'custom': True})
         stdict.update({name: data})
 
 
-def create_std_types(ict_net, data, element="link", overwrite=True, check_required=True):
+def create_std_types(ict_net, data, element="link", overwrite=True, custom=True, check_required=True):
     """
     Creates multiple standard types in the type dict.
 
     :INPUT:
         **ict_net** (pandaictNet) - The pandaict network
+       
         **data** (dict) - dictionary of standard type parameters (including type names)
+                          NOTE: if a standard type with given name already exists, it is overwritten.
+       
         **element** (string, default "link" - Element type, may be "link" or "protocol"
+       
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
+       
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
 
     """
     for name, typdata in data.items():
         create_std_type(ict_net, data=typdata, name=name, element=element, overwrite=overwrite,
-                        check_required=check_required)
+                        custom=custom, check_required=check_required)
 
 
 def __controller_area_linktypes():
@@ -75,9 +88,9 @@ def __controller_area_linktypes():
               "latency_ms": 1,
               "wired": True,
               "protocols": ['Binary'],
-              "ber_per_km": 0.005,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.00001,
+              "mtbf_h": 6000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"),
             },
         "RS485":
@@ -85,9 +98,9 @@ def __controller_area_linktypes():
               "latency_ms": 100,
               "wired": True,    
               "protocols": ['MODBUS-SMA'],    
-              "ber_per_km": 0.005,
-              "mtbf_h": 0,
-              "mttr_h": 0,
+              "ber_per_km": 0.00001,
+              "mtbf_h": 6000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("77fbef84-195f-40de-882b-3d8824c0d3a5"),
             }
         }
@@ -99,9 +112,9 @@ def __local_area_linktypes():
               "latency_ms": 100,
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0005,
-              "mtbf_h": 1000,
-              "mttr_h": 1,
+              "ber_per_km": 0.00000002,
+              "mtbf_h": 8000,
+              "mttr_h": 2,
               "uuid": uuid.UUID("4d5b388f-ce1c-407e-81c6-5caa23f1832b"),
             }
         }
@@ -113,9 +126,9 @@ def __wide_area_linktypes():
               "latency_ms": (100,200),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0005,
-              "mtbf_h": 200,
-              "mttr_h": 1,
+              "ber_per_km": 0.00000001,
+              "mtbf_h": 5000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("cd43d4c0-66d2-4723-886a-7c937e259c5a"),
             },
         "UMTS": 
@@ -123,9 +136,9 @@ def __wide_area_linktypes():
               "latency_ms": (300,300),
               "wired": False,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0005,
-              "mtbf_h": 100,
-              "mttr_h": 1,
+              "ber_per_km": 0.0000001,
+              "mtbf_h": 5000,
+              "mttr_h": 0.5,
               "uuid": uuid.UUID("ed41d4c0-64d2-452d-586a-7c937e259c5b"),
             },                
         "ADSL8": # Asymmetric DSL with downstream bandwidth of 8 Mbps
@@ -134,8 +147,8 @@ def __wide_area_linktypes():
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
               "ber_per_km": 0.0005,
-              "mtbf_h": 100,
-              "mttr_h": 1,
+              "mtbf_h": 12000,
+              "mttr_h": 10,
               "uuid": uuid.UUID("6dd01923-0bce-4f07-8ef0-65a0f214d2cf"),
             },
         "Fiber": # Glass fiber
@@ -143,9 +156,9 @@ def __wide_area_linktypes():
               "latency_ms": 100,
               "wired": True,
               "protocols": ['TCP','UDP','FTP','HTTP','HTTPS','MODBUS-TCP'],
-              "ber_per_km": 0.0001,
-              "mtbf_h": 1000,
-              "mttr_h": 10,
+              "ber_per_km": 0.000000001,
+              "mtbf_h": 12000,
+              "mttr_h": 2,
               "uuid": uuid.UUID("eebc167b-b816-468f-bb9a-5e75c7ccd79b"),
             }
         }
@@ -179,7 +192,7 @@ def __transmission_protocoltypes():
             "uuid": uuid.UUID("fdb0612d-3791-437a-b570-139c49c9dea9"),   
             },
         "UDP": {        
-            "base_package_size_byte": 8,
+            "base_package_size_byte": 12, # UDP Header has at least 12 byte
             "info_items":
                 [ InfoItem.REQUEST,
                   InfoItem.RESPONSE,                   
@@ -240,7 +253,7 @@ def __application_protocoltypes():
         }
     return pt  
 
-def __MODBUS_protocoltypes():
+def __modbus_protocoltypes():
     return {"MODBUS-TCP": {        
                 "base_package_size_byte": 1024,
                 "info_items":
@@ -266,7 +279,7 @@ def __basic_protocol_std_types():
     protocoltypes = __simple_protocoltypes()
     protocoltypes.update(__transmission_protocoltypes())
     protocoltypes.update(__application_protocoltypes())   
-    protocoltypes.update(__MODBUS_protocoltypes())                      
+    protocoltypes.update(__modbus_protocoltypes())
     return protocoltypes
 
 
@@ -276,16 +289,14 @@ def __basic_std_types():
         "protocol"   : __basic_protocol_std_types(),           
     }
     
-def add_basic_std_types(ict_net): # ToDo: make private?
+def add_basic_std_types(ict_net):
     """Adds basic standard types of the pandaict library to the ict_net provided. These standard types
-    are the same types that are available with output of `pandapower.create_empty_network()` and
-    `pandapower.create_empty_network(add_stdtypes=True)` respectively.
+    are automatically available with output of `create_empty_network()`.
 
     :INPUT:
         **ict_net** - pandaICT net which should receive the basic standard types
 
-    :OUTPUT:
-    
+    :OUTPUT:    
         **std_types** (tuple of dict) - standard types as dictionaries which have been added to the ict_net.
     """
 
@@ -296,7 +307,7 @@ def add_basic_std_types(ict_net): # ToDo: make private?
     linktypes = __basic_link_std_types()
     protocols = __basic_protocol_std_types()
 
-    create_std_types(ict_net, data=linktypes, element="link")
-    create_std_types(ict_net, data=protocols, element="protocol")  
+    create_std_types(ict_net, data=linktypes, element="link", custom=False)
+    create_std_types(ict_net, data=protocols, element="protocol", custom=False)  
         
-    return linktypes    
+    return linktypes, protocols    

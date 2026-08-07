@@ -1,15 +1,14 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+'''
+ @author: jringelstein
+'''   
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'pandaICT'
-copyright = '2024 by Fraunhofer IEE'
+copyright = '2024-2026 by Fraunhofer IEE, Kassel. All rights reserved'
 author = 'Fraunhofer IEE'
-release = '1.1.1'
+release = '1.2.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
