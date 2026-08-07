@@ -1,4 +1,6 @@
-﻿.. _authors:
+﻿.. 	@author: jringelstein
+		
+.. _authors:
 
 =========
 Authors

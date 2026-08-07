@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-
 @author: dheck
 """
 import os
@@ -18,7 +17,7 @@ if os.path.isfile(requirement_path):
 
 setuptools.setup(
     name="pandaict",
-    version="1.1.1",
+    version="1.2.0",
     author="Jan Ringelstein",
     author_email="jan.ringelstein@iee.fraunhofer.de",
     description="Toolbox for ICT networks",

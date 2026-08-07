@@ -1,10 +1,9 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 30.01.2024
+@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
 
-@author: jringelstein
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 from pandaict.utils.utils import uuid2elt, get_elts_any

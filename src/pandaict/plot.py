@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar  6 11:34:37 2024
-
+Created on 6.03.2024
 @author: gbanerjee
+
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
 """
 
 import networkx as nx
@@ -12,51 +14,46 @@ import matplotlib.pyplot as plt
 
 
 
-def create_plot(net, draw_type='dev', custom_icons=None):
-    
+def create_plot(net, draw_type='dev', custom_icons=None):    
     """
     Create a plot.
-    
+
     :INPUT:
         **net** - The network to be plotted.
+
+        **draw_type** (string) - The type of drawing to be created. There are two possibilities: 'dev' and 'app'. \
+            'dev': plotting all devices and nodes as well as links in the ICT grid (physical view) \
+            'app': plotting all apps and connections in the ICT grid (logical view).
         
-        **draw_type** (string) - The type of drawing to be created. There are two possibilities, i.e., 'dev' and 'app'.\n
-         'dev': plotting all devices and nodes in the ICT grid and all the elemnets are connected via 'link' (physical view)\n
-         'app': plotting all apps in the ICT grid and all the end-to-end elements are connected via connection 'conn' (logical view).
-        
-        **custom_icons** (dict, optional) - A dictionary of custom icons to be used in the plot. Defaults to None.\n
-        Example:\n
-            "node": "icons/router.png",\n
-            "app":  "icons/app.png",\n
-            "device": "icons/device.png",\n
-            "converter": "icons/convert.png",
+    :OPTIONAL:
+        **custom_icons** (dict, default None) - A dictionary of custom icons to be used in the plot. If None, standard icons are used.                              
     
-            
     :OUTPUT:
-        **plot** -  The pyplot figure object.
-        
-     
-    :OPTIONAL: custom_icons to be used as optional
+        **plot** -  The pyplot figure object.                 
               
     :EXAMPLE:
-    ::
+        ::
             
-        import networkx as nx
-        import matplotlib.pyplot as plt
-
-
-        # Plot the graph for dev
-        plot = create_plot(net, draw_type='dev', custom_icons=None)
-        plot.show()
-        
-        # Plot the graph for app
-        plot = create_plot(net, draw_type='app', custom_icons=None)
-        plot.show()
+            import networkx as nx
+            import matplotlib.pyplot as plt
+    
+            cicons = {"node": "icons/router.png",
+                      "app":  "icons/app.png",
+                      "device": "icons/device.png",
+                      "converter": "icons/convert.png"}
+                
+            # Plot the graph for dev
+            plot = create_plot(net, draw_type='dev', custom_icons=cicons)
+            plot.show()
+            
+            # Plot the graph for app
+            plot = create_plot(net, draw_type='app', custom_icons=cicons)
+            plot.show()
         
     """    
-    G, edge_labels = __create_g__(custom_icons, draw_type, net)        
+    g, edge_labels = __create_g__(custom_icons, draw_type, net)        
             
-    ax, fig, pos = __init_networkx__(G, draw_type, edge_labels)
+    ax, fig, pos = __init_networkx__(g, draw_type, edge_labels)
 
     # Transform from data coordinates (scaled between xlim and ylim) to display coordinates
     tr_figure = ax.transData.transform
@@ -67,7 +64,7 @@ def create_plot(net, draw_type='dev', custom_icons=None):
     icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.02
     icon_center = icon_size / 2.0
 
-    __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure)        
+    __draw_labels__(g, icon_center, icon_size, pos, tr_axes, tr_figure)        
     
     # plt.show()        
     return plt.gcf()    
@@ -83,40 +80,38 @@ def __create_g__(custom_icons, draw_type, net):
             i = np.asarray(imgfile)
             images.update({k: i})            
     
-    G = __create_graph__(draw_type, images, net)
+    g = __create_graph__(draw_type, images, net)
         
     # Define colors for 'link' and 'conn' edges
     edge_colors = {'link': 'blue', 'conn': 'green'}
     edge_labels = {}
 
-    __draw_edges__(G, draw_type, edge_colors, edge_labels, net)    
+    __draw_edges__(g, draw_type, edge_colors, edge_labels, net)    
         
-    return G, edge_labels
+    return g, edge_labels
 
 
-def __draw_labels__(G, icon_center, icon_size, pos, tr_axes, tr_figure):
+def __draw_labels__(g, icon_center, icon_size, pos, tr_axes, tr_figure):
     # Draw node labels under icons
 
-    for n in G.nodes:
+    for n in g.nodes:
         xf, yf = tr_figure(pos[n])
         xa, ya = tr_axes((xf, yf))
         # get overlapped axes and plot icon
         a = plt.axes([xa - icon_center, ya - icon_center, icon_size, icon_size])
-        a.imshow(G.nodes[n]["image"])
+        a.imshow(g.nodes[n]["image"])
         a.axis("off")
         a.text(0.5, -0.1, n, transform=a.transAxes, ha='center', va='top')
 
 
-def __init_networkx__(G, draw_type, edge_labels):
-    # ToDo:
-    # Write generic fuction for creating different node, edge colors
+def __init_networkx__(g, draw_type, edge_labels):
     # Get a reproducible layout and create figure
-    pos = nx.spring_layout(G, seed=1734289230)
-    edge_colors = [G[u][v]['color'] for u, v in G.edges()]  # Extract edge colors
+    pos = nx.spring_layout(g, seed=1734289230)
+    edge_colors = [g[u][v]['color'] for u, v in g.edges()]  # Extract edge colors
     fig, ax = plt.subplots()
-    # nx.draw_networkx(G, with_labels=True)
+    # nx.draw_networkx(g, with_labels=True)
     nx.draw_networkx_edges(
-    G,
+    g,
     pos=pos,
     ax=ax,
     edge_color=edge_colors,
@@ -125,9 +120,9 @@ def __init_networkx__(G, draw_type, edge_labels):
     min_source_margin=15,
     min_target_margin=15,
     )
-    edge_labels = {(u, v): f'{edge_labels.get((u, v), "123")}\n' for u, v in G.edges()}
+    edge_labels = {(u, v): f'{edge_labels.get((u, v), "123")}\n' for u, v in g.edges()}
     nx.draw_networkx_edge_labels(
-    G,
+    g,
     pos=pos,
     edge_labels=edge_labels,
     label_pos=0.5,
@@ -140,7 +135,7 @@ def __init_networkx__(G, draw_type, edge_labels):
     return ax, fig, pos
 
 
-def __draw_edges__(G, draw_type, edge_colors, edge_labels, net):
+def __draw_edges__(g, draw_type, edge_colors, edge_labels, net):
     # Iterate over each edge type
     if draw_type == 'dev':
         edge_types = ['link']
@@ -154,12 +149,12 @@ def __draw_edges__(G, draw_type, edge_colors, edge_labels, net):
     # Iterate over each edge in the current edge type
     for one_edge in net[one_edge_type].itertuples():
         # Extract source and destination information from the edge
-        from_source, from_index = one_edge.from_fix if not draw_type == 'app' else ('app', one_edge.from_fix)
-        to_source, to_index = one_edge.to[0] if not draw_type == 'app' else ('app', one_edge.to)
+        from_source, from_index = one_edge.from_fix if draw_type != 'app' else ('app', one_edge.from_fix)
+        to_source, to_index = one_edge.to[0] if draw_type != 'app' else ('app', one_edge.to)
         
 
         # Add an edge to the graph, with color based on the edge type
-        G.add_edge(net[from_source].loc[from_index, 'name'], net[to_source].loc[to_index, 'name'],
+        g.add_edge(net[from_source].loc[from_index, 'name'], net[to_source].loc[to_index, 'name'],
                    color=edge_colors[one_edge_type], label=one_edge.name)
         edge_labels[
             (net[from_source].loc[from_index, 'name'], net[to_source].loc[to_index, 'name'])] = one_edge.name
@@ -168,7 +163,7 @@ def __draw_edges__(G, draw_type, edge_colors, edge_labels, net):
 
 
 def __create_graph__(draw_type, images, net):
-    G = nx.Graph()
+    g = nx.Graph()
     if draw_type == 'dev':
         node_types = ['node', 'device']
     elif draw_type == 'app':
@@ -178,14 +173,13 @@ def __create_graph__(draw_type, images, net):
     for one_node_type in node_types:
         for one_node in net[one_node_type].itertuples():
             # create_node_for this node
-            G.add_node(one_node.name, image=images[one_node_type])
-    return G
+            g.add_node(one_node.name, image=images[one_node_type])
+    return g
 
 
 def __get_icons__(custom_icons):
     icons = {}
-    if custom_icons is not None:
-    # hier relative Pfade BR ToDo
+    if custom_icons is not None:    
         icons = custom_icons
     else:
         import os

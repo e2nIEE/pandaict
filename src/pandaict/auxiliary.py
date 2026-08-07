@@ -1,10 +1,9 @@
 '''
-# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
-# and Energy System Technology (IEE), Kassel. All rights reserved.
-
 Created on 30.01.2024
+@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
 
-@author: jringelstein
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 from collections.abc import MutableMapping
@@ -16,7 +15,7 @@ from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
 
 def __preserve_dtypes(df, dtypes):
-    for item, dtype in list(dtypes.items()):
+    for item, dtype in dtypes.items():
         if df.dtypes.at[item] != dtype:
             if (dtype == bool or dtype == np.bool_) and np.any(df[item].isnull()):
                 raise UserWarning(f"Encountered NaN value(s) in a boolean column {item}! "
@@ -29,7 +28,7 @@ def __preserve_dtypes(df, dtypes):
 
 
 def __get_free_id(df):
-    return np.int64(0) if len(df) == 0 else df.index.values.max() + 1
+    return 0 if len(df) == 0 else df.index.values.max() + 1
 
 
 class ADict(dict, MutableMapping):
@@ -56,10 +55,6 @@ class ADict(dict, MutableMapping):
         self.update(mapping)
         self.__setattr('_allow_invalid_attributes', allow_invalid_attributes)
 
-    @classmethod
-    def __constructor(cls, mapping):
-        return cls(mapping)
-
     # --- taken from MutableAttr
 
     def __setattr(self, key, value):
@@ -76,9 +71,6 @@ class ADict(dict, MutableMapping):
                     cls=self.__class__.__name__
                 )
             )
-
-    def __delattr(self, key):
-        super(MutableMapping, self).__delattr__(key)
 
     def __delattr__(self, key, force=False):
         if self.__valid_name(key):
@@ -112,6 +104,18 @@ class ADict(dict, MutableMapping):
 
         return self.__build(self[key])
 
+
+    def __deepcopy_add_key_to_result(self, k, v, deep_columns, memo, result):
+        if k not in result:
+            result[k] = v.__class__(index=v.index, columns=v.columns)
+        for col in v.columns:
+            if col in deep_columns:
+                result[k][col] = v[col].apply(lambda x: copy.deepcopy(x, memo))
+            else:
+                result[k][col] = copy.deepcopy(v[col], memo)
+        __preserve_dtypes(result[k], v.dtypes)
+        return result
+        
     def __deepcopy__(self, memo):
         deep_columns = {'object', 'coords', 'geometry'}
         cls = self.__class__
@@ -119,14 +123,7 @@ class ADict(dict, MutableMapping):
         memo[id(self)] = result
         for k, v in self.items():
             if isinstance(v, pd.DataFrame) and not set(v.columns).isdisjoint(deep_columns):
-                if k not in result:
-                    result[k] = v.__class__(index=v.index, columns=v.columns)
-                for col in v.columns:
-                    if col in deep_columns:
-                        result[k][col] = v[col].apply(lambda x: copy.deepcopy(x, memo))
-                    else:
-                        result[k][col] = copy.deepcopy(v[col], memo)
-                __preserve_dtypes(result[k], v.dtypes)
+                result = self.__deepcopy_add_key_to_result(k, v, deep_columns, memo, result)                
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
 
@@ -166,7 +163,7 @@ class pandaICTNet(ADict):
     def __repr__(self):  # pragma: no cover
         par = []
         res = []
-        for et in list(self.keys()):
+        for et in self.keys():
             if not et.startswith("_") and isinstance(self[et], pd.DataFrame) and len(self[et]) > 0:
                 n_rows = self[et].shape[0]
                 if 'res_' in et:
@@ -176,7 +173,7 @@ class pandaICTNet(ADict):
                     par.append('   - %s (%i %s, %i %s)' % (
                         et, n_groups, "group" + __plural_s(n_groups), n_rows, "row" + __plural_s(n_rows)))
                 else:
-                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + __plural_s(n_rows)))
+                    par.append("   - %s (%i %s)" % (et, n_rows, "element" + self.__plural_s(n_rows)))
         res_cost = [" and the following result values:",
                     "   - %s" % "res_cost"] if "res_cost" in self.keys() else []
         if not len(par) + len(res):
@@ -187,6 +184,14 @@ class pandaICTNet(ADict):
             par + res + res_cost
         return "\n".join(lines)
     
+    def _remove_uuids_from_std_types(self, std_type_dict):
+        dict_nouuids = copy.deepcopy(std_type_dict)
+        for k in dict_nouuids.keys():
+            for kk in dict_nouuids[k].keys():
+                if 'uuid' in dict_nouuids[k][kk].keys():
+                    dict_nouuids[k][kk].pop('uuid')            
+        return dict_nouuids
+    
     def equals_excluding_uuids(self, other, include_std_types=False):
         """
         Compares this network to another one
@@ -194,22 +199,36 @@ class pandaICTNet(ADict):
         :INPUT:
             **other** (pandaICTNet) - pandaict network to compare to.           
             
+        :OPTIONAL:
+            **include_std_types** (default=False) - If True, std_types are saved too. If False, they're not. 
+        
         :OUTPUT:
-            **equals** (boolean) - True if networks are equal excluding uuids and standard types, False else.  
+            **equals** (boolean) - True if networks are equal, False else.  
         
         """
         keys = list(self.keys())
         if 'name' in keys:
             keys.remove('name')
-        if 'std_types' in keys: 
+        if 'std_types' in keys and not include_std_types: 
             keys.remove('std_types')
+        retval = True
         for k in keys:            
-            cols = list(self[k].columns)
-            if 'uuid' in cols: 
-                cols.remove('uuid')                        
-            if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
-                return False                
-        return True
+            if isinstance(self[k], dict):
+                self_nouuids = self._remove_uuids_from_std_types(self[k])
+                other_nouuids = self._remove_uuids_from_std_types(other[k]) 
+                retval = (self_nouuids==other_nouuids)
+            else:                
+                cols = list(self[k].columns)                            
+                if 'uuid' in cols: 
+                    cols.remove('uuid')                        
+                try:
+                    if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
+                        retval=False
+                        break
+                except (IndexError, AttributeError, ValueError, TypeError):
+                    pass
+                                
+        return retval
     
     def get_elts_by_name_dict(self, typefilter=None):
         """
@@ -240,7 +259,7 @@ class pandaICTNet(ADict):
             typedict = {}     
             for i,e in self[tf].iterrows():
                 if e['name'] in typedict.keys():
-                    logger.warn("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
+                    pilogger.warn("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
                     print("get_elts_by_name_dict found multiple elements named "+e['name']+", some are omitted in the dict")
                 typedict.update({e['name']: (tf, i)})
             alldict.update({tf: typedict})
@@ -279,8 +298,8 @@ class pandaICTNet(ADict):
             alldict.update({tf: typedict})
         return alldict
         
-def __plural_s(number):
-    if number > 1:
-        return "s"
-    else:
-        return ""
+    def __plural_s(self, number):
+        if number > 1:
+            return "s"
+        else:
+            return ""
