@@ -72,13 +72,13 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
         pinode = ndata['pielt']
         mtbf   = ict_net[pinode[0]].loc[pinode[1]]['mtbf_h']
         mttr   = ict_net[pinode[0]].loc[pinode[1]]['mttr_h']
-        ndata['mttf_h'] = mtbf - mttr # mttf = mtbf - mttr
+        ndata['mttf_h'] = mtbf - mttr
         ndata['mttr_h'] = mttr
 
     for u, v, key, edata in mdg.edges(data=True, keys=True):
         piedge = edata['pielt']
         ltype  = ict_net.std_types['link'][ict_net[piedge[0]].loc[piedge[1]]['type']]
-        edata['mttf_h'] = ltype['mtbf_h'] - ltype['mttr_h'] # mttf = mtbf - mttr
+        edata['mttf_h'] = ltype['mtbf_h'] - ltype['mttr_h']
         edata['mttr_h'] = ltype['mttr_h']
 
     return mdg, sources, targets
@@ -242,7 +242,7 @@ def plot_graph(ict_net, protocol='TCP',
     highlight_edges = highlight_edges or []
 
     # --- Draw ---
-    fig, ax = plt.subplots(figsize=(5,5))
+    _, ax = plt.subplots(figsize=(5,5))
     pos = nx.spring_layout(G, seed=seed)
 
     nx.draw(G, pos, ax=ax,
@@ -307,10 +307,10 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
         'min_connected': -1,
         'N': int(1e5),
         'depth': 200,
-        'TOL': 0,
+        #'TOL': 0,
         'max_time': np.inf,
         'max_events': -1,
-        'return_samples': True,
+        #'return_samples': True,
         'analyze_crit': False,
         'laziness': 0,
         'use_numba': True,
@@ -429,7 +429,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
         'min_connected': -1,
         'N': int(1e5),
         'depth': 200,
-        'TOL': 0,
+        #'TOL': 0,
         'max_time': np.inf,
         'max_events': -1,
         'laziness': 0,
@@ -440,7 +440,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
     # Force critical analysis on; samples not needed for the caller
     protected = {
         'analyze_crit': True,
-        'return_samples': False,
+        #'return_samples': False,
     }
 
     config = {**defaults, **kwargs, **protected}
@@ -450,10 +450,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
     # Run simulation — estimate_mttf_mttr collects all_critical internally
     # (its own analyze call is suppressed via plot=False, verbose=False)
     res = estimate_mttf_mttr(graph, sources, targets, **config)
-
-    mttr = 0 if np.isinf(res['mttr']) else res['mttr']
-    mttf = res['mttf']
-    mtbf = mttf + mttr
 
     all_critical = res.get('all_critical')
 
@@ -586,7 +582,7 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     defaults = {
         'min_connected': -1,
         'N': int(1e5),
-        'TOL': 0,
+        #'TOL': 0,
         'max_time': np.inf,
         'max_events': -1,
         'laziness': 0,
@@ -597,7 +593,7 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     # Samples are required; critical analysis is not.
     # depth=1: each sample must be an individual failure time, not a cycle-averaged mean.
     protected = {
-        'return_samples': True,
+        #'return_samples': True,
         'analyze_crit': False,
         'depth': 1,
     }

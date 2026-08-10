@@ -25,11 +25,7 @@ from pandaict.reliability.monte_carlo_helpers import (
 # try importing wrappers for numba version
 try:
     from pandaict.reliability.monte_carlo_numba_wrappers import (
-        _run_numba,
-        _run_parallel,
-        _run_parallel_norepair,
-        _run_serial,
-        _run_serial_norepair
+        _run_numba
     )
     NUMBA_AVAILABLE = True
 
@@ -218,7 +214,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
 
 def empirical_reliability(T, samples):
     """
-    Builds an empirical reliability function R and returns its value at timepoint T: R(T)=P(t>T).
+    Builds empirical reliability function R and returns its value at timepoint T: R(T)=P(t>T).
 
     :INPUT:
         **T**       - float, timepoint at which the reliability will be evaluated.
@@ -237,7 +233,6 @@ def empirical_reliability(T, samples):
     n_failure = np.sum(samples <= T)
     n_survivor = n - n_failure
 
-    p_failure = n_failure / n
     reliability = n_survivor / n
 
     return reliability
@@ -247,15 +242,14 @@ def empirical_reliability(T, samples):
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
 def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
-                       N=1000, depth=200, TOL=0,
+                       N=1000, depth=200,
                        max_time=np.inf, max_events=-1,
-                       return_samples=True, analyze_crit=False, laziness=0,
+                       analyze_crit=False, laziness=0,
                        use_numba=True, parallel=True):
     """
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
 
     TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
-    TODO: Check if N and depth can be collapsed to one argument => No!
 
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
@@ -279,16 +273,12 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                                   with a fully functional network. Depth hands over a semi-fixed network into the next cycle.
                                   ~200 gives reasonable values.
 
-        **TOL**                 - float, tolerance for convergence of MTTF/MTTR (not yet implemented).
-
         **max_time**            - float, parameter to optimize sample collection for empirical reliability function type
                                   calculations.
 
         **max_events**          - int, control maximum number of events to avoid infinite loops for super-robust networks.
 
-        **return_samples**      - Boolean, choose whether all samples should be returned, alongside the mean values.
-
-        **analyze_crit**        - Boolean, choose whether network should be analyzed for critical components. (WIP)
+        **analyze_crit**        - Boolean, choose whether network should be analyzed for critical components.
 
         **laziness**            - float in [0,1), parameter which allows to sacrifice some accuracy for performance.
                                   Only checks the connectivity of the network if laziness*(V+E) events took place (only numba).
@@ -303,9 +293,9 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
 
         **mttr**                - float, mean time to repair (np.inf if non-repairable)
 
-        **mttf_samples**        - np.ndarray, mttf samples (None if not return_samples)
+        **mttf_samples**        - np.ndarray, mttf samples
 
-        **mttr_samples**        - np.ndarray, mttr samples (None if not return_samples or non-repairable)
+        **mttr_samples**        - np.ndarray, mttr samples
         }
     """
     sources, targets = _normalize_connection_pairs(sources, targets)
@@ -340,9 +330,9 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     if use_numba and NUMBA_AVAILABLE:
         all_results, all_critical = _run_numba(G, sources, targets, min_connected, is_repairable,
                                                lam_edges, lam_nodes, mu_edges, mu_nodes,
-                                               N, depth, TOL,
+                                               N, depth,
                                                max_time, max_events,
-                                               return_samples, analyze_crit, laziness,
+                                               analyze_crit, laziness,
                                                parallel)
 
     else:
@@ -375,7 +365,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         mttf_samples = all_results
         mttr_samples = None
 
-    # return everything
     return {'mttf': mttf,
             'mttr': mttr,
             'mttf_samples': mttf_samples,
