@@ -1,7 +1,11 @@
 '''
 Created on 04.02.2026
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
+
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt

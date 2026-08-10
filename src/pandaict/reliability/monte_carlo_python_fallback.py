@@ -1,11 +1,16 @@
 '''
 Created on 22.12.2025
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import random
 import statistics
 import numpy as np
+from pandaict.pilogger import pilogger
+
 
 # =====================================================================================
 # PYTHON-ONLY Fallback (Union-Find)
@@ -15,7 +20,7 @@ class UnionFind:
 
     def __init__(self, nodes):
         self.parent = {n: n for n in nodes}
-        self.rank = {n: 0 for n in nodes}
+        self.rank = dict.fromkeys(nodes, 0)
 
     def find(self, x):
         """find parent of x"""
@@ -67,7 +72,6 @@ def _simulate_python_repairable(G, source, target,
     edge_state = [1] * len(edge_list)
     node_state = [1] * len(node_list)
 
-    edge_index = {e: i for i, e in enumerate(edge_list)}
     node_index = {n: i for i, n in enumerate(node_list)}
 
     if max_events == -1:
@@ -104,7 +108,7 @@ def _simulate_python_repairable(G, source, target,
                 break
 
             if total_rate == 0:
-                print("lambda, mu are all 0. Please define rates.")
+                pilogger.warning("lambda, mu are all 0. Please define rates.")
                 return None
 
             dt = random.expovariate(total_rate)

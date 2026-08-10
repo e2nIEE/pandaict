@@ -1,6 +1,9 @@
 '''
 Created on 09.02.2026
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import networkx as nx
@@ -21,12 +24,12 @@ from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
 
 def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptables=False):
     """
-    Build a NetworkX MultiDiGraph from a pandaICT net and extract
+    Build a NetworkX MultiDiGraph from a pandaict net and extract
     source/target node lists from the given connections.
 
     :INPUT:
-        **ict_net**           - pandaICT ICT-Network object
-        **connections**       - list of pandaICT connection tuples (something, index)
+        **ict_net**           - pandaict ICT-Network object
+        **connections**       - list of connections in pandaict element notation ('conn', index)
         **downstream**        - bool, direction of connection (default: True)
         **respect_iptables**  - bool, whether to apply iptable modifications (default: False)
 
@@ -46,14 +49,14 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
 
     for conn_tuple in connections:
         ind = conn_tuple[1]
-        conn_data = ict_net['conn'].iloc[ind]
+        conn_data = ict_net['conn'].loc[ind]
 
         # Check protocol consistency
         if conn_data['protocol'] != protocol:
             raise ValueError('Protocols of connections must be identical.')
 
-        from_dev = ('device', ict_net.app.iloc[conn_data['from']]['device'])
-        to_dev   = ('device', ict_net.app.iloc[conn_data['to']]['device'])
+        from_dev = ('device', ict_net.app.loc[conn_data['from']]['device'])
+        to_dev   = ('device', ict_net.app.loc[conn_data['to']]['device'])
 
         if not downstream:
             from_dev, to_dev = to_dev, from_dev
@@ -90,14 +93,14 @@ def plot_graph(ict_net, protocol='TCP',
                default_color='lightblue', highlight_color='red',
                cmap=True, show_colorbar=True, seed=8):
     """
-    Plot a pandaICT network as a graph with optional criticality-based color encoding.
-    Converts the given pandaICT network into a NetworkX MultiDiGraph and renders it
+    Plot a pandaict network as a graph with optional criticality-based color encoding.
+    Converts the given pandaict network into a NetworkX MultiDiGraph and renders it
     using a spring layout. When criticality scores are provided, components are
     color-coded using a diverging colormap centered at 1 (expected criticality),
     making it easy to visually identify over- and under-critical components.
 
     :INPUT:
-        **ict_net** (pandaict.ICTNetwork) - pandaICT network object to be plotted.
+        **ict_net** (pandaict.ICTNetwork) - pandaict network object to be plotted.
 
         **protocol** (str, default 'TCP') - Communication protocol used to build the
         underlying MultiDiGraph.
@@ -174,7 +177,7 @@ def plot_graph(ict_net, protocol='TCP',
     labels = {}
     for n, attr in G.nodes(data=True):
         elt_type, elt_idx = attr['pielt']
-        labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
+        labels[n] = ict_net[elt_type].loc[elt_idx]['name']
 
     for u, v, key, data in G.edges(data=True, keys=True):
         G[u][v][key]['weight'] = 1.0
@@ -269,27 +272,26 @@ def plot_graph(ict_net, protocol='TCP',
 
 def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
     """
-    Estimate **MTBF**, **MTTF** and **MTTR** for one or more pandaICT connections.
+    Estimate **MTBF**, **MTTF** and **MTTR** for one or more pandaict connections.
     Runs a Monte-Carlo simulation on the given network and connections
     and returns the **Mean Time Between Failures** (MTBF = MTTF + MTTR)
-    together with the **Mean Time To Failure** and **Mean Time To Repair**.
+    together with the **Mean Time To Failure** (MTTF) and **Mean Time To Repair** (MTTR).
 
     :INPUT:
-        **ict_net** (pandaict.ICTNetwork) - pandaICT network object containing
+        **ict_net** (pandaict.ICTNetwork) - pandaict network object containing
         topology and component reliability attributes (mtbf_h, mttr_h).
 
-        **connections** (list of pandaict.Connection) - One or more connection objects
-        whose source/target pairs define the system-level connectivity requirement.
-
+        **connections** (list of tuple) - One or more connection(s) in pandaict 
+        element notation. 
+        
     :OUTPUT:
         **result** (dict) - Dictionary with the following keys:
-
-        **result['mtbf_h']** (float) - Mean Time Between Failures in hours (MTBF = MTTF + MTTR).
-
-        **result['mttf_h']** (float) - Mean Time To Failure in hours.
-
-        **result['mttr_h']** (float) - Mean Time To Repair in hours. Returns numpy.inf if the
-        system is non-repairable.
+                
+        - mtbf_h (float) - Mean Time Between Failures in hours (MTBF = MTTF + MTTR). 
+        
+        - mttf_h (float) - Mean Time To Failure in hours. 
+        
+        - mttr_h (float) - Mean Time To Repair in hours. Returns numpy.inf if the system is non-repairable.
 
     .. note::
         This function shares optional keyword arguments with
@@ -350,20 +352,22 @@ def analyze_critical_components_for_conn(ict_net, connections,
                                          rate_adjustment=True, save_excel=False,
                                          **kwargs):
     """
-    Identify disproportionately critical components for pandaICT connections.
+    Identify disproportionately critical components for pandaict connections.
     Runs a Monte-Carlo simulation with critical-component tracking enabled and
     computes per-component criticality scores. A score greater than 1 means the
-    component causes system failures more often than its rates alone would predict.
-    Both failure and repair events are tracked separately.
+    component causes system failures more often than its reliability rates alone 
+    would predict. Both failure and repair events are tracked separately.
 
     :INPUT:
-        **ict_net** (pandaict.ICTNetwork) - pandaICT network object containing
+        **ict_net** (pandaictNet) - pandaict network containing
         topology and component reliability attributes.
 
-        **connections** (list of pandaict.Connection) - Connection object(s) defining
-        the system-level connectivity requirement.
+        **connections** (list of tuple) - One or more connection(s) in pandaict 
+        element notation.
 
-        **top_n** (int, default -1) - Number of highest-ranked components to display.
+    :OPTIONAL:
+    
+        **top_n** (int, default -1) - Number of most critical components to display.
         -1 shows all components.
 
         **plot** (bool, default True) - If True, produce a horizontal bar chart of
@@ -382,13 +386,13 @@ def analyze_critical_components_for_conn(ict_net, connections,
     :OUTPUT:
         **result** (dict) - Dictionary with the following keys:
 
-        **result['edge_criticality']** (np.ndarray or None) - Failure criticality score per edge.
+        - edge_criticality (np.ndarray or None) - Failure criticality score per edge.
 
-        **result['node_criticality']** (np.ndarray or None) - Failure criticality score per node.
+        - node_criticality (np.ndarray or None) - Failure criticality score per node.
 
-        **result['edge_repair_criticality']** (np.ndarray or None) - Repair criticality score per edge.
+        - edge_repair_criticality (np.ndarray or None) - Repair criticality score per edge.
 
-        **result['node_repair_criticality']** (np.ndarray or None) - Repair criticality score per node.
+        - node_repair_criticality (np.ndarray or None) - Repair criticality score per node.
 
     .. note::
         **Relation to classical importance measures**
@@ -509,6 +513,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
         }
     
     if plot:
+
         edge_crit = crit_result['edge_criticality'] # + crit_result['edge_repair_criticality'] TODO: add later
         node_crit = crit_result['node_criticality'] # + crit_result['node_repair_criticality'] TODO: add later
         
@@ -534,27 +539,26 @@ def analyze_critical_components_for_conn(ict_net, connections,
 
 def empirical_reliability_function(ict_net, connections, T, **kwargs):
     """
-    Estimate the reliability function R(T) for pandaICT connections,
-    which describes the likelyhood of system level survival longer that T.
+    Estimate the reliability function R(T) for pandaict connections,
+    which describes the likelihood of system level survival longer that T.
     Approximates R(T) = P(system lifetime > T) by generating first-failure-time
     samples via Monte-Carlo simulation and computing the empirical survival
     fraction at one or more time points.
 
     :INPUT:
-        **ict_net** (pandaict.ICTNetwork) - pandaICT network object.
+         **ict_net** (pandaictNet) - pandaict network containing
+        topology and component reliability attributes.
 
-        **connections** (list of pandaict.Connection) - Connection object(s) defining
-        the system-level connectivity requirement.
+        **connections** (list of tuple) - One or more connection(s) in pandaict 
+        element notation.    
 
         **T** (float or array-like of float) - Time point(s) in hours at which the
         reliability is evaluated. A scalar input returns a scalar; an array returns
         an array of the same length.
 
     :OUTPUT:
-        **R(T)** (float) - If T is scalar, the reliability value R(T) in [0, 1].
-
-        **R(T)** (np.ndarray) - If T is array-like, element-wise reliability values
-        of the same length as T.
+        **R(T)** (float or np.ndarray) - If T is scalar, the reliability value R(T) in [0, 1]. \
+        If T is array-like, element-wise reliability values of the same length as T.
 
         Returns None if the simulation produced no valid samples.
 

@@ -1,9 +1,9 @@
 .. 	@author: jringelstein	
 .. _std_types:
 
-##############
-Standard Types
-##############
+########################
+Standard Types and Enums
+########################
 
 
 Basic standard types
@@ -18,7 +18,7 @@ Basic standard types
 Link types
 ----------
 
-.. note:: Link types currently do not have an extra flag for bidrectionality. A link is considered bidirectional if its bandwith_Mbps is a tuple, otherwise unidirectional.  
+.. note:: Link types currently do not have an extra flag for bidirectionality. A link is considered bidirectional if its bandwith_Mbps is a tuple, otherwise unidirectional.  
 
 .. tabularcolumns:: |l|l|l|l|l|l|l|l|
 .. csv-table:: 
@@ -49,4 +49,9 @@ Adding and creating standard types
 
 .. autofunction:: pandaict.std_types.create_std_types
 
+Adding custom enums 
+===================
 
+.. _add_custom_enum:
+
+.. autofunction:: pandaict.enums.add_custom_enum

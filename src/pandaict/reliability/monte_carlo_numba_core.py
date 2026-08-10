@@ -1,6 +1,9 @@
 '''
 Created on 22.12.2025
 @author: fnuetz
+
+SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import numpy as np

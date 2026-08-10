@@ -1,15 +1,10 @@
 '''
 Created on 22.07.2025
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
 '''
 
 from pandaict.utils.enums import NodeType, DeviceType, InfoItem, AppType, RoutingType, SortType
@@ -18,7 +13,6 @@ from pandaict.topology.ip_address import IP_address
 from pandaict.create_empty_net import create_empty_network
 from pandaict.create import create_ict_node, create_ict_link, create_ict_device, create_ict_app, create_ict_devapp, create_ict_connection
 from pandaict.utils.utils import get_elt_id_by_name, elt2uuid
-from pickle import FALSE
 
 def _create_testnet(name, use_uuid=False):
     ict_net = create_empty_network(name, True)
@@ -84,7 +78,7 @@ def _create_testnet(name, use_uuid=False):
                                       info_items=[InfoItem.VALUE], 
                                       peers=(acc,asc), producer=[0], prod_freq_ms=[60000]) 
     except:
-        print("A")
+        pass
         
     return ict_net  
 

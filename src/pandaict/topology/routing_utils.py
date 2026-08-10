@@ -1,15 +1,9 @@
 '''
 Created on 30.01.2024
-@author: gbanerjee
+@author: jringelstein
 
 SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
-
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause-No-Military-License
+SPDX-License-Identifier: BSD-3-Clause
 '''
 
 import networkx as nx
@@ -44,8 +38,8 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
         if pilink[0] != 'link':
             passed = __log_debug_and_return_false("__validate_multidigraph: found nxedge annotated with "+str(pilink)+", expected link element")            
         else:
-            pifrom = ict_net.link.iloc[pilink[1]]['from']
-            pito = ict_net.link.iloc[pilink[1]]['to']                            
+            pifrom = ict_net.link.loc[pilink[1]]['from']
+            pito = ict_net.link.loc[pilink[1]]['to']                            
             
             if not((pinode1==pifrom and pinode2 in pito) or (is_bidirectional(ict_net, pilink) and pinode2==pifrom and pinode1 in pito)):
                 passed = __log_debug_and_return_false("__validate_multidigraph: nxedge between nxnodes "+str(nxnode1)+" and "+str(nxnode2)+" does not match ict_net")                
@@ -55,13 +49,16 @@ def __validate_multidigraph(ict_net, mdg, protocol=None):
                     passed = __log_debug_and_return_false("__validate_multidigraph: pandaICT link represented by nxedge between nxnodes "+ 
                                 str(nxnode1)+" and "+str(nxnode2)+" does not support target protocol "+str(protocol))                    
         
-    if not passed:        
+    __print_failed(passed)
+    
+    return passed
+
+def __print_failed(passed):
+    if not passed:
         if pilogger.level != logging.DEBUG:
             print("__validate_multidigraph FAILED, set loglevel to debug and check the log")
         else:
             print("__validate_multidigraph FAILED, check the log")
-    
-    return passed
 
 def __get_weight(ict_net, link, wtype):
     
@@ -81,7 +78,7 @@ def __get_weight(ict_net, link, wtype):
             return (ltype['ber_per_km'] * link['length'], ltype['ber_per_km'] * link['length'])
         else:
             return None
-    
+
 def __mdg_add_elts(ict_net, mdg, elt_type, in_service_only, idx):
     # elt_type: "node" or "device"
     for i, n in ict_net[elt_type].iterrows():        
@@ -159,8 +156,8 @@ def __get_pict_paths(mdg, nfrom, nto):
 def __get_end_nxnodes_for_conn(ict_net, mdg, conn):
     # Fetch devices used by the connection
     try:
-        dev1 = ("device", ict_net.app.iloc[conn['from']]['device'])
-        dev2 = ("device", ict_net.app.iloc[conn['to']]['device'])
+        dev1 = ("device", ict_net.app.loc[conn['from']]['device'])
+        dev2 = ("device", ict_net.app.loc[conn['to']]['device'])
     except (KeyError, IndexError, TypeError, AttributeError):
         pilogger.debug("Failed to obtain from or to device for conn "+str(conn['name']))        
             
