@@ -397,24 +397,28 @@ def analyze_critical_components_for_conn(ict_net, connections,
     .. note::
         **Relation to classical importance measures**
 
-        The criticality score is conceptually related to classical component
-        importance measures from reliability theory:
+        Under the standard assumption of a non-repairable coherent system, the implemented
+        attribution procedure corresponds to an empirical Monte Carlo estimate of the 
+        Barlow-Proschan importance. It estimates the probability that a particular component
+        is the one whose failure cuases the system to fail. For repairable systems, the
+        same principle is used as an analogous recurrent importance measure for system failures
+        and restoration.
 
-        - With ``rate_adjustment=True``, the score reflects *structural importance*:
-          how much more often a component triggers a system failure than its
-          failure rate alone would predict. This is closely related to the
-          **Birnbaum importance measure**, which expresses the probability that
-          the system state is determined by a given component.
+        By default, an additional rate-based normalization specific to this implementation is
+        applied. The observed share of system-failure triggers attributed to a component is
+        compared with its share of the nominal failure rate. Restoration scores are calculated
+        analogously using the repair rate. This normalization establishes ``1`` as an intuitive
+        reference level:
 
-        - With ``rate_adjustment=False``, the score reflects the raw failure
-          frequency of each component, which is closer to the **Criticality
-          importance measure** (Birnbaum x component unreliability).
+        - ``score = 1``: the component is observed as often as expected from the rate-based reference;
+        - ``score > 1``: the component is overrepresented and therefore more critical than expected
+          from its nominal rate alone.
+        - ``score < 1``: the component is underrepresented and therefore less critical than expected
+          from its nominal rate alone.
 
-        Empirical comparisons across various network topologies show that the
-        ranking produced by this function correlates well with Birnbaum
-        importance (mean Spearman: 0.76), making it a practical
-        simulation-based alternative when analytical importance measures are
-        difficult to compute.
+        The reported score should therefore be interpreted as relative criticality with respect to the
+        rate-based reference. The underlying unnormalized trigger share represents the empirical 
+        Barlow-Proschan-type importance.
 
     .. note::
         This function shares optional keyword arguments with
@@ -444,7 +448,6 @@ def analyze_critical_components_for_conn(ict_net, connections,
     # Force critical analysis on; samples not needed for the caller
     protected = {
         'analyze_crit': True,
-        #'return_samples': False,
     }
 
     config = {**defaults, **kwargs, **protected}
