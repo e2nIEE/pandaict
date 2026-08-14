@@ -23,7 +23,10 @@ from pandaict.reliability.monte_carlo_helpers import (
         _filter_results,
         _print_criticality,
         _calc_criticalities,
-        _save_criticality_excel
+        _save_criticality_excel,
+        _rates_to_arrays,
+        _count_events,
+        _expected_fractions,
     )
 
 # try importing wrappers for numba version
@@ -44,7 +47,7 @@ except ImportError:
 def analyze_critical_components(all_critical, G, sources, targets,
                                 lam_edges, lam_nodes,
                                 mu_edges, mu_nodes,
-                                top_n=-1, plot=False, verbose=True,
+                                top_n=-1, verbose=True,
                                 rate_adjustment=True,
                                 save_excel=False, excel_path=None,
                                 edge_labels=None, node_labels=None
@@ -74,8 +77,6 @@ def analyze_critical_components(all_critical, G, sources, targets,
 
         **top_n**           - int, number of most critical components to be displayed
 
-        **plot**            - bool, whether to plot the graph NOTE: !deprecated: moved to reliabilty.py!
-
         **verbose**         - bool, prints component criticalities to console
 
         **rate_adjustment** - bool, choose whether to adjust the counts by their rates.
@@ -102,69 +103,25 @@ def analyze_critical_components(all_critical, G, sources, targets,
     n_nodes = len(node_list)
     n_events = n_edges + n_nodes
 
-    lam_edges_arr = np.array([lam_edges[e] for e in edge_list], dtype=np.float64)
-    lam_nodes_arr = np.array([lam_nodes[n] for n in node_list], dtype=np.float64)
+    lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr = \
+        _rates_to_arrays(edge_list, node_list,
+                         lam_edges, lam_nodes, mu_edges, mu_nodes)
 
-    if mu_edges is None:
-        mu_edges_arr = np.zeros(n_edges, dtype=np.float64)
-    else:
-        mu_edges_arr = np.array([mu_edges[e] for e in edge_list], dtype=np.float64)
+    failure_counts, repair_counts, total_failure, total_repair = \
+        _count_events(all_critical, n_events)
 
-    if mu_nodes is None:
-        mu_nodes_arr = np.zeros(n_nodes, dtype=np.float64)
-    else:
-        mu_nodes_arr = np.array([mu_nodes[n] for n in node_list], dtype=np.float64)
-
-    # filter events
-    flat = all_critical.flatten()
-    valid = flat[flat >= 0]
-
-    if len(valid) == 0:
+    if failure_counts is None:
         pilogger.info("No critical components tracked!")
         return None
 
-    # Failure-Events: Indices  0 .. n_events-1
-    # Repair-Events:  Indices  n_events .. 2*n_events-1
-    failure_mask = valid < n_events
-    repair_mask = valid >= n_events
-
-    failure_indices = valid[failure_mask]
-    repair_indices = valid[repair_mask] - n_events  # reset index
-
-    # get counts by phase
-    failure_counts = np.zeros(n_events, dtype=np.float64)
-    repair_counts = np.zeros(n_events, dtype=np.float64)
-
-    # failure and repair counts
-    if len(failure_indices) > 0:
-        f_idx, f_cnt = np.unique(failure_indices, return_counts=True)
-        for idx, cnt in zip(f_idx, f_cnt):
-            failure_counts[idx] = cnt
-
-    if len(repair_indices) > 0:
-        r_idx, r_cnt = np.unique(repair_indices, return_counts=True)
-        for idx, cnt in zip(r_idx, r_cnt):
-            repair_counts[idx] = cnt
-
-    total_failure = np.sum(failure_counts)
-    total_repair = np.sum(repair_counts)
     total_observed = total_failure + total_repair
 
-    #
     lam_all = np.concatenate([lam_edges_arr, lam_nodes_arr])
     mu_all = np.concatenate([mu_edges_arr, mu_nodes_arr])
 
-    # Failure-Baseline: P(Last Straw = i | failure event) ~ lambda_i
-    lam_total = np.sum(lam_all)
-    failure_fractions = (lam_all / lam_total
-                         if lam_total > 0
-                         else np.ones(n_events) / n_events)
-
-    # Repair-Baseline: P(Last Straw = i | repair event) ~ mu_i
-    mu_total = np.sum(mu_all)
-    repair_fractions = (mu_all / mu_total
-                        if mu_total > 0
-                        else np.ones(n_events) / n_events)
+    # Failure-Baseline & Repair-Baseline
+    failure_fractions = _expected_fractions(lam_all, n_events)
+    repair_fractions = _expected_fractions(mu_all, n_events)
 
     # calculate criticality scores
     failure_crit = _calc_criticalities(
@@ -215,6 +172,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
         'total_failure': total_failure,
         'total_repair': total_repair,
     }
+
 
 def empirical_reliability(T, samples):
     """
@@ -376,5 +334,9 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
             'edge_criticality': edge_criticality,
             'node_criticality': node_criticality,
             'all_critical': all_critical,}
+
+
+
+
 
 
