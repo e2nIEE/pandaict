@@ -106,7 +106,7 @@ def analyze_critical_components(all_critical, G, sources, targets,
     lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr = \
         _rates_to_arrays(edge_list, node_list,
                          lam_edges, lam_nodes, mu_edges, mu_nodes)
-
+    
     failure_counts, repair_counts, total_failure, total_repair = \
         _count_events(all_critical, n_events)
 
@@ -210,8 +210,6 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
                        use_numba=True, parallel=True):
     """
     Run N Monte Carlo simulations and estimate MTTF/MTTR.
-
-    TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
 
     :INPUT:
         **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
