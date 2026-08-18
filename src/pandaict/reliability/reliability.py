@@ -17,9 +17,16 @@ from pandaict.reliability.monte_carlo import (
     empirical_reliability as _empirical_reliability
 )
 from pandaict.reliability.monte_carlo_helpers import _critical_bar_plot
+from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
+from pandaict.reliability.reliability_helpers import (
+    _build_criticality_colors,
+    _auto_highlight,
+    _draw_directed_edges,
+)
+
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
 
 
 def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptables=False):
@@ -75,14 +82,26 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
         pinode = ndata['pielt']
         mtbf   = ict_net[pinode[0]].loc[pinode[1]]['mtbf_h']
         mttr   = ict_net[pinode[0]].loc[pinode[1]]['mttr_h']
-        ndata['mttf_h'] = mtbf - mttr
+        mttf = mtbf - mttr
+        if mttf < 0:
+            print(f"Warning: mtbf_h ({mtbf}) <= mttr_h ({mttr}) for node {n}. "
+                  f"Clamping mttf_h to 0 (component never fails).")
+            mttf = 0
+        ndata['mttf_h'] = mttf
         ndata['mttr_h'] = mttr
 
     for u, v, key, edata in mdg.edges(data=True, keys=True):
-        piedge = edata['pielt']
-        ltype  = ict_net.std_types['link'][ict_net[piedge[0]].loc[piedge[1]]['type']]
-        edata['mttf_h'] = ltype['mtbf_h'] - ltype['mttr_h']
-        edata['mttr_h'] = ltype['mttr_h']
+        piedge  = edata['pielt']
+        ltype   = ict_net.std_types['link'][ict_net[piedge[0]].loc[piedge[1]]['type']]
+        mtbf    = ltype['mtbf_h']
+        mttr    = ltype['mttr_h']
+        mttf = mtbf - mttr
+        if mttf < 0:
+            print(f"Warning: mtbf_h ({ltype['mtbf_h']}) <= mttr_h ({ltype['mttr_h']}) "
+                f"for edge ({u}, {v}). Clamping mttf_h to 0 (link never fails).")
+            mttf = 0
+        edata['mttf_h'] = mttf
+        edata['mttr_h'] = mttr
 
     return mdg, sources, targets
 
@@ -169,96 +188,58 @@ def plot_graph(ict_net, protocol='TCP',
         ...            node_criticality=result['node_criticality'],
         ...            cmap=False)
     """
-    # TODO: Fix plot for unidirectional graphs
-    # Build multidigraph once
     G = create_multidigraph(ict_net, protocol, validate=True)
 
-    # Build label mapping: node index -> device/node name
     labels = {}
     for n, attr in G.nodes(data=True):
         elt_type, elt_idx = attr['pielt']
-        labels[n] = ict_net[elt_type].loc[elt_idx]['name']
+        labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
 
-    for u, v, key, data in G.edges(data=True, keys=True):
-        G[u][v][key]['weight'] = 1.0
+    colormap = mcolors.LinearSegmentedColormap.from_list(
+        'criticality', ['lightgray', 'black', 'red'])
 
-    # Custom diverging colormap: light gray -> black -> red
-    colors = ['lightgray', 'black', 'red']
-    colormap = mcolors.LinearSegmentedColormap.from_list('criticality', colors)
-
-    norm = None
-
-    # --- Handle edge criticality ---
+    # --- Edge colors ---
     if edge_criticality is not None:
-        edge_criticality = np.array(edge_criticality)
-
-        if cmap:
-            # Diverging colormap mode
-            max_deviation = max(abs(edge_criticality.max() - 1),
-                                abs(edge_criticality.min() - 1))
-            vmin = 1 - max_deviation
-            vmax = 1 + max_deviation
-
-            norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1, vmax=vmax)
-            edge_colors = [colormap(norm(c)) for c in edge_criticality]
-        else:
-            # Binary mode: red if > 1, black otherwise
-            edge_colors = [highlight_color if c > 1 else 'black' for c in edge_criticality]
-
-        # Determine highlight edges based on criticality > 1
-        critical_edges_mask = edge_criticality > 1
-        edges_array = np.array(list(G.edges()))
-        critical_edges = [tuple(e) for e in edges_array[critical_edges_mask]]
-        highlight_edges = critical_edges if highlight_edges is None else highlight_edges
+        edge_colors, edge_norm = _build_criticality_colors(
+            edge_criticality, cmap, colormap, highlight_color)
+        if highlight_edges is None:
+            highlight_edges = _auto_highlight(edge_criticality, list(G.edges()))
     else:
-        edge_colors = ['gray' for _ in G.edges()]
+        edge_colors = ['gray'] * G.number_of_edges()
+        edge_norm = None
 
-    # --- Handle node criticality ---
+    # --- Node colors ---
     if node_criticality is not None:
-        node_criticality = np.array(node_criticality)
-
-        if cmap:
-            # Diverging colormap mode
-            max_deviation = max(abs(node_criticality.max() - 1),
-                                abs(node_criticality.min() - 1))
-            vmin = 1 - max_deviation
-            vmax = 1 + max_deviation
-
-            node_norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1, vmax=vmax)
-            node_colors = [colormap(node_norm(c)) for c in node_criticality]
-
-            if norm is None:
-                norm = node_norm
-        else:
-            # Binary mode: red if > 1, black otherwise
-            node_colors = [highlight_color if c > 1 else 'black' for c in node_criticality]
-
-        # Determine highlight nodes based on criticality > 1
-        critical_nodes_mask = node_criticality > 1
-        nodes_array = np.array(list(G.nodes()))
-        critical_nodes = list(nodes_array[critical_nodes_mask])
-        highlight_nodes = critical_nodes if highlight_nodes is None else highlight_nodes
+        node_colors, node_norm = _build_criticality_colors(
+            node_criticality, cmap, colormap, highlight_color)
+        if highlight_nodes is None:
+            highlight_nodes = _auto_highlight(node_criticality, list(G.nodes()))
     else:
-        node_colors = [default_color for _ in G.nodes()]
-
-    highlight_nodes = highlight_nodes or []
-    highlight_edges = highlight_edges or []
+        node_colors = [default_color] * G.number_of_nodes()
+        node_norm = None
 
     # --- Draw ---
-    _, ax = plt.subplots(figsize=(5,5))
-    pos = nx.spring_layout(G, seed=seed)
+    _, ax = plt.subplots(figsize=(5, 5))
+    pos = nx.spring_layout(G, seed=seed, weight=None)
 
-    nx.draw(G, pos, ax=ax,
-            node_color=node_colors,
-            edge_color=edge_colors,
-            with_labels=True,
-            labels=labels,
-            font_color='black',
-            node_size=500,
-            font_size=12,
-            width=2)
+    _draw_directed_edges(G, pos, ax, edge_colors, edge_width=2,
+                         highlight_edges=highlight_edges)
 
-    # Add colorbar (only in cmap mode)
+    highlight_set = set(highlight_nodes or [])
+    node_edge_colors = ['red' if n in highlight_set else 'black'
+                        for n in G.nodes()]
+
+    nx.draw_networkx_nodes(G, pos, ax=ax,
+                           node_color=node_colors,
+                           node_size=500,
+                           edgecolors=node_edge_colors,
+                           linewidths=[2.5 if n in highlight_set else 1.0
+                                       for n in G.nodes()])
+    nx.draw_networkx_labels(G, pos, labels=labels, ax=ax,
+                            font_color='black', font_size=12)
+
+    # --- Colorbar ---
+    norm = edge_norm or node_norm
     if show_colorbar and cmap and norm is not None:
         sm = plt.cm.ScalarMappable(cmap=colormap, norm=norm)
         sm.set_array([])
