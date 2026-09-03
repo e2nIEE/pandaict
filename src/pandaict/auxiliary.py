@@ -1,8 +1,10 @@
 '''
 Created on 30.01.2024
+@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
 
-SPDX-FileCopyrightText: 2026 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
-SPDX-License-Identifier: BSD-3-Clause'''
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
+'''
 
 from collections.abc import MutableMapping
 from pandaict import __version__
@@ -220,7 +222,9 @@ class pandaICTNet(ADict):
                 if 'uuid' in cols: 
                     cols.remove('uuid')                        
                 try:
-                    if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
+                    if ((self[k].empty != other[k].empty) or 
+                        (self[k].columns != other[k].columns) or
+                        (not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty))):
                         retval=False
                         break
                 except (IndexError, AttributeError, ValueError, TypeError):

@@ -2,7 +2,7 @@
 Created on 04.02.2026
 @author: fnuetz
 
-SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 '''
 

@@ -6,9 +6,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'pandaICT'
-copyright = '2024 by Fraunhofer IEE'
+copyright = '2024-2026 by Fraunhofer IEE, Kassel. All rights reserved'
 author = 'Fraunhofer IEE'
-release = '1.1.2preview'
+release = '1.2.1preview'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

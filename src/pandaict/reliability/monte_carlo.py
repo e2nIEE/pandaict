@@ -2,7 +2,7 @@
 Created on 22.12.2025
 @author: fnuetz
 
-SPDX-FileCopyrightText: 2026 Fabian Nuetz <fabian.nuetz@iee.fraunhofer.de>
+SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
 '''
 
@@ -258,6 +258,10 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         **mttr_samples**        - np.ndarray, mttr samples
         }
     """
+    
+    # TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
+    # TODO: Check if N and depth can be collapsed to one argument => No!
+    
     sources, targets = _normalize_connection_pairs(sources, targets)
 
     # Catch if G is not connected at start.

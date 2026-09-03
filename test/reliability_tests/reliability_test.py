@@ -8,16 +8,17 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 
-from test_networks_pi import (
+from reliability_tests.test_networks_pi import (
     build_test_ict_network,
     build_series_network_with_rates,
     build_parallel_network_with_rates,
 )
-from reference import (
+from reliability_tests.reference import (
     reference_values,
     reference_criticality_series,
     reference_criticality_parallel_1oo2
 )
+
 from pandaict.reliability.monte_carlo import NUMBA_AVAILABLE   
 from pandaict.reliability.reliability import (
     estimate_mtbf_mttr_for_conn,
@@ -26,7 +27,7 @@ from pandaict.reliability.reliability import (
 )
 
 
-class ReliabiltyTest(unittest.TestCase):
+class ReliabilityTest(unittest.TestCase):
     """Compare MC results against analytical reference values."""
 
     @classmethod
@@ -51,7 +52,7 @@ class ReliabiltyTest(unittest.TestCase):
         ]
 
         # sample counts
-        cls.N_nonrep    = int(1e6)
+        cls.N_nonrep    = int(1e7)
         cls.N_rep       = int(1e4)
         cls.depth       = 200
         cls.N_rel       = cls.N_nonrep
