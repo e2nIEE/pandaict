@@ -13,6 +13,7 @@ import copy
 import numpy as np
 from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
+from anyio._backends._asyncio import _Retval_Queue_Type
 
 def __preserve_dtypes(df, dtypes):
     for item, dtype in dtypes.items():
@@ -192,6 +193,19 @@ class pandaICTNet(ADict):
                     dict_nouuids[k][kk].pop('uuid')            
         return dict_nouuids
     
+    def _compare_nondict_key(self, k, other, retval):
+        cols = list(self[k].columns)                            
+        if 'uuid' in cols: 
+            cols.remove('uuid')                        
+        try:
+            if ((self[k].empty != other[k].empty) or 
+                (self[k].columns != other[k].columns) or
+                (not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty))):
+                retval=False                
+        except (IndexError, AttributeError, ValueError, TypeError):
+            pass
+        return retval
+    
     def equals_excluding_uuids(self, other, include_std_types=False):
         """
         Compares this network to another one
@@ -218,17 +232,9 @@ class pandaICTNet(ADict):
                 other_nouuids = self._remove_uuids_from_std_types(other[k]) 
                 retval = (self_nouuids==other_nouuids)
             else:                
-                cols = list(self[k].columns)                            
-                if 'uuid' in cols: 
-                    cols.remove('uuid')                        
-                try:
-                    if ((self[k].empty != other[k].empty) or 
-                        (self[k].columns != other[k].columns) or
-                        (not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty))):
-                        retval=False
-                        break
-                except (IndexError, AttributeError, ValueError, TypeError):
-                    pass
+                retval = self._compare_nondict_key(k, other, retval)
+            if not retval: 
+                break
                                 
         return retval
     
