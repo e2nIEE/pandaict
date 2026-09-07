@@ -28,12 +28,16 @@ def __df_to_json(df):
              
     return dfc.to_json()
 
+def __std_type_to_be_saved(save_std_types, save_custom_std_types, stkeys):
+    do_save = not((not save_std_types and save_custom_std_types and ("custom" not in stkeys)) 
+                  or (save_std_types and not save_custom_std_types and ("custom" in stkeys)))
+    return do_save  
+
 def __std_type_dict_to_json(di, save_std_types, save_custom_std_types):
     dic = copy.deepcopy(di)    
     for etype in di.keys():                
         for stdtype in di[etype].keys():
-            if ((not save_std_types and save_custom_std_types and ("custom" not in di[etype][stdtype].keys())) # save custom only
-                or (save_std_types and not save_custom_std_types and ("custom" in di[etype][stdtype].keys()))): # save non-custom only                
+            if not __std_type_to_be_saved(save_std_types, save_custom_std_types, di[etype][stdtype].keys()):                 
                 dic[etype].pop(stdtype)
                 continue                            
             if 'uuid' in dic[etype][stdtype].keys():            

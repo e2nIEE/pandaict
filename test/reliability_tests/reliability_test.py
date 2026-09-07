@@ -84,7 +84,7 @@ class ReliabilityTest(unittest.TestCase):
 
                     if repairable:
                         res = estimate_mtbf_mttr_for_conn(
-                            net, conns, N=self.N_rep, depth=self.depth,
+                            net, conns, n=self.N_rep, depth=self.depth,
                             min_connected=mc, **self.method_config)
 
                         A_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
@@ -92,7 +92,7 @@ class ReliabilityTest(unittest.TestCase):
                         self._rel_err(res['mtbf_h'], ref['mtbf_h'], "MTBF", label)
                     else:
                         res = estimate_mtbf_mttr_for_conn(
-                            net, conns, N=self.N_nonrep, depth=1,
+                            net, conns, n=self.N_nonrep, depth=1,
                             min_connected=mc, **self.method_config)
 
                         self.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
@@ -116,7 +116,7 @@ class ReliabilityTest(unittest.TestCase):
 
                 if repairable:
                     res = estimate_mtbf_mttr_for_conn(
-                        net, conns, N=self.N_rep, depth=self.depth,
+                        net, conns, n=self.N_rep, depth=self.depth,
                         min_connected=mc, **self.method_config_serial)
 
                     A_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
@@ -124,7 +124,7 @@ class ReliabilityTest(unittest.TestCase):
                     self._rel_err(res['mtbf_h'], ref['mtbf_h'], "MTBF(serial)", label)
                 else:
                     res = estimate_mtbf_mttr_for_conn(
-                        net, conns, N=self.N_nonrep,
+                        net, conns, n=self.N_nonrep,
                         min_connected=mc, **self.method_config_serial)
 
                     self.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
@@ -151,7 +151,7 @@ class ReliabilityTest(unittest.TestCase):
                                          min_connected=mc, T=T)['reliability']
 
                 R = empirical_reliability_function(
-                    net, conns, T=T, N=self.N_rel, min_connected=mc, **self.method_config)
+                    net, conns, T=T, n=self.N_rel, min_connected=mc, **self.method_config)
 
                 self.assertIsInstance(R, np.ndarray)
                 self.assertEqual(len(R), len(T))
@@ -189,7 +189,7 @@ class ReliabilityTest(unittest.TestCase):
                         N, depth = self.N_nonrep, 1
 
                     res = analyze_critical_components_for_conn(
-                        net, conns, N=N, depth=depth, min_connected=mc,
+                        net, conns, n=N, depth=depth, min_connected=mc,
                         plot=False, verbose=False, **self.method_config)
 
                     # --- failure criticality (rate_adjustment=True default) ---
@@ -227,7 +227,7 @@ class ReliabilityTest(unittest.TestCase):
                 ref = reference_criticality_series(mttf_list, ra)
 
                 res = analyze_critical_components_for_conn(
-                    net, conns, N=self.N_nonrep, depth=1, min_connected=-1,
+                    net, conns, n=self.N_nonrep, depth=1, min_connected=-1,
                     plot=False, verbose=False, rate_adjustment=ra,
                     **self.method_config)
 
@@ -252,7 +252,7 @@ class ReliabilityTest(unittest.TestCase):
                 ref = reference_criticality_parallel_1oo2(mttf_list, ra)
 
                 res = analyze_critical_components_for_conn(
-                    net, conns, N=self.N_nonrep, depth=1, min_connected=1,
+                    net, conns, n=self.N_nonrep, depth=1, min_connected=1,
                     plot=False, verbose=False, rate_adjustment=ra,
                     **self.method_config)
 

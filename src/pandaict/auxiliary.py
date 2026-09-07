@@ -13,7 +13,6 @@ import copy
 import numpy as np
 from pandaict.utils.utils import uuid2elt
 from pandaict.pilogger import pilogger
-from anyio._backends._asyncio import _Retval_Queue_Type
 
 def __preserve_dtypes(df, dtypes):
     for item, dtype in dtypes.items():

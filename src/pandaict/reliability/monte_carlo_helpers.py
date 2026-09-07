@@ -12,12 +12,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from pathlib import Path
 
-def _check_initial_connectivity(G, sources, targets, min_connected):
+def _check_initial_connectivity(nxg, sources, targets, min_connected):
     """
     Checks initial connectivity for source-target pairs.
 
     :INPUT:
-        **G**               - networkX graph, topology of network
+        **nxg**               - networkX graph, topology of network
         **sources**         - list of ints, identifier of source nodes
         **targets**         - list of ints, identifier of target nodes
         **min_connected**   - int, minimum number of source-target pairs required to be connected.
@@ -29,10 +29,10 @@ def _check_initial_connectivity(G, sources, targets, min_connected):
 
     # Validate nodes exist
     for s in sources:
-        if s not in G:
+        if s not in nxg:
             return False, f"Source '{s}' not found in graph"
     for t in targets:
-        if t not in G:
+        if t not in nxg:
             return False, f"Target '{t}' not found in graph"
 
     # Count connected pairs
@@ -41,7 +41,7 @@ def _check_initial_connectivity(G, sources, targets, min_connected):
 
     # check connection for all pairs
     for i in range(n_pairs):
-        if nx.has_path(G, sources[i], targets[i]):
+        if nx.has_path(nxg, sources[i], targets[i]):
             n_connected += 1
         else:
             disconnected_pairs.append((sources[i], targets[i]))
@@ -161,12 +161,12 @@ def _to_index_arrays(sources, targets, node_to_idx):
     return source_indices, target_indices
 
 
-def _graph_to_numba_arrays(G, source, target):
+def _graph_to_numba_arrays(nxg, source, target):
     """
     Convert NetworkX graph to Numba-compatible np.ndarrays.
 
     :INPUT:
-        **G**      - networkx.Graph, topology of network
+        **nxg**      - networkx.Graph, topology of network
         **source** - string, classifying source node
         **target** - string, classifying target node
 
@@ -183,12 +183,12 @@ def _graph_to_numba_arrays(G, source, target):
         **node_list**   - np.ndarray, list of nodes
     }
     """
-    node_list = list(G.nodes())
-    edge_list = list(G.edges())
+    node_list = list(nxg.nodes())
+    edge_list = list(nxg.edges())
     n_nodes = len(node_list)
     n_edges = len(edge_list)
 
-    is_directed = isinstance(G, nx.DiGraph)
+    is_directed = isinstance(nxg, nx.DiGraph)
 
     # Node index mapping
     node_to_idx = {n: i for i, n in enumerate(node_list)}
@@ -328,6 +328,52 @@ def _filter_results(all_results, is_repairable, max_time):
     return {'mttf_samples': mttf_samples, 'mttr_samples': mttr_samples}
 
 
+
+def _critical_bar_plot_edges(top_edge_idx, edge_crit, edge_labels, rate_adjustment, ax1):
+    # === EDGES ===
+    if len(top_edge_idx) > 0 and np.any(edge_crit[top_edge_idx] > 0):
+        edges_str = [edge_labels.get(i, f"Edge {i}") for i in top_edge_idx]
+        colors = ['red' if edge_crit[i] > 1.01 else 'gray' for i in top_edge_idx]
+        ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
+        max_edge_val = np.nanmax(edge_crit[top_edge_idx])
+        ax1.set_xlim(0, max(max_edge_val * 1.2, 1.5))
+        if rate_adjustment:
+            ax1.set_xlabel('Topological Criticality Score')
+        else:
+            ax1.set_xlabel('Holistic Criticality Score')
+        ax1.axvline(1.0, color='black', linestyle='--', lw=2)
+        ax1.set_yticks(range(len(top_edge_idx)))
+        ax1.set_yticklabels(edges_str)
+    else:
+        ax1.text(0.5, 0.5, 'No critical edges', ha='center', va='center', 
+            transform=ax1.transAxes, fontsize=12, color='gray')
+        ax1.set_xlim(0, 2) # avoids singular matrix error
+    ax1.set_title('Critical Edges')
+    ax1.invert_yaxis()
+    
+def _critical_bar_plot_nodes(top_node_idx, node_crit, node_labels, rate_adjustment, ax2):
+    # === NODES ===
+    if len(top_node_idx) > 0 and np.any(node_crit[top_node_idx] > 0):
+        nodes_str = [node_labels.get(i, f"Node {i}") for i in top_node_idx]
+        colors = ['red' if node_crit[i] > 1.01 else 'gray' for i in top_node_idx]
+        ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
+        max_node_val = np.nanmax(node_crit[top_node_idx])
+        ax2.set_xlim(0, max(max_node_val * 1.2, 1.5))
+        if rate_adjustment:
+            ax2.set_xlabel('Topological Criticality Score')
+        else:
+            ax2.set_xlabel('Wholistic Criticality Score')
+        ax2.axvline(1.0, color='black', linestyle='--', lw=2)
+        ax2.set_yticks(range(len(top_node_idx)))
+        ax2.set_yticklabels(nodes_str)
+    else:
+        ax2.text(0.5, 0.5, 'No critical nodes', ha='center', va='center', 
+            transform=ax2.transAxes, fontsize=12, color='gray')
+        ax2.set_xlim(0, 2)
+    ax2.set_title('Critical Nodes')
+    ax2.invert_yaxis()
+
+
 def _critical_bar_plot(top_edge_idx, top_node_idx,
                        edge_crit, edge_labels,
                        node_crit, node_labels,
@@ -336,71 +382,41 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
     n_rows = max(len(top_edge_idx), len(top_node_idx)) + 1
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, max(3, int(n_rows / 4)))) # dynamic height based on number of critical components
 
-    # === EDGES ===
-    if len(top_edge_idx) > 0 and np.any(edge_crit[top_edge_idx] > 0):
-        edges_str = [edge_labels.get(i, f"Edge {i}") for i in top_edge_idx]
-        colors = ['red' if edge_crit[i] > 1.01 else 'gray' for i in top_edge_idx]
-        ax1.barh(range(len(top_edge_idx)), edge_crit[top_edge_idx], color=colors, alpha=0.7)
-
-        max_edge_val = np.nanmax(edge_crit[top_edge_idx])
-        ax1.set_xlim(0, max(max_edge_val * 1.2, 1.5))
-        if rate_adjustment:
-            ax1.set_xlabel('Topological Criticality Score')
-        else:
-            ax1.set_xlabel('Wholistic Criticality Score')
-        ax1.axvline(1.0, color='black', linestyle='--', lw=2)
-        ax1.set_yticks(range(len(top_edge_idx)))
-        ax1.set_yticklabels(edges_str)
-    else:
-        ax1.text(0.5, 0.5, 'No critical edges', ha='center', va='center',
-                 transform=ax1.transAxes, fontsize=12, color='gray')
-        ax1.set_xlim(0, 2)  # avoids singular matrix error
-
-    ax1.set_title('Critical Edges')
-    ax1.invert_yaxis()
-
-    # === NODES ===
-    if len(top_node_idx) > 0 and np.any(node_crit[top_node_idx] > 0):
-        nodes_str = [node_labels.get(i, f"Node {i}") for i in top_node_idx]
-        colors = ['red' if node_crit[i] > 1.01 else 'gray' for i in top_node_idx]
-        ax2.barh(range(len(top_node_idx)), node_crit[top_node_idx], color=colors, alpha=0.7)
-
-        max_node_val = np.nanmax(node_crit[top_node_idx])
-        ax2.set_xlim(0, max(max_node_val * 1.2, 1.5))
-        if rate_adjustment:
-            ax2.set_xlabel('Topological Criticality Score')
-        else:
-            ax2.set_xlabel('Wholistic Criticality Score')
-
-        ax2.axvline(1.0, color='black', linestyle='--', lw=2)
-
-        ax2.set_yticks(range(len(top_node_idx)))
-        ax2.set_yticklabels(nodes_str)
-    else:
-        ax2.text(0.5, 0.5, 'No critical nodes', ha='center', va='center',
-                 transform=ax2.transAxes, fontsize=12, color='gray')
-        ax2.set_xlim(0, 2)
-
-
-    ax2.set_title('Critical Nodes')
-    ax2.invert_yaxis()
+    _critical_bar_plot_edges(top_edge_idx, edge_crit, edge_labels, rate_adjustment, ax1)
+    _critical_bar_plot_nodes(top_node_idx, node_crit, node_labels, rate_adjustment, ax2)
 
     if rate_adjustment:
         fig.suptitle('Topological Criticality Analysis')
     else:
-        fig.suptitle('Wholistic Criticality Analysis')
+        fig.suptitle('Holistic Criticality Analysis')
 
     plt.tight_layout()
     plt.show()
 
 
-def _print_criticality(total_observed, total_failure, total_repair, top_n,
-                       top_edge_fail_idx, top_edge_rep_idx, edge_list,
-                       edge_fail_crit, edge_rep_crit, n_edges,
-                       top_node_fail_idx, top_node_rep_idx, node_list,
-                       node_fail_crit, node_rep_crit, n_nodes,
-                       failure_counts, repair_counts,
-                       edge_labels=None, node_labels=None):
+def _print_criticality(args):
+        
+    total_observed    = args.get('total_observed', '')
+    total_failure     = args.get('total_failure', '')
+    total_repair      = args.get('total_repair', '')
+    top_n             = args.get('top_n', '')
+    top_edge_fail_idx = args.get('top_edge_fail_idx', '')
+    top_edge_rep_idx  = args.get('top_edge_rep_idx', '')
+    edge_list         = args.get('edge_list', '')
+    edge_fail_crit    = args.get('edge_fail_crit', '')
+    edge_rep_crit     = args.get('edge_rep_crit', '')
+    n_edges           = args.get('n_edges', '')
+    top_node_fail_idx = args.get('top_node_fail_idx', '')
+    top_node_rep_idx  = args.get('top_node_rep_idx', '')
+    node_list         = args.get('node_list', '')
+    node_fail_crit    = args.get('node_fail_crit', '')
+    node_rep_crit     = args.get('node_rep_crit', '')
+    n_nodes           = args.get('n_nodes', '')
+    failure_counts    = args.get('failure_counts', '')
+    repair_counts     = args.get('repair_counts', '')
+    edge_labels       = args.get('edge_labels', None)
+    node_labels       = args.get('node_labels', None)
+    
     print("\n" + "=" * 70)
     print("CRITICAL COMPONENT ANALYSIS")
     print("=" * 70)
@@ -478,8 +494,7 @@ def _calc_criticalities(n_events, total_observed, expected_fractions, full_count
 def _save_criticality_excel(total_observed, criticality, top_n,
                             top_edge_idx, edge_list, edge_crit, n_edges,
                             top_node_idx, node_list, node_crit, full_counts,
-                            excel_path=None,
-                            edge_labels=None, node_labels=None):
+                            **kwargs):
     """
     Writes the critical-component analysis to an Excel file.
 
@@ -491,6 +506,10 @@ def _save_criticality_excel(total_observed, criticality, top_n,
 
     The content mirrors the console output of ``_print_criticality``.
     """
+
+    excel_path  = kwargs.get('excel_path', None)
+    edge_labels = kwargs.get('edge_labels', None)
+    node_labels = kwargs.get('node_labels', None)
 
     # resolve output path
     if excel_path is None:

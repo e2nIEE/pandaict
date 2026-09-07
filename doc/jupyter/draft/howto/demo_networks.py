@@ -33,9 +33,9 @@ def simple_net(mtbf_h_n=0, mttr_h_n=0, mtbf_h_l=8760, mttr_h_l=0):
     app_a = pi.create_ict_app(net, name='Alice', app_type=AppType.CLIENT, device=dev_a)
     app_b = pi.create_ict_app(net, name='Bob', app_type=AppType.WEBSERVER, device=dev_b)
 
-    link_ab = pi.create_ict_link(net, name='link_ab', from_elt=node_a, to_elt=node_b, link_type='ETH')
+    pi.create_ict_link(net, name='link_ab', from_elt=node_a, to_elt=node_b, link_type='ETH')
 
-    link_a = pi.create_ict_link(net, name='link_a', from_elt=dev_a, to_elt=node_a, link_type='ETH_perfect')
+    pi.create_ict_link(net, name='link_a', from_elt=dev_a, to_elt=node_a, link_type='ETH_perfect')
     pi.create_ict_link(net, name='link_b', from_elt=dev_b, to_elt=node_b, link_type='ETH_perfect')
 
     return net, app_a, app_b

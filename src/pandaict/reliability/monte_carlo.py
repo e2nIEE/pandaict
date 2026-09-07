@@ -44,13 +44,12 @@ except ImportError:
 # ----------------------------------------------------------------------------------------------------------------------
 # Critical Component Analysis
 # ----------------------------------------------------------------------------------------------------------------------
-def analyze_critical_components(all_critical, G, sources, targets,
+def analyze_critical_components(all_critical, nxg, sources, targets,
                                 lam_edges, lam_nodes,
                                 mu_edges, mu_nodes,
-                                top_n=-1, verbose=True,
+                                top_n=-1, 
                                 rate_adjustment=True,
-                                save_excel=False, excel_path=None,
-                                edge_labels=None, node_labels=None
+                                **kwargs
                                 ):
     """
 
@@ -75,27 +74,37 @@ def analyze_critical_components(all_critical, G, sources, targets,
 
         **mu_nodes_arr**    - array of repair rates (nodes)
 
-        **top_n**           - int, number of most critical components to be displayed
+        **top_n**           - int (default -1), number of most critical components to be displayed    
 
-        **verbose**         - bool, prints component criticalities to console
-
-        **rate_adjustment** - bool, choose whether to adjust the counts by their rates.
+        **rate_adjustment** - bool (default True), choose whether to adjust the counts by their rates.
                               This determines whether the network is analyzed for bare topological
                               criticalities (True) or a wholistic analysis of critical components
                               is performed, which explicitly depends on the rates of the components (False).
 
-        **save_excel**      - bool, save calculated component criticalities in an excel file for further analysis.
-        **excel_path**      - string, saving path for the excel spreadsheet. (default=current directory)
+    :OPTIONAL:
+    
+        **verbose**         - bool (default True), prints component criticalities to console
+    
+        **save_excel**      - bool (default False), save calculated component criticalities in an excel file for further analysis.
+    
+        **excel_path**      - string (default None), saving path for the excel spreadsheet. (default=current directory)
 
     :OUTPUT:
         dict with edge_criticality, node_criticality, counts, plots, etc.
 
     """
+    
+    save_excel  = kwargs.get('save_excel', False)
+    excel_path  = kwargs.get('excel_path', None)
+    edge_labels = kwargs.get('edge_labels', None)
+    node_labels = kwargs.get('node_labels', None)
+    verbose     = kwargs.get('verbose', True)
+    
     if top_n == 0:
         top_n = -1
 
     # get graph in csr-array format
-    conv = _graph_to_numba_arrays(G, sources, targets)
+    conv = _graph_to_numba_arrays(nxg, sources, targets)
 
     edge_list = conv['edge_list']
     node_list = conv['node_list']
@@ -145,13 +154,14 @@ def analyze_critical_components(all_critical, G, sources, targets,
     top_node_rep_idx = np.argsort(node_rep_crit)[::-1]
 
     if verbose:
-        _print_criticality(total_observed, total_failure, total_repair, top_n,
-                           top_edge_fail_idx, top_edge_rep_idx, edge_list,
-                           edge_fail_crit, edge_rep_crit, n_edges,
-                           top_node_fail_idx, top_node_rep_idx, node_list,
-                           node_fail_crit, node_rep_crit, n_nodes,
-                           failure_counts, repair_counts,
-                           edge_labels, node_labels)
+        args = {'total_observed': total_observed, 'total_failure': total_failure, 'total_repair': total_repair,     
+                'top_n': top_n, 'top_edge_fail_idx': top_edge_fail_idx, 'top_edge_rep_idx': top_edge_rep_idx, 
+                'edge_list': edge_list, 'edge_fail_crit': edge_fail_crit, 'edge_rep_crit': edge_rep_crit, 'n_edges': n_edges,          
+                'top_node_fail_idx': top_node_fail_idx, 'top_node_rep_idx': top_node_rep_idx, 'node_list': node_list,        
+                'node_fail_crit': node_fail_crit, 'node_rep_crit': node_rep_crit, 'n_nodes': n_nodes,          
+                'failure_counts': failure_counts, 'repair_counts': repair_counts, 
+                'edge_labels': edge_labels, 'node_labels': node_labels}
+        _print_criticality(args)
 
     if save_excel:
         _save_criticality_excel(
@@ -174,17 +184,17 @@ def analyze_critical_components(all_critical, G, sources, targets,
     }
 
 
-def empirical_reliability(T, samples):
+def empirical_reliability(t, samples):
     """
-    Builds empirical reliability function R and returns its value at timepoint T: R(T)=P(t>T).
+    Builds empirical reliability function R and returns its value at timepoint t: R(t)=P(t>t).
 
     :INPUT:
-        **T**       - float, timepoint at which the reliability will be evaluated.
+        **t**       - float, timepoint at which the reliability will be evaluated.
 
         **samples** - np.ndarray, mttf samples
 
     :OUTPUT:
-        **R**       - float, reliability function evaluated at timepoint T: R(T)=P(t>=T).
+        **R**       - float, reliability function evaluated at timepoint t: R(t)=P(t>=t).
     """
 
     n = len(samples)
@@ -192,7 +202,7 @@ def empirical_reliability(T, samples):
     if n==0:
         return 0.0
 
-    n_failure = np.sum(samples <= T)
+    n_failure = np.sum(samples <= t)
     n_survivor = n - n_failure
 
     reliability = n_survivor / n
@@ -203,16 +213,16 @@ def empirical_reliability(T, samples):
 # ----------------------------------------------------------------------------------------------------------------------
 # Main API: run N Monte Carlo simulations and estimate reliability metrics from samples
 # ----------------------------------------------------------------------------------------------------------------------
-def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
-                       N=1000, depth=200,
+def estimate_mttf_mttr(nxg, sources, targets, min_connected=-1,
+                       n=1000, depth=200,
                        max_time=np.inf, max_events=-1,
                        analyze_crit=False, laziness=0,
                        use_numba=True, parallel=True):
     """
-    Run N Monte Carlo simulations and estimate MTTF/MTTR.
+    Run n Monte Carlo simulations and estimate MTTF/MTTR.
 
     :INPUT:
-        **G**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
+        **nxg**                   - NetworkX graph with 'mtbf_h' and 'mttr_h' attributes on nodes and edges.
 
         **sources**             - Source node(s)
 
@@ -223,7 +233,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
             - min_connected=k:  At least k pairs (k-out-of-n)
             - min_connected=-1: All pairs (all) (default)
 
-        **N**:                  - Number of simulation runs. It is recommended to not use more than 1e9, since beyond
+        **n**:                  - Number of simulation runs. It is recommended to not use more than 1e9, since beyond
                                   that most systems will run into memory issues. Samples are stored as np.float64,
                                   allocating 11 bits exponent and 52 bits mantissa resulting in.
                                   1e9 samples result in ~8GB of RAM usage.
@@ -259,13 +269,12 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         }
     """
     
-    # TODO: Remove max_events, laziness for release. remove TOL and return_samples until implemented.
-    # TODO: Check if N and depth can be collapsed to one argument => No!
+    # Note: TOL and return_samples removed until implemented.
     
     sources, targets = _normalize_connection_pairs(sources, targets)
 
-    # Catch if G is not connected at start.
-    is_connected, error_msg = _check_initial_connectivity(G, sources, targets, min_connected)
+    # Catch if nxg is not connected at start.
+    is_connected, error_msg = _check_initial_connectivity(nxg, sources, targets, min_connected)
 
     if not is_connected:
         pilogger.warning(f'Initial connectivity check failed: {error_msg}')
@@ -273,7 +282,7 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         return {'mttf': None, 'mttr': None, 'mttf_samples': None, 'mttr_samples': None}
 
     # Extract rates from graph
-    lam_edges, lam_nodes, mu_edges, mu_nodes = _get_lam_mu_from_graph(G)
+    lam_edges, lam_nodes, mu_edges, mu_nodes = _get_lam_mu_from_graph(nxg)
 
     # Check for non-repairable case
     is_nonrepairable = (all(mu == 0 for mu in mu_edges.values()) and all(mu == 0 for mu in mu_nodes.values()))
@@ -292,9 +301,9 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
         return {'mttf':np.inf, 'mttr':0.0, 'mttf_samples':None, 'mttr_samples':None}
 
     if use_numba and NUMBA_AVAILABLE:
-        all_results, all_critical = _run_numba(G, sources, targets, min_connected, is_repairable,
+        all_results, all_critical = _run_numba(nxg, sources, targets, min_connected, is_repairable,
                                                lam_edges, lam_nodes, mu_edges, mu_nodes,
-                                               N, depth,
+                                               n, depth,
                                                max_time, max_events,
                                                analyze_crit, laziness,
                                                parallel)
@@ -302,12 +311,12 @@ def estimate_mttf_mttr(G, sources, targets, min_connected=-1,
     else:
         # Python fallback
         pilogger.warning("Warning! Using deprecated python fallback. Consider using numba to get access to maintained version.")
-        pilogger.warning(f"Using Python fallback ({G.number_of_nodes()} nodes, {G.number_of_edges()} edges)")
+        pilogger.warning(f"Using Python fallback ({nxg.number_of_nodes()} nodes, {nxg.number_of_edges()} edges)")
 
         sources = sources[0]
         targets = targets[0]
 
-        all_results = _run_python(G, sources, targets, is_repairable, lam_edges, lam_nodes, mu_edges, mu_nodes, N, depth)
+        all_results = _run_python(nxg, sources, targets, is_repairable, lam_edges, lam_nodes, mu_edges, mu_nodes, n, depth)
 
     # filter results
     valid_results = _filter_results(all_results, is_repairable, max_time)

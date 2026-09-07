@@ -281,14 +281,14 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
         See :ref:`mc_kwargs` for the full list.
 
     :EXAMPLE:
-        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], N=100_000)
+        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], n=100_000)
         >>> print(f"MTBF = {result['mtbf_h']:.1f} h, MTTR = {result['mttr_h']:.1f} h")
         MTBF = 9200.4 h, MTTR = 5.8 h
     """
     # set default kwargs
     defaults = {
         'min_connected': -1,
-        'N': int(1e5),
+        'n': int(1e5),
         'depth': 200,
         'max_time': np.inf,
         'max_events': -1,
@@ -414,7 +414,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
 
     defaults = {
         'min_connected': -1,
-        'N': int(1e5),
+        'n': int(1e5),
         'depth': 200,
         'max_time': np.inf,
         'max_events': -1,
@@ -565,7 +565,7 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     """
     defaults = {
         'min_connected': -1,
-        'N': int(1e5),
+        'n': int(1e5),
         'max_time': np.inf,
         'max_events': -1,
         'laziness': 0,
