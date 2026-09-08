@@ -394,6 +394,29 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
     plt.show()
 
 
+
+def _print_failure_critical_edges(top_edge_fail_idx, top_node_fail_idx, n_show, edge_list, edge_labels, 
+                                  edge_fail_crit, failure_counts):
+    print(f"\n{'─' * 70}")
+    print("FAILURE-CRITICAL EDGES  (last straw before System Down)")
+    print(f"{'─' * 70}")
+    for rank, i in enumerate(top_edge_fail_idx[:n_show], 1):
+        print(f"  {rank:2d}. {edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i])}: "
+            f"Score={edge_fail_crit[i]:.3f}, "
+            f"Count={int(failure_counts[i])}")
+
+def _print_failure_critical_nodes(top_n, top_node_fail_idx, n_nodes, n_edges, n_show, 
+                                  node_list, node_labels, node_fail_crit, failure_counts):        
+    n_show_n = top_n if top_n > 0 else n_nodes
+    print(f"\n{'─' * 70}")
+    print("FAILURE-CRITICAL NODES  (last straw before System Down)")
+    print(f"{'─' * 70}")
+    for rank, i in enumerate(top_node_fail_idx[:n_show_n], 1):
+        print(f"  {rank:2d}. {node_labels.get(i, str(node_list[i])) if node_labels else str(node_list[i])}: "
+            f"Score={node_fail_crit[i]:.3f}, "
+            f"Count={int(failure_counts[n_edges + i])}")
+    
+
 def _print_criticality(args):
         
     total_observed    = args.get('total_observed', '')
@@ -432,42 +455,33 @@ def _print_criticality(args):
     n_show = top_n if top_n > 0 else n_edges
 
     # Failure-Critical Edges
-    print(f"\n{'─' * 70}")
-    print("FAILURE-CRITICAL EDGES  (last straw before System Down)")
-    print(f"{'─' * 70}")
-    for rank, i in enumerate(top_edge_fail_idx[:n_show], 1):
-        print(f"  {rank:2d}. {edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i])}: "
-              f"Score={edge_fail_crit[i]:.3f}, "
-              f"Count={int(failure_counts[i])}")
-
+    _print_failure_critical_edges(top_edge_fail_idx, top_node_fail_idx, n_show, edge_list, 
+                                  edge_labels, edge_fail_crit, failure_counts)
     # Failure-Critical Nodes
-    n_show_n = top_n if top_n > 0 else n_nodes
+    _print_failure_critical_nodes(top_n, top_node_fail_idx, n_nodes, n_edges, n_show, 
+                                  node_list, node_labels, node_fail_crit, failure_counts)
+
+    if total_repair == 0:
+        return 
+    
+    # Repair-Critical Edges
     print(f"\n{'─' * 70}")
-    print("FAILURE-CRITICAL NODES  (last straw before System Down)")
+    print("REPAIR-CRITICAL EDGES  (last straw before System Up)")
     print(f"{'─' * 70}")
-    for rank, i in enumerate(top_node_fail_idx[:n_show_n], 1):
+    for rank, i in enumerate(top_edge_rep_idx[:n_show], 1):
+        print(f"  {rank:2d}. {edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i])}: "
+              f"Score={edge_rep_crit[i]:.3f}, "
+              f"Count={int(repair_counts[i])}")
+
+    # Repair-Critical Nodes
+    print(f"\n{'─' * 70}")
+    print("REPAIR-CRITICAL NODES  (last straw before System Up)")
+    print(f"{'─' * 70}")
+    n_show_n = top_n if top_n > 0 else n_nodes
+    for rank, i in enumerate(top_node_rep_idx[:n_show_n], 1):
         print(f"  {rank:2d}. {node_labels.get(i, str(node_list[i])) if node_labels else str(node_list[i])}: "
-              f"Score={node_fail_crit[i]:.3f}, "
-              f"Count={int(failure_counts[n_edges + i])}")
-
-    if total_repair > 0:
-        # Repair-Critical Edges
-        print(f"\n{'─' * 70}")
-        print("REPAIR-CRITICAL EDGES  (last straw before System Up)")
-        print(f"{'─' * 70}")
-        for rank, i in enumerate(top_edge_rep_idx[:n_show], 1):
-            print(f"  {rank:2d}. {edge_labels.get(i, str(edge_list[i])) if edge_labels else str(edge_list[i])}: "
-                  f"Score={edge_rep_crit[i]:.3f}, "
-                  f"Count={int(repair_counts[i])}")
-
-        # Repair-Critical Nodes
-        print(f"\n{'─' * 70}")
-        print("REPAIR-CRITICAL NODES  (last straw before System Up)")
-        print(f"{'─' * 70}")
-        for rank, i in enumerate(top_node_rep_idx[:n_show_n], 1):
-            print(f"  {rank:2d}. {node_labels.get(i, str(node_list[i])) if node_labels else str(node_list[i])}: "
-                  f"Score={node_rep_crit[i]:.3f}, "
-                  f"Count={int(repair_counts[n_edges + i])}")
+              f"Score={node_rep_crit[i]:.3f}, "
+              f"Count={int(repair_counts[n_edges + i])}")
 
 
 def _calc_criticalities(n_events, total_observed, expected_fractions, full_counts, rate_adjustment):

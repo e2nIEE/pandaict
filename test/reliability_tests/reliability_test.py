@@ -27,12 +27,13 @@ from pandaict.reliability.reliability import (
 )
 
 
-class ReliabilityTest(unittest.TestCase):
+class ReliabilityTest:
     """Compare MC results against analytical reference values."""
 
     @classmethod
     def setUpClass(cls):
         # relative tolerance for stochastic approximation (2%)
+        print("Init...")
         cls.TOL = 2e-2
 
         # reliability parameters (only nodes fail)
@@ -62,22 +63,22 @@ class ReliabilityTest(unittest.TestCase):
         if not NUMBA_AVAILABLE:
             self.skipTest("Numba not available")
 
-    def _rel_err(self, mc, ref, quantity, label):
+    def _rel_err(self, utest, mc, ref, quantity, label):
         """Assert relative error of mc vs ref is below TOL."""
         rel = abs(mc - ref) / ref
-        self.assertLess(rel, self.TOL,
+        utest.assertLess(rel, self.TOL,
             f"{label}: {quantity}_MC={mc:.4f} vs analytical={ref:.4f} (err={rel:.2%})")
 
     # ==========================================================================
     # MTBF / MTTR Tests
     # ==========================================================================
-    def test_mtbf_mttr(self):
+    def test_mtbf_mttr(self, utest):
         """Monte-Carlo MTBF/MTTR against analytical reference for all cases."""
         self._require_numba()
 
         for n, m, mc, label in self.cases:
             for repairable in (False, True):
-                with self.subTest(case=label, repairable=repairable):
+                with utest.subTest(case=label, repairable=repairable):
                     mttr_h = self.mttr_h if repairable else 0.0
                     net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
                     ref = reference_values(n, m, self.mttf_h, mttr_h, min_connected=mc)
@@ -88,28 +89,28 @@ class ReliabilityTest(unittest.TestCase):
                             min_connected=mc, **self.method_config)
 
                         A_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
-                        self._rel_err(A_mc, ref['availability'], "A", label)
-                        self._rel_err(res['mtbf_h'], ref['mtbf_h'], "MTBF", label)
+                        self._rel_err(utest, A_mc, ref['availability'], "A", label)
+                        self._rel_err(utest, res['mtbf_h'], ref['mtbf_h'], "MTBF", label)
                     else:
                         res = estimate_mtbf_mttr_for_conn(
                             net, conns, n=self.N_nonrep, depth=1,
                             min_connected=mc, **self.method_config)
 
-                        self.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
-                        self.assertTrue(np.isinf(res['mttr_h']),
+                        utest.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
+                        utest.assertTrue(np.isinf(res['mttr_h']),
                             f"{label}: expected MTTR=inf for non-repairable, got {res['mttr_h']}")
-                        self._rel_err(res['mttf_h'], ref['mttf_h'], "MTTF", label)   
+                        self._rel_err(utest, res['mttf_h'], ref['mttf_h'], "MTTF", label)   
 
     # ==========================================================================
     # Serial (non-parallel) Execution Tests
     # ==========================================================================
-    def test_mtbf_mttr_serial_execution(self):
+    def test_mtbf_mttr_serial_execution(self, utest):
         """Cover the serial (non-parallel) numba path; single-component only."""
         self._require_numba()
-
+        
         n, m, mc, label = 1, 1, -1, 'single'
         for repairable in (False, True):
-            with self.subTest(repairable=repairable):
+            with utest.subTest(repairable=repairable):
                 mttr_h = self.mttr_h if repairable else 0.0
                 net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
                 ref = reference_values(n, m, self.mttf_h, mttr_h, min_connected=mc)
@@ -120,27 +121,27 @@ class ReliabilityTest(unittest.TestCase):
                         min_connected=mc, **self.method_config_serial)
 
                     A_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
-                    self._rel_err(A_mc, ref['availability'], "A(serial)", label)
-                    self._rel_err(res['mtbf_h'], ref['mtbf_h'], "MTBF(serial)", label)
+                    self._rel_err(utest, A_mc, ref['availability'], "A(serial)", label)
+                    self._rel_err(utest, res['mtbf_h'], ref['mtbf_h'], "MTBF(serial)", label)
                 else:
                     res = estimate_mtbf_mttr_for_conn(
                         net, conns, n=self.N_nonrep,
                         min_connected=mc, **self.method_config_serial)
 
-                    self.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
-                    self.assertTrue(np.isinf(res['mttr_h']),
+                    utest.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
+                    utest.assertTrue(np.isinf(res['mttr_h']),
                         f"{label}: expected MTTR=inf for non-repairable, got {res['mttr_h']}")
-                    self._rel_err(res['mttf_h'], ref['mttf_h'], "MTTF(serial)", label)
+                    self._rel_err(utest, res['mttf_h'], ref['mttf_h'], "MTTF(serial)", label)
 
     # ==========================================================================
     # Empirical Reliability Function Tests (non-repairable only)
     # ==========================================================================
-    def test_empirical_reliability(self):
+    def test_empirical_reliability(self, utest):
         """Monte-Carlo R(T) against analytical reference (non-repairable)."""
         self._require_numba()
 
         for n, m, mc, label in self.cases:
-            with self.subTest(case=label):
+            with utest.subTest(case=label):
                 net, conns = build_test_ict_network(n, m, self.mttf_h, 0.0)
                 ref = reference_values(n, m, self.mttf_h, 0.0, min_connected=mc)
                 mttf = ref['mttf_h']
@@ -151,13 +152,13 @@ class ReliabilityTest(unittest.TestCase):
                                          min_connected=mc, T=T)['reliability']
 
                 R = empirical_reliability_function(
-                    net, conns, T=T, n=self.N_rel, min_connected=mc, **self.method_config)
+                    net, conns, t=T, n=self.N_rel, min_connected=mc, **self.method_config)
 
-                self.assertIsInstance(R, np.ndarray)
-                self.assertEqual(len(R), len(T))
+                utest.assertIsInstance(R, np.ndarray)
+                utest.assertEqual(len(R), len(T))
 
                 for t, r_mc, r_ref in zip(T, R, ref_R):
-                    self._rel_err(r_mc, r_ref, f"R({t:.1f})", label)
+                    self._rel_err(utest, r_mc, r_ref, f"R({t:.1f})", label)
 
     # ==========================================================================
     # Critical Component Analysis Tests
@@ -173,13 +174,13 @@ class ReliabilityTest(unittest.TestCase):
                 for i in range(len(names))
                 if elements[i][0] == 'node'}
 
-    def test_criticality_symmetric(self):
+    def test_criticality_symmetric(self, utest):
         """T1: identical rates => every path-node criticality == 1.0."""
         self._require_numba()
 
         for n, m, mc, label in self.cases:
             for repairable in (False, True):
-                with self.subTest(case=label, repairable=repairable):
+                with utest.subTest(case=label, repairable=repairable):
                     mttr_h = self.mttr_h if repairable else 0.0
                     net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
 
@@ -194,28 +195,28 @@ class ReliabilityTest(unittest.TestCase):
 
                     # --- failure criticality (rate_adjustment=True default) ---
                     node_crit = self._path_node_crit(res, 'node_criticality')
-                    self.assertTrue(node_crit, f"{label}: no path nodes tracked")
+                    utest.assertTrue(node_crit, f"{label}: no path nodes tracked")
                     K = len(node_crit)
                     for name, c in node_crit.items():
-                        self._rel_err(c, 1.0, f"nodeCrit[{name}]", label)
+                        self._rel_err(utest, c, 1.0, f"nodeCrit[{name}]", label)
                     # symmetric + RA=True => sum of scores == K
-                    self._rel_err(sum(node_crit.values()), float(K),
+                    self._rel_err(utest, sum(node_crit.values()), float(K),
                                   "sumNodeCrit", label)
 
                     # edges are ideal => criticality exactly 0
-                    self.assertTrue(np.all(res['edge_criticality'] == 0.0),
+                    utest.assertTrue(np.all(res['edge_criticality'] == 0.0),
                         f"{label}: expected edge crit 0, got {res['edge_criticality']}")
 
                     # --- repair criticality (repairable only) ---
                     if repairable:
                         node_rep = self._path_node_crit(res, 'node_repair_criticality')
                         for name, c in node_rep.items():
-                            self._rel_err(c, 1.0, f"nodeRepCrit[{name}]", label)
-                        self.assertTrue(np.all(res['edge_repair_criticality'] == 0.0),
+                            self._rel_err(utest, c, 1.0, f"nodeRepCrit[{name}]", label)
+                        utest.assertTrue(np.all(res['edge_repair_criticality'] == 0.0),
                             f"{label}: expected edge rep crit 0, "
                             f"got {res['edge_repair_criticality']}")
 
-    def test_criticality_series_rates(self):
+    def test_criticality_series_rates(self, utest):
         """T2: 2-node series, rates 1:10 => BP_i = lam_i/sum(lam)."""
         self._require_numba()
 
@@ -223,7 +224,7 @@ class ReliabilityTest(unittest.TestCase):
         net, conns, node_names = build_series_network_with_rates(mttf_list, mttr_h=0.0)
 
         for ra in (True, False):
-            with self.subTest(rate_adjustment=ra):
+            with utest.subTest(rate_adjustment=ra):
                 ref = reference_criticality_series(mttf_list, ra)
 
                 res = analyze_critical_components_for_conn(
@@ -233,22 +234,20 @@ class ReliabilityTest(unittest.TestCase):
 
                 crit_by_name = self._path_node_crit(res, 'node_criticality')
                 for name, r_ref in zip(node_names, ref):
-                    self._rel_err(crit_by_name[name], r_ref,
+                    self._rel_err(utest, crit_by_name[name], r_ref,
                                   f"seriesCrit[{name}]", f"series_RA={ra}")
 
-                self.assertTrue(np.all(res['edge_criticality'] == 0.0),
+                utest.assertTrue(np.all(res['edge_criticality'] == 0.0),
                     f"series_RA={ra}: expected edge crit 0, "
                     f"got {res['edge_criticality']}")
 
-    def test_criticality_parallel_rates(self):
+    def test_criticality_parallel_rates(self, utest):
         """T3: 1oo2 parallel, rates 1:10 => BP_i = lam_j/(lam_i+lam_j)."""
         self._require_numba()
-
         mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
         net, conns, node_names = build_parallel_network_with_rates(mttf_list, mttr_h=0.0)
-
         for ra in (True, False): # repairable
-            with self.subTest(rate_adjustment=ra):
+            with utest.subTest(rate_adjustment=ra):
                 ref = reference_criticality_parallel_1oo2(mttf_list, ra)
 
                 res = analyze_critical_components_for_conn(
@@ -258,15 +257,10 @@ class ReliabilityTest(unittest.TestCase):
 
                 crit_by_name = self._path_node_crit(res, 'node_criticality')
                 for name, r_ref in zip(node_names, ref):
-                    self._rel_err(crit_by_name[name], r_ref,
+                    self._rel_err(utest, crit_by_name[name], r_ref,
                                   f"parCrit[{name}]", f"parallel_RA={ra}")
 
                 # Assert link criticality == 0
-                self.assertTrue(np.all(res['edge_criticality'] == 0.0),
+                utest.assertTrue(np.all(res['edge_criticality'] == 0.0),
                     f"parallel_RA={ra}: expected edge crit 0, "
                     f"got {res['edge_criticality']}")
-
-
-
-if __name__ == '__main__':
-    unittest.main()

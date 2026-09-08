@@ -517,11 +517,11 @@ def analyze_critical_components_for_conn(ict_net, connections,
     }
 
 
-def empirical_reliability_function(ict_net, connections, T, **kwargs):
+def empirical_reliability_function(ict_net, connections, t, **kwargs):
     """
-    Estimate the reliability function R(T) for pandaict connections,
-    which describes the likelihood of system level survival longer that T.
-    Approximates R(T) = P(system lifetime > T) by generating first-failure-time
+    Estimate the reliability function R(t) for pandaict connections,
+    which describes the likelihood of system level survival longer that t.
+    Approximates R(t) = P(system lifetime > t) by generating first-failure-time
     samples via Monte-Carlo simulation and computing the empirical survival
     fraction at one or more time points.
 
@@ -532,13 +532,13 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
         **connections** (list of tuple) - One or more connection(s) in pandaict 
         element notation.    
 
-        **T** (float or array-like of float) - Time point(s) in hours at which the
+        **t** (float or array-like of float) - Time point(s) in hours at which the
         reliability is evaluated. A scalar input returns a scalar; an array returns
         an array of the same length.
 
     :OUTPUT:
-        **R(T)** (float or np.ndarray) - If T is scalar, the reliability value R(T) in [0, 1]. \
-        If T is array-like, element-wise reliability values of the same length as T.
+        **R(t)** (float or np.ndarray) - If t is scalar, the reliability value R(t) in [0, 1]. \
+        If t is array-like, element-wise reliability values of the same length as t.
 
         Returns None if the simulation produced no valid samples.
 
@@ -551,15 +551,15 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     :EXAMPLE:
         Scalar evaluation:
 
-        >>> R = empirical_reliability_function(net, [conn_a], T=8760)
+        >>> R = empirical_reliability_function(net, [conn_a], t=8760)
         >>> print(f"R(1 year) = {R:.4f}")
         R(1 year) = 0.6321
 
         Vectorised evaluation over a time axis:
 
         >>> import numpy as np
-        >>> T = np.linspace(0, 50_000, 200)
-        >>> R = empirical_reliability_function(net, [conn_a], T=T, N=500_000)
+        >>> t = np.linspace(0, 50_000, 200)
+        >>> R = empirical_reliability_function(net, [conn_a], t=t, N=500_000)
         >>> R.shape
         (200,)
     """
@@ -585,23 +585,23 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
 
     graph, sources, targets = _pandaict_to_mcnxgraph(ict_net, connections)
 
-    scalar_input = np.isscalar(T)
+    scalar_input = np.isscalar(t)
 
     if scalar_input:
         # use max_time speedup
-        config['max_time'] = T
+        config['max_time'] = t
 
     res = estimate_mttf_mttr(graph, sources, targets, **config)
 
     samples = res.get('mttf_samples')
 
     if samples is None or len(samples) == 0:
-        print('Warning: No valid MTTF samples obtained. Cannot estimate R(T).')
+        print('Warning: No valid MTTF samples obtained. Cannot estimate R(t).')
         return None
 
     # Handle scalar and array input uniformly
-    T_arr = np.atleast_1d(np.asarray(T, dtype=np.float64))
+    t_arr = np.atleast_1d(np.asarray(t, dtype=np.float64))
 
-    R = np.array([_empirical_reliability(t, samples) for t in T_arr])
+    R = np.array([_empirical_reliability(t, samples) for t in t_arr])
 
     return float(R[0]) if scalar_input else R
