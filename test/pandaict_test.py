@@ -71,7 +71,7 @@ class PandaICT_Test(unittest.TestCase):
     # ******* Reliability tests ********
     
     def test_reliability(self):
-        self.reli_tester.setUpClass()
+        self.reli_tester.set_up_class()
         self.reli_tester.test_criticality_parallel_rates(self)
         self.reli_tester.test_criticality_series_rates(self)
         self.reli_tester.test_criticality_symmetric(self)

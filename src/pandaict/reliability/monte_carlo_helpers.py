@@ -395,7 +395,7 @@ def _critical_bar_plot(top_edge_idx, top_node_idx,
 
 
 
-def _print_failure_critical_edges(top_edge_fail_idx, top_node_fail_idx, n_show, edge_list, edge_labels, 
+def _print_failure_critical_edges(top_edge_fail_idx, n_show, edge_list, edge_labels, 
                                   edge_fail_crit, failure_counts):
     print(f"\n{'─' * 70}")
     print("FAILURE-CRITICAL EDGES  (last straw before System Down)")
@@ -405,7 +405,7 @@ def _print_failure_critical_edges(top_edge_fail_idx, top_node_fail_idx, n_show, 
             f"Score={edge_fail_crit[i]:.3f}, "
             f"Count={int(failure_counts[i])}")
 
-def _print_failure_critical_nodes(top_n, top_node_fail_idx, n_nodes, n_edges, n_show, 
+def _print_failure_critical_nodes(top_n, top_node_fail_idx, n_nodes, n_edges, 
                                   node_list, node_labels, node_fail_crit, failure_counts):        
     n_show_n = top_n if top_n > 0 else n_nodes
     print(f"\n{'─' * 70}")
@@ -455,10 +455,10 @@ def _print_criticality(args):
     n_show = top_n if top_n > 0 else n_edges
 
     # Failure-Critical Edges
-    _print_failure_critical_edges(top_edge_fail_idx, top_node_fail_idx, n_show, edge_list, 
+    _print_failure_critical_edges(top_edge_fail_idx, n_show, edge_list, 
                                   edge_labels, edge_fail_crit, failure_counts)
     # Failure-Critical Nodes
-    _print_failure_critical_nodes(top_n, top_node_fail_idx, n_nodes, n_edges, n_show, 
+    _print_failure_critical_nodes(top_n, top_node_fail_idx, n_nodes, n_edges, 
                                   node_list, node_labels, node_fail_crit, failure_counts)
 
     if total_repair == 0:

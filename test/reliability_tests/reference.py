@@ -9,7 +9,7 @@ import math
 import numpy as np
 
 
-def reference_values(n, m, mttf_h, mttr_h, min_connected=-1, T=None):
+def reference_values(n, m, mttf_h, mttr_h, min_connected=-1, t=None):
     """
     Calculate analytical reference values for test cases build from build_test_network(n, m, ...).
     
@@ -19,10 +19,10 @@ def reference_values(n, m, mttf_h, mttr_h, min_connected=-1, T=None):
     :INPUT:
         n, m, mttf_h, mttr_h    - identical to build_test_network
         min_connected           - int, k-out-of-n requirement
-        T                       - float / array, optional for R(T) (only non-repairable)
+        t                       - float / array, optional for R(t) (only non-repairable)
 
     :OUTPUT:
-        dict of mttf_h, mttr_h, mtbf_h, availability A and reliability R (if T not None)
+        dict of mttf_h, mttr_h, mtbf_h, availability A and reliability R (if t not None)
     """
     if min_connected > n:
         print('ERROR: min_connected > n')
@@ -35,7 +35,7 @@ def reference_values(n, m, mttf_h, mttr_h, min_connected=-1, T=None):
         k = min_connected
 
     lam = 0.0 if mttf_h == 0 else 1.0 / mttf_h  # get failure rate
-    lam_path = m * lam                          # R(T) = R1 * ... * Rm
+    lam_path = m * lam                          # using R(t) = R1 * ... * Rm
 
     repairable = (mttr_h != 0)
 
@@ -48,32 +48,32 @@ def reference_values(n, m, mttf_h, mttr_h, min_connected=-1, T=None):
         out = {'mttf_h': mttf, 'mttr_h': np.inf,
                'mtbf_h': mttf, 'availability': 0.0}
 
-        if T is not None:
-            tt = np.asarray(T, dtype=float)
+        if t is not None:
+            tt = np.asarray(t, dtype=float)
             p = np.exp(-lam_path * tt)
             R = sum(math.comb(n, i) * p**i * (1-p)**(n-i) for i in range(k, n+1))
 
-            out['reliability'] = float(R) if np.ndim(T)==0 else R
+            out['reliability'] = float(R) if np.ndim(t)==0 else R
 
         return out
 
     # === repairable ===
     mu = 1.0 / mttr_h
-    A_comp = mu / (lam + mu)    # availability per component
-    A_path = A_comp ** m
-    U_path = 1.0 - A_path
+    a_comp = mu / (lam + mu)    # availability per component
+    a_path = a_comp ** m
+    u_path = 1.0 - a_path
 
     # System-Availability: P(# UP paths >= k)
-    A_sys = sum(math.comb(n,j) * U_path**j * A_path**(n-j) for j in range(0, n - k + 1))
+    a_sys = sum(math.comb(n,j) * u_path**j * a_path**(n-j) for j in range(0, n - k + 1))
 
     # expected frequency of system-level failure
-    nu = math.comb(n,k) * A_path**k * U_path**(n - k) * k * lam_path
+    nu = math.comb(n,k) * a_path**k * u_path**(n - k) * k * lam_path
 
     return {
-        'mttf_h': A_sys / nu,
-        'mttr_h': (1-A_sys) / nu,
+        'mttf_h': a_sys / nu,
+        'mttr_h': (1-a_sys) / nu,
         'mtbf_h': 1.0 / nu,
-        'availability': A_sys
+        'availability': a_sys
     }
 
 def reference_criticality_series(mttf_list, rate_adjustment):
@@ -138,7 +138,6 @@ def reference_criticality_parallel_1oo2(mttf_list, rate_adjustment):
     if total == 0:
         return [0.0, 0.0]
 
-    # BP_1 = lam2 / total, BP_2 = lam1 / total
     bp = np.array([lam[1], lam[0]]) / total
 
     if rate_adjustment:
