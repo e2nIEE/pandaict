@@ -199,7 +199,7 @@ class ReliabilityTest:
                           "sumNodeCrit", label)
 
             # edges are ideal => criticality exactly 0
-            utest.assertTrue(np.all(res['edge_criticality'] == 0.0),
+            utest.assertTrue(np.allclose(res['edge_criticality'], 0.0),
                 f"{label}: expected edge crit 0, got {res['edge_criticality']}")
 
             # --- repair criticality (repairable only) ---

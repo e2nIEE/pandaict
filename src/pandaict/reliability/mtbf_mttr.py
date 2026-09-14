@@ -136,6 +136,22 @@ def _update_mtbf_mttr(mtbf_link, mttr_link, mtbf_node, mttr_node, mtbf_route, mt
         (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_node, mttr_node))
     return mtbf_route, mttr_route
 
+def _handle_include_end_devices(ict_net, links, include_end_devices):
+    if include_end_devices:
+        (start_dev, end_dev) = __get_end_devices_route(ict_net, links)
+        d = get_elts_any(ict_net, start_dev)
+        if start_dev is not None:
+            if 'mtbf_h' in d.keys() and d['mtbf_h']!=0:
+                mtbf_route = d['mtbf_h']
+            if 'mttr_h' in d.keys() and d['mttr_h']!=0:
+                mttr_route = d['mttr_h']        
+    else:
+        mtbf_route = None
+        mttr_route = None
+        end_dev    = None
+        
+    return mtbf_route, mttr_route, end_dev
+
 def calc_mtbf_mttr_route(ict_net, links, include_end_devices=False):
     """
     Calculate MTBF and MTTR along a route given by a list of links.    
@@ -161,21 +177,10 @@ def calc_mtbf_mttr_route(ict_net, links, include_end_devices=False):
     
     if not __check_calc_route(ict_net, links, "calc_mtbf_mttr_route"):
         return None
-           
-    mtbf_route = None
-    mttr_route = None
+               
     lni  = None # last node index
     
-    if include_end_devices:
-        (start_dev, end_dev) = __get_end_devices_route(ict_net, links)
-        d = get_elts_any(ict_net, start_dev)
-        if start_dev is not None:
-            if 'mtbf_h' in d.keys() and d['mtbf_h']!=0:
-                mtbf_route = d['mtbf_h']
-            if 'mttr_h' in d.keys() and d['mttr_h']!=0:
-                mttr_route = d['mttr_h']        
-    else:
-        end_dev = None
+    mtbf_route, mttr_route, end_dev = _handle_include_end_devices(ict_net, links, include_end_devices)
     
     for li in range(0,len(links)):
         l = get_elts_any(ict_net, links[li])

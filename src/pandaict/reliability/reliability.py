@@ -69,7 +69,7 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
             from_dev, to_dev = to_dev, from_dev
 
         if respect_iptables:
-            __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)
+            __modify_multidigraph_by_iptables(ict_net, mdg, to_dev)
 
         from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
         to_nxnode   = __get_nx_node_for_elt(mdg, to_dev)

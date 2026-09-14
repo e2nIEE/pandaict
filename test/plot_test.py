@@ -4,10 +4,8 @@ Created on 21.03.2024
 @author: gbanerjee
 '''
 
-# from core_test import *
 from pandaict.networks.test_networks import create_testnet1
 from pandaict.plot import create_plot, __create_g__
-#import PIL
 from PIL import Image, ImageChops
 import tempfile
 import os
