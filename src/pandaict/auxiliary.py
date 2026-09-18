@@ -44,22 +44,22 @@ class ADict(dict, MutableMapping):
 
     # --- taken from AttrDict
 
-    def __getstate__(self):
-        return self.copy(), self._allow_invalid_attributes
-
-    def __dir__(self):
-        return list(self.keys())
-
-    def __setstate__(self, state):
-        mapping, allow_invalid_attributes = state
-        self.update(mapping)
-        self.__setattr('_allow_invalid_attributes', allow_invalid_attributes)
+    # def __getstate__(self):
+    #     return self.copy(), self._allow_invalid_attributes
+    #
+    # def __dir__(self):
+    #     return list(self.keys())
+    #
+    # def __setstate__(self, state):
+    #     mapping, allow_invalid_attributes = state
+    #     self.update(mapping)
+    #     self.__setattr('_allow_invalid_attributes', allow_invalid_attributes)
 
     # --- taken from MutableAttr
 
     def __setattr(self, key, value):
         super(MutableMapping, self).__setattr__(key, value)
-
+    
     def __setattr__(self, key, value):
         if self.__valid_name(key):
             self[key] = value
@@ -71,28 +71,28 @@ class ADict(dict, MutableMapping):
                     cls=self.__class__.__name__
                 )
             )
+    
+    # def __delattr__(self, key, force=False):
+    #     if self.__valid_name(key):
+    #         del self[key]
+    #     elif getattr(self, '_allow_invalid_attributes', True):
+    #         super(MutableMapping, self).__delattr__(key)
+    #     else:
+    #         raise TypeError(
+    #             "'{cls}' does not allow attribute deletion.".format(
+    #                 cls=self.__class__.__name__
+    #             )
+    #         )
 
-    def __delattr__(self, key, force=False):
-        if self.__valid_name(key):
-            del self[key]
-        elif getattr(self, '_allow_invalid_attributes', True):
-            super(MutableMapping, self).__delattr__(key)
-        else:
-            raise TypeError(
-                "'{cls}' does not allow attribute deletion.".format(
-                    cls=self.__class__.__name__
-                )
-            )
-
-    def __call__(self, key):
-        if key not in self:
-            raise AttributeError(
-                "'{cls} instance has no attribute '{name}'".format(
-                    cls=self.__class__.__name__, name=key
-                )
-            )
-
-        return self.__build(self[key])
+    # def __call__(self, key):
+    #     if key not in self:
+    #         raise AttributeError(
+    #             "'{cls} instance has no attribute '{name}'".format(
+    #                 cls=self.__class__.__name__, name=key
+    #             )
+    #         )
+    #
+    #     return self.__build(self[key])
 
     def __getattr__(self, key):
         if key not in self or not self.__valid_name(key):
@@ -101,21 +101,21 @@ class ADict(dict, MutableMapping):
                     cls=self.__class__.__name__, name=key
                 )
             )
-
+    
         return self.__build(self[key])
 
 
-    def __deepcopy_add_key_to_result(self, k, v, deep_columns, memo, result):
-        if k not in result:
-            result[k] = v.__class__(index=v.index, columns=v.columns)
-        for col in v.columns:
-            if col in deep_columns:
-                result[k][col] = v[col].apply(lambda x: copy.deepcopy(x, memo))
-            else:
-                result[k][col] = copy.deepcopy(v[col], memo)
-        __preserve_dtypes(result[k], v.dtypes)
-        return result
-        
+    # def __deepcopy_add_key_to_result(self, k, v, deep_columns, memo, result):
+    #     if k not in result:
+    #         result[k] = v.__class__(index=v.index, columns=v.columns)
+    #     for col in v.columns:
+    #         if col in deep_columns:
+    #             result[k][col] = v[col].apply(lambda x: copy.deepcopy(x, memo))
+    #         else:
+    #             result[k][col] = copy.deepcopy(v[col], memo)
+    #     __preserve_dtypes(result[k], v.dtypes)
+    #     return result
+    
     def __deepcopy__(self, memo):
         deep_columns = {'object', 'coords', 'geometry'}
         cls = self.__class__
@@ -126,7 +126,7 @@ class ADict(dict, MutableMapping):
                 result = self.__deepcopy_add_key_to_result(k, v, deep_columns, memo, result)                
             else:
                 setattr(result, k, copy.deepcopy(v, memo))
-
+    
         result.__setattr('_allow_invalid_attributes', self._allow_invalid_attributes)
         return result
 

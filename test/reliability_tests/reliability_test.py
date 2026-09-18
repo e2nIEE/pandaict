@@ -3,7 +3,10 @@ Created on 03.08.2026
 @author: fnuetz
 '''
 
-import unittest
+
+import tempfile
+import os
+from PIL import Image, ImageChops
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -23,7 +26,8 @@ from pandaict.reliability.monte_carlo import NUMBA_AVAILABLE
 from pandaict.reliability.reliability import (
     estimate_mtbf_mttr_for_conn,
     empirical_reliability_function,
-    analyze_critical_components_for_conn
+    analyze_critical_components_for_conn,
+    plot_graph
 )
 
 
@@ -57,7 +61,20 @@ class ReliabilityTest:
         cls.n_rep       = int(1e4)
         cls.depth       = 200
         cls.n_rel       = cls.n_nonrep
+        
+        cls.test_verbose_plot_repair = True
+        cls.test_verbose_plot_norepair = True
 
+    def set_test_python_fallback(self, pfb):
+        if pfb:
+            self.method_config.update({'use_numba': False})
+            self.n_nonrep    = int(1e3)
+            self.n_rep       = int(1e2)
+        else:
+            self.method_config.update({'use_numba': True})
+            self.n_nonrep    = int(1e7)
+            self.n_rep       = int(1e4)
+    
     def _require_numba(self):
         """Skip test if Numba is not available."""
         if not NUMBA_AVAILABLE:
@@ -173,6 +190,23 @@ class ReliabilityTest:
         return {names[i]: float(crit[i])
                 for i in range(len(names))
                 if elements[i][0] == 'node'}
+        
+    def _do_plot_test(self, utest, net, test_idx, res=None):        
+        if res:
+            plt = plot_graph(net, edge_criticality=res['edge_criticality'], node_criticality=res['node_criticality'], show=False)                                                         
+        else:
+            plt = plot_graph(net, show=False)
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:    
+            plt.savefig(tmp_file.name)
+             
+            image1 = Image.open(tmp_file.name)
+            # load the saved figure to compare
+            image2 = Image.open(os.path.dirname(os.path.abspath(__file__)) + os.sep + 'plt_nxg' + str(test_idx) + '.png')                         
+            # compare the size
+            assert image1.size == image2.size 
+            # compare the content
+            diff = ImageChops.difference(image1, image2)
+            utest.assertTrue(diff.getbbox() is None)
 
     def _do_test_criticality_symmetric(self, utest, label, repairable, n, m, mc):
         with utest.subTest(case=label, repairable=repairable):
@@ -183,11 +217,17 @@ class ReliabilityTest:
                 N, depth = self.n_rep, self.depth
             else:
                 N, depth = self.n_nonrep, 1
-
+            
+            vpflag = self.test_verbose_plot_repair or self.test_verbose_plot_norepair
             res = analyze_critical_components_for_conn(
                 net, conns, n=N, depth=depth, min_connected=mc,
-                plot=False, verbose=False, **self.method_config)
-
+                plot=vpflag, verbose=vpflag, **self.method_config)
+            # test verbose one time only for each repairable and non-repairable
+            if repairable: 
+                self.test_verbose_plot_repair = False 
+            else:
+                self.test_verbose_plot_norepair = False 
+            
             # --- failure criticality (rate_adjustment=True default) ---
             node_crit = self._path_node_crit(res, 'node_criticality')
             utest.assertTrue(node_crit, f"{label}: no path nodes tracked")
@@ -211,7 +251,9 @@ class ReliabilityTest:
                 utest.assertTrue(np.allclose(res['edge_repair_criticality'], 0.0),
                     f"{label}: expected edge rep crit 0, "
                     f"got {res['edge_repair_criticality']}")
-
+        if label=="serial5" and repairable:             
+            self._do_plot_test(utest, net, 2, res=res)
+    
     def test_criticality_symmetric(self, utest):
         """T1: identical rates => every path-node criticality == 1.0."""
         self._require_numba()
@@ -225,8 +267,7 @@ class ReliabilityTest:
         self._require_numba()
 
         mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
-        net, conns, node_names = build_series_network_with_rates(mttf_list, mttr_h=0.0)
-
+        net, conns, node_names = build_series_network_with_rates(mttf_list, mttr_h=0.0)                
         for ra in (True, False):
             with utest.subTest(rate_adjustment=ra):
                 ref = reference_criticality_series(mttf_list, ra)
@@ -250,6 +291,7 @@ class ReliabilityTest:
         self._require_numba()
         mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
         net, conns, node_names = build_parallel_network_with_rates(mttf_list, mttr_h=0.0)
+        self._do_plot_test(utest, net, 1)
         for ra in (True, False): # repairable
             with utest.subTest(rate_adjustment=ra):
                 ref = reference_criticality_parallel_1oo2(mttf_list, ra)
@@ -268,3 +310,4 @@ class ReliabilityTest:
                 utest.assertTrue(np.allclose(res['edge_criticality'], 0.0),
                     f"parallel_RA={ra}: expected edge crit 0, "
                     f"got {res['edge_criticality']}")
+        

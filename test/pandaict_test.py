@@ -4,6 +4,7 @@ Created on 8.03.2024
 '''
 
 import unittest
+from codetiming import Timer
 from core_test import Core_Test
 from plot_test import Plot_Test
 from reliability_tests.reliability_test import ReliabilityTest
@@ -71,13 +72,20 @@ class PandaICT_Test(unittest.TestCase):
     # ******* Reliability tests ********
     
     def test_reliability(self):
-        self.reli_tester.set_up_class()
+        self.reli_tester.set_up_class()                        
         self.reli_tester.test_criticality_parallel_rates(self)
-        self.reli_tester.test_criticality_series_rates(self)
+        self.reli_tester.test_criticality_series_rates(self)                            
         self.reli_tester.test_criticality_symmetric(self)
         self.reli_tester.test_empirical_reliability(self)
         self.reli_tester.test_mtbf_mttr(self)
-        self.reli_tester.test_mtbf_mttr_serial_execution(self)        
+        self.reli_tester.test_mtbf_mttr_serial_execution(self)      
+        
+        print("Test with python fallback...")
+        self.reli_tester.set_test_python_fallback(True)   
+        self.reli_tester.test_criticality_series_rates(self) 
+        self.reli_tester.test_mtbf_mttr(self)          
+        self.reli_tester.set_test_python_fallback(False)
+          
 
 if __name__ == '__main__':
     #pitest = PandaICT_Test()

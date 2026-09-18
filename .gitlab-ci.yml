@@ -45,12 +45,7 @@ sonarqube-check:
     paths:
       - .sonar/cache
   before_script:
-    - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
-    - pip install -r requirements.txt
-    - pip install coverage
-    - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/      
-    - coverage run test/pandaict_test.py 
-    - coverage xml -i -o coverage.xml
+    - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit    
   script:
     - sonar-scanner -X
   allow_failure: true

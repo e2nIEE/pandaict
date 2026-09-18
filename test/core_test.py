@@ -138,6 +138,17 @@ class Core_Test():
         ict_net2 = create_testnet2()
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net2))
+        
+        elts = ict_net.get_elts_by_name_dict()        
+        utest.assertTrue(len(elts.keys())==5 and len(elts['device'])==9)
+        devs = ict_net.get_elts_by_name_dict(['device'])
+        utest.assertTrue(len(devs)==1 and len(devs['device'])==len(elts['device']))
+        utest.assertEqual(ict_net.get_elts_by_name_dict(['foo']),{})
+        
+        elts2 = ict_net2.get_elts_by_uuid_dict()
+        utest.assertTrue(len(elts2.keys())==5 and len(elts2['device'])==9)
+        utest.assertTrue(all([isinstance(x, uuid.UUID) for x in elts2['device'].values()]))
+        
     
     def test_save_load(self, utest, ict_net=None): 
     
@@ -237,6 +248,9 @@ class Core_Test():
         ict_net = create_testnet3()
         extend_testnet3(ict_net)
         # single route testing
+        
+        # TODO: add test calc_mtbf_route, calc_mtbf_mttr_by_lup
+        
         ber_d = []
         ber_u = []
         for i, _ in ict_net['conn'].iterrows():
@@ -368,10 +382,31 @@ class Core_Test():
         (down4, up4) = is_connection_possible(ict_net, ('conn',3))
         
         utest.assertTrue( (down1, up1)==(True,True) and (down2, up2)==(True,False) and (down3, up3)==(True,False) and (down4, up4)==(True,False) ) 
+     
+    def _test_ip_boundary(self, utest):
+        # Test boundary/error cases
+        ipaddr = IP_address("2001:0db8:85a3:08d3:1319:8a2e:0370:7344")
+        utest.assertFalse(ipaddr.is_IPV4())
+        utest.assertFalse(ipaddr.last_hostIP_in_network())
         
+        ipaddr = IP_address("192.168.20.5")
+        utest.assertTrue(ipaddr.inc())
+        utest.assertEqual(str(ipaddr),'192.168.20.6')    
+        utest.assertEqual(str(ipaddr.last_hostIP_in_network()), '255.255.255.254')    
+        
+        ipaddr2 = IP_address("192.168.20.255","255.255.255.0")       
+        utest.assertTrue(ipaddr2.inc())
+        utest.assertEqual(str(ipaddr2),'192.168.21.1 / 255.255.255.0')
+        utest.assertEqual(str(ipaddr2.last_hostIP_in_network()), '192.168.21.254 / 255.255.255.0')
+        utest.assertTrue(ipaddr2.greater_than(ipaddr))
+        
+        ipaddr = IP_address("192.168.20.255","255.255.255.0")
+        utest.assertFalse(ipaddr.inc(own_network_only = True))
+        utest.assertEqual(str(ipaddr),'192.168.20.255 / 255.255.255.0')   
 
     def test_ip_support(self, utest):    
         # xTODO: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
+        self._test_ip_boundary(utest)      
                             
         ict_net = create_testnet3()
         extend_testnet3(ict_net)

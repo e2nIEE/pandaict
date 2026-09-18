@@ -27,6 +27,7 @@ from pandaict.reliability.reliability_helpers import (
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from plotly.matplotlylib import mpltools
 
 
 def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptables=False):
@@ -110,7 +111,7 @@ def plot_graph(ict_net, protocol='TCP',
                highlight_nodes=None, highlight_edges=None,
                edge_criticality=None, node_criticality=None,
                default_color='lightblue', highlight_color='red',
-               cmap=True, show_colorbar=True, seed=8):
+               cmap=True, show_colorbar=True, seed=8, show=True):
     """
     Plot a pandaict network as a graph with optional criticality-based color encoding.
     Converts the given pandaict network into a NetworkX MultiDiGraph and renders it
@@ -156,11 +157,14 @@ def plot_graph(ict_net, protocol='TCP',
 
         **seed** (int, default 8) - Random seed for the spring layout, ensuring
         reproducible node positions.
+        
+        **show** (bool, default True) - If True, displays the plot via matplotlib. 
+        Otherwise just returns the plot.
 
     :OUTPUT:
-        None. Displays the plot via matplotlib.
+        **plt** (matplotlib plot). 
 
-    .. note::
+    .. note::        
         The criticality scores can be obtained from
         :func:`analyze_critical_components_for_conn`. A score of 1 means the
         component fails exactly as often as expected. Scores above 1 indicate
@@ -248,7 +252,10 @@ def plot_graph(ict_net, protocol='TCP',
         cbar.ax.axhline(y=1, color='white', linewidth=2, linestyle='--')
 
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()
+
+    return plt 
 
 
 def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
