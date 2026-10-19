@@ -1,0 +1,37 @@
+# # # @author: jringelstein
+
+# SPDX-FileCopyrightText: 2024 Jan Ringelstein <jan.ringelstein@iee.fraunhofer.de>
+# # Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: pandaICT_root
+parts:
+- caption: User documentation
+  chapters:
+  - file: pandaICT_datamodel
+  - file: pp_pict_connector_example
+  - file: pandaICT_scenario
+  
+- caption: How-To Guides
+  chapters:
+  - file: howto/00_overview
+  - file: howto/01_getting_started
+  - file: howto/02_physical_layer
+  - file: howto/03_logical_layer
+  - file: howto/04_workflow_analysis
+  - file: howto/05_inspection_management
+  - file: howto/06_std_types
+#  - file: howto/07_advanced_topics
+#  - file: howto/08_howto_MTBF_estimation
+#  - file: howto/09_howto_MTBF_MTTR_estimation
+#  - file: howto/10_howto_critical_components
+#  - file: howto/11_howto_reliability_function
+#  - file: howto/12_howto_multi_source_target
+
+- caption: Internals of pandaict
+  chapters:
+  - file: pandaICT_routing
+  - file: pandaICT_reliability_metrics
+  - file: reliability-Monte-Carlo
+
