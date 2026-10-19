@@ -1,0 +1,102 @@
+This project is using following third-party licenses: 
+
+aenum
+- Version: >=3.1.17
+- Copyright: Copyright © 2015, 2016, 2017, 2018 Ethan Furman
+- Author: Ethan Furman
+- License: BSD 3-clause
+- License text: https://github.com/ethanfurman/aenum/blob/master/aenum/LICENSE
+
+bump2version
+- Version: >=1.0.1
+- Copyright: Copyright © 2024 Mahmoud
+- Author: Christian Verkerk
+- License: MIT
+- License text: https://github.com/wiseaidev/bump2version/blob/main/LICENSE
+
+matplotlib
+- Version: >=3.11.1
+- Copyright: Copyright © 2012- Matplotlib Development Team; All Rights Reserved
+- Author: John D. Hunter, Michael Droettboom
+- License: Python Software Foundation License
+- License text: https://github.com/matplotlib/matplotlib/blob/main/LICENSE/LICENSE
+- Notice: this library was used as-is with no changes made.
+
+networkx
+- Version: >=3.6.1
+- Copyright: Copyright © 2004-2025, NetworkX Developers
+- Author: Aric Hagberg
+- License: BSD 3-clause
+- License text: https://networkx.org/documentation/stable/#license
+
+numba
+- Version: >=0.61.0
+- Copyright: Copyright © 2012, Anaconda, Inc.
+- Author: Anaconda, Inc.
+- License: BSD License (BSD) 
+- License text: https://github.com/numba/numba/blob/main/LICENSE
+
+numpy
+- Version: <2.0.0
+- Copyright: Copyright © 2005-2025, NumPy Developers.
+- Author: Travis E. Oliphant et al.
+- License: modified BSD 3-clause
+- License text: https://numpy.org/doc/stable/license.html
+
+openpyxl
+- Version: >=3.1.5
+- Copyright: Copyright © 2010 openpyxl
+- Author: Eric Gazoni
+- License: MIT License (MIT) 
+- License text: https://github.com/fluidware/openpyxl/blob/master/LICENCE
+
+pandas
+- Version: >2.0.0
+- Copyright: Copyright © 2008-2011, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team
+- Author: PyData Development Team
+- License: BSD 3-clause
+- License text: https://github.com/pandas-dev/pandas/blob/main/LICENSE
+
+pillow
+- Version: >=12.3.0
+- Copyright: 
+  Copyright © 1997-2011 by Secret Labs AB
+  Copyright © 1995-2011 by Fredrik Lundh and contributors
+  Copyright © 2010 by Jeffrey 'Alex' Clark and contributors
+- Author: Jeffrey 'Alex' Clark
+- License: MIT-CMU
+- License text: https://github.com/python-pillow/Pillow/blob/main/LICENSE
+
+regex
+- Version: >=2026.7.19
+- Copyright: Copyright 2020 Matthew Barnett
+- Author: Matthew Barnett
+- License: Apache-2.0 AND CNRI-Python 
+- License text: https://github.com/mrabarnett/mrab-regex/blob/hg/LICENSE.txt
+
+setuptools
+- Version: >=60.9.3
+- Copyright: 
+  Copyright © 2004-2024 Python Packaging Authority
+  Copyright © 1998-2004 SimpleXMLRPCServlet.py contributors
+  Copyright © 1999 Clark Evans
+- Author: Python Packaging Authority (PyPA)
+- License: MIT License (MIT)
+- License text: https://github.com/pypa/setuptools/blob/main/LICENSE
+
+sphinx_rtd_theme
+- Version: >=3.1.0
+- Copyright: Copyright © 2013-2018 Dave Snider, Read the Docs, Inc. & contributors
+- Author: Dave Snider, Read the Docs, Inc. & contributors
+- License: MIT License (MIT)
+- License text: https://github.com/readthedocs/sphinx_rtd_theme/blob/master/LICENSE
+
+
+
+
+
+
+
+
+
+

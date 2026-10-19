@@ -1,0 +1,49 @@
+---
+version: "2"
+exclude_patterns:
+  - "**/pandaict_orig/"
+  - "**/test/"
+  - "**/test_orig/"
+  - "**/requirements.txt"
+  - "**/venv/"
+  - "**/doc/"
+plugins:
+  sonar-python:
+    enabled: false
+checks:
+  argument-count:
+    enabled: true
+    config:
+      threshold: 12
+  complex-logic:
+    enabled: true
+    config:
+      threshold: 40
+  file-lines:
+    enabled: true
+    config:
+      threshold: 450
+  method-complexity:
+    enabled: true
+    config:
+      threshold: 40
+  method-count:
+    enabled: true
+    config:
+      threshold: 30
+  method-lines:
+    enabled: true
+    config:
+      threshold: 80
+  nested-control-flow:
+    enabled: true
+    config:
+      threshold: 6
+  return-statements:
+    enabled: true
+    config:
+      threshold: 8
+  similar-code:
+    enabled: true
+  identical-code:
+    enabled: true
