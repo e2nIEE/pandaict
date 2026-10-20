@@ -222,9 +222,7 @@ class pandaICTNet(ADict):
                 if 'uuid' in cols: 
                     cols.remove('uuid')                        
                 try:
-                    if ((self[k].empty != other[k].empty) or 
-                        (self[k].columns != other[k].columns) or
-                        (not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty))):
+                    if not(self[k].empty) and not (self[k][cols].compare(other[k][cols]).empty):
                         retval=False
                         break
                 except (IndexError, AttributeError, ValueError, TypeError):

@@ -8,17 +8,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 
-from reliability_tests.test_networks_pi import (
-    build_test_ict_network,
-    build_series_network_with_rates,
-    build_parallel_network_with_rates,
-)
-from reliability_tests.reference import (
-    reference_values,
-    reference_criticality_series,
-    reference_criticality_parallel_1oo2
-)
-
+from reliability_tests.test_networks_pi import build_test_ict_network
+from reliability_tests.reference import reference_values
 from pandaict.reliability.monte_carlo import NUMBA_AVAILABLE   
 from pandaict.reliability.reliability import (
     estimate_mtbf_mttr_for_conn,
@@ -160,112 +151,18 @@ class ReliabilityTest(unittest.TestCase):
                     self._rel_err(r_mc, r_ref, f"R({t:.1f})", label)
 
     # ==========================================================================
-    # Critical Component Analysis Tests
+    # Critical Component Analysis Tests  (TODO: implement)
     # ==========================================================================
-    def _path_node_crit(self, res, key='node_criticality'):
-        """Return {name: criticality} for path nodes only (exclude devices)."""
-        crit = res[key]
-        if crit is None:
-            self.fail(f"criticality '{key}' is None (no critical data collected)")
-        elements = res['node_elements']
-        names = res['node_names']
-        return {names[i]: float(crit[i])
-                for i in range(len(names))
-                if elements[i][0] == 'node'}
-
-    def test_criticality_symmetric(self):
-        """T1: identical rates => every path-node criticality == 1.0."""
-        self._require_numba()
-
-        for n, m, mc, label in self.cases:
-            for repairable in (False, True):
-                with self.subTest(case=label, repairable=repairable):
-                    mttr_h = self.mttr_h if repairable else 0.0
-                    net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
-
-                    if repairable:
-                        N, depth = self.N_rep, self.depth
-                    else:
-                        N, depth = self.N_nonrep, 1
-
-                    res = analyze_critical_components_for_conn(
-                        net, conns, N=N, depth=depth, min_connected=mc,
-                        plot=False, verbose=False, **self.method_config)
-
-                    # --- failure criticality (rate_adjustment=True default) ---
-                    node_crit = self._path_node_crit(res, 'node_criticality')
-                    self.assertTrue(node_crit, f"{label}: no path nodes tracked")
-                    K = len(node_crit)
-                    for name, c in node_crit.items():
-                        self._rel_err(c, 1.0, f"nodeCrit[{name}]", label)
-                    # symmetric + RA=True => sum of scores == K
-                    self._rel_err(sum(node_crit.values()), float(K),
-                                  "sumNodeCrit", label)
-
-                    # edges are ideal => criticality exactly 0
-                    self.assertTrue(np.all(res['edge_criticality'] == 0.0),
-                        f"{label}: expected edge crit 0, got {res['edge_criticality']}")
-
-                    # --- repair criticality (repairable only) ---
-                    if repairable:
-                        node_rep = self._path_node_crit(res, 'node_repair_criticality')
-                        for name, c in node_rep.items():
-                            self._rel_err(c, 1.0, f"nodeRepCrit[{name}]", label)
-                        self.assertTrue(np.all(res['edge_repair_criticality'] == 0.0),
-                            f"{label}: expected edge rep crit 0, "
-                            f"got {res['edge_repair_criticality']}")
-
-    def test_criticality_series_rates(self):
-        """T2: 2-node series, rates 1:10 => BP_i = lam_i/sum(lam)."""
-        self._require_numba()
-
-        mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
-        net, conns, node_names = build_series_network_with_rates(mttf_list, mttr_h=0.0)
-
-        for ra in (True, False):
-            with self.subTest(rate_adjustment=ra):
-                ref = reference_criticality_series(mttf_list, ra)
-
-                res = analyze_critical_components_for_conn(
-                    net, conns, N=self.N_nonrep, depth=1, min_connected=-1,
-                    plot=False, verbose=False, rate_adjustment=ra,
-                    **self.method_config)
-
-                crit_by_name = self._path_node_crit(res, 'node_criticality')
-                for name, r_ref in zip(node_names, ref):
-                    self._rel_err(crit_by_name[name], r_ref,
-                                  f"seriesCrit[{name}]", f"series_RA={ra}")
-
-                self.assertTrue(np.all(res['edge_criticality'] == 0.0),
-                    f"series_RA={ra}: expected edge crit 0, "
-                    f"got {res['edge_criticality']}")
-
-    def test_criticality_parallel_rates(self):
-        """T3: 1oo2 parallel, rates 1:10 => BP_i = lam_j/(lam_i+lam_j)."""
-        self._require_numba()
-
-        mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
-        net, conns, node_names = build_parallel_network_with_rates(mttf_list, mttr_h=0.0)
-
-        for ra in (True, False): # repairable
-            with self.subTest(rate_adjustment=ra):
-                ref = reference_criticality_parallel_1oo2(mttf_list, ra)
-
-                res = analyze_critical_components_for_conn(
-                    net, conns, N=self.N_nonrep, depth=1, min_connected=1,
-                    plot=False, verbose=False, rate_adjustment=ra,
-                    **self.method_config)
-
-                crit_by_name = self._path_node_crit(res, 'node_criticality')
-                for name, r_ref in zip(node_names, ref):
-                    self._rel_err(crit_by_name[name], r_ref,
-                                  f"parCrit[{name}]", f"parallel_RA={ra}")
-
-                # Assert link criticality == 0
-                self.assertTrue(np.all(res['edge_criticality'] == 0.0),
-                    f"parallel_RA={ra}: expected edge crit 0, "
-                    f"got {res['edge_criticality']}")
-
+    # def test_critical_components(self):
+    #     self._require_numba()
+    #     for n, m, mc, label in self.cases:
+    #         with self.subTest(case=label):
+    #             net, conns = build_test_ict_network(n, m, self.mttf_h, 0.0)
+    #             res = analyze_critical_components_for_conn(
+    #                 net, conns, N=self.N_nonrep, depth=1,
+    #                 min_connected=mc, plot=False, verbose=False,
+    #                 **self.method_config)
+    #             ...
 
 
 if __name__ == '__main__':

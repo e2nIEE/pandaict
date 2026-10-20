@@ -16,31 +16,42 @@ from pandaict.utils.utils import get_elt_id_by_name, elt2uuid
 
 def _create_testnet(name, use_uuid=False):
     ict_net = create_empty_network(name, True)
-    node1 = create_ict_node(ict_net, use_uuid=use_uuid, name="Node1", node_type=NodeType.ROUTER, link_types=["Fiber", "LAN1000"])       
-    node2 = create_ict_node(ict_net, use_uuid=use_uuid, name="Node2", node_type=NodeType.ROUTER, link_types=["Fiber", "LAN1000", "ADSL8", "LTE50"])       
+    node1 = create_ict_node(ict_net, name="Node1", node_type=NodeType.ROUTER, link_types=["Fiber", "LAN1000"])       
+    node2 = create_ict_node(ict_net, name="Node2", node_type=NodeType.ROUTER, link_types=["Fiber", "LAN1000", "ADSL8", "LTE50"])       
     
-    (dconv1, aconv1) = create_ict_devapp(ict_net, use_uuid=use_uuid, name="Conv1", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
-    (dconv2, aconv2) = create_ict_devapp(ict_net, use_uuid=use_uuid, name="Conv2", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
-    (dconv3, aconv3) = create_ict_devapp(ict_net, use_uuid=use_uuid, name="Conv3", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
+    (dconv1, aconv1) = create_ict_devapp(ict_net, name="Conv1", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
+    (dconv2, aconv2) = create_ict_devapp(ict_net, name="Conv2", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
+    (dconv3, aconv3) = create_ict_devapp(ict_net, name="Conv3", device_type=DeviceType.CONVERTER, app_type=AppType.CONVERTER) 
     
-    (dcc, acc)    = create_ict_devapp(ict_net, use_uuid=use_uuid, name="CC", device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
-    (dpq1, apq1)  = create_ict_devapp(ict_net, use_uuid=use_uuid, name="PQ1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
-    (dpq2, apq2)  = create_ict_devapp(ict_net, use_uuid=use_uuid, name="PQ2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
-    (dsc, asc)    = create_ict_devapp(ict_net, use_uuid=use_uuid, name="SC", device_type=DeviceType.RTU, app_type=AppType.CLIENT)      
-    (dpc1, apc1)  = create_ict_devapp(ict_net, use_uuid=use_uuid, name="PC1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
-    (dpc2, apc2)  = create_ict_devapp(ict_net, use_uuid=use_uuid, name="PC2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)        
+    (dcc, acc)    = create_ict_devapp(ict_net, name="CC", device_type=DeviceType.SERVER, app_type=AppType.WEBSERVER) 
+    (dpq1, apq1)  = create_ict_devapp(ict_net, name="PQ1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
+    (dpq2, apq2)  = create_ict_devapp(ict_net, name="PQ2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
+    (dsc, asc)    = create_ict_devapp(ict_net, name="SC", device_type=DeviceType.RTU, app_type=AppType.CLIENT)      
+    (dpc1, apc1)  = create_ict_devapp(ict_net, name="PC1", device_type=DeviceType.RTU, app_type=AppType.CLIENT)  
+    (dpc2, apc2)  = create_ict_devapp(ict_net, name="PC2", device_type=DeviceType.RTU, app_type=AppType.CLIENT)        
                  
-    link1 = create_ict_link(ict_net, use_uuid=use_uuid, name="CC_Node1", link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)
-    link2 = create_ict_link(ict_net, use_uuid=use_uuid, name="Node1_Node2", link_type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
-    link3 = create_ict_link(ict_net, use_uuid=use_uuid, name="Node2_Conv1", link_type="ADSL8", from_elt=node2, to_elt=[dconv1], length_km=5)
-    link4 = create_ict_link(ict_net, use_uuid=use_uuid, name="Node2_Conv2", link_type="LTE50", from_elt=node2, to_elt=[dconv2], length_km=10)        
-    link5 = create_ict_link(ict_net, use_uuid=use_uuid, name="Node2_Conv3", link_type="ADSL8", from_elt=node2, to_elt=[dconv3], length_km=5)
-    link6 = create_ict_link(ict_net, use_uuid=use_uuid, name="Node2_PQ1", link_type="LAN1000", from_elt=node2, to_elt=[dpq1], length_km=0.01)
-    link7 = create_ict_link(ict_net, use_uuid=use_uuid, name="Node2_PQ2", link_type="LAN1000", from_elt=node2, to_elt=[dpq2], length_km=0.01)
-    link8 = create_ict_link(ict_net, use_uuid=use_uuid, name="Conv1_PC1", link_type="LAN1000", from_elt=dconv1, to_elt=[dpc1], length_km=0.01)
-    link9 = create_ict_link(ict_net, use_uuid=use_uuid, name="Conv2_PC2", link_type="RS485", from_elt=dconv2, to_elt=[dpc2], length_km=0.01)
-    link10 = create_ict_link(ict_net, use_uuid=use_uuid, name="Conv3_SC", link_type="Binary", from_elt=dconv3, to_elt=[dsc], length_km=0.001)            
-                
+    link1 = create_ict_link(ict_net, name="CC_Node1", link_type="LAN1000", from_elt=dcc, to_elt=[node1], length_km=0.01)
+    link2 = create_ict_link(ict_net, name="Node1_Node2", link_type="Fiber", from_elt=node1, to_elt=[node2], length_km=25)
+    link3 = create_ict_link(ict_net, name="Node2_Conv1", link_type="ADSL8", from_elt=node2, to_elt=[dconv1], length_km=5)
+    link4 = create_ict_link(ict_net, name="Node2_Conv2", link_type="LTE50", from_elt=node2, to_elt=[dconv2], length_km=10)        
+    link5 = create_ict_link(ict_net, name="Node2_Conv3", link_type="ADSL8", from_elt=node2, to_elt=[dconv3], length_km=5)
+    link6 = create_ict_link(ict_net, name="Node2_PQ1", link_type="LAN1000", from_elt=node2, to_elt=[dpq1], length_km=0.01)
+    link7 = create_ict_link(ict_net, name="Node2_PQ2", link_type="LAN1000", from_elt=node2, to_elt=[dpq2], length_km=0.01)
+    link8 = create_ict_link(ict_net, name="Conv1_PC1", link_type="LAN1000", from_elt=dconv1, to_elt=[dpc1], length_km=0.01)
+    link9 = create_ict_link(ict_net, name="Conv2_PC2", link_type="RS485", from_elt=dconv2, to_elt=[dpc2], length_km=0.01)
+    link10 = create_ict_link(ict_net, name="Conv3_SC", link_type="Binary", from_elt=dconv3, to_elt=[dsc], length_km=0.001)            
+    
+    if use_uuid:
+        aconv1 = elt2uuid(ict_net, aconv1)
+        aconv2 = elt2uuid(ict_net, aconv2)
+        aconv3 = elt2uuid(ict_net, aconv3)
+        acc = elt2uuid(ict_net, acc)
+        apc1 = elt2uuid(ict_net, apc1)
+        apq1 = elt2uuid(ict_net, apq1)
+        apc2 = elt2uuid(ict_net, apc2)
+        apq2 = elt2uuid(ict_net, apq2)
+        asc = elt2uuid(ict_net, asc)
+            
     try:
         create_ict_connection(ict_net, use_uuid=use_uuid, name="CC_Conv1", from_app=acc, to_app=aconv1, protocol="HTTP",
                                   info_items=[InfoItem.VALUE, InfoItem.ACK], 

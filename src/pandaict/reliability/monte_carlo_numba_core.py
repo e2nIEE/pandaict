@@ -288,11 +288,11 @@ def _lazy_connectivity_check(idx, event_count, event_threshold,
 # Core Simulation Loops
 # ------------------------------------------------------------------------------------------------------------------
 @njit
-def _run_cycle(n_edges, n_nodes, edge_state, node_state,
-               adj_offsets, adj_nodes, adj_edges,
-               lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,
-               source_idx, target_idx, min_connected,
-               max_events, max_time,
+def _run_cycle(n_edges, n_nodes, edge_state, node_state,						# topology, precomputed constants
+               adj_offsets, adj_nodes, adj_edges,								# topology, connections
+               lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,	# topology, rates
+               source_idx, target_idx, min_connected,							# connectivity
+               max_events, max_time,											# early stoppage
 		       analyze_crit, event_threshold):
     """
     Run one cycle until system connectivity flips from its initial state.
@@ -358,12 +358,12 @@ def _run_cycle(n_edges, n_nodes, edge_state, node_state,
 
 
 @njit
-def simulate_numba_core(depth,
-		                n_edges, n_nodes,
-                        adj_offsets, adj_nodes, adj_edges,
-                        lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,
-                        source_idx, target_idx, min_connected,
-                        max_events, max_time,
+def simulate_numba_core(depth,															# number of samples
+		                n_edges, n_nodes,												# topology, precomputed constants
+                        adj_offsets, adj_nodes, adj_edges,								# topology, connections
+                        lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr, bit,	# topology, rates
+                        source_idx, target_idx, min_connected,							# connectivity
+                        max_events, max_time,											# early stoppage
 		                analyze_crit, laziness):
     """
     Core simulation loop in Numba which simulates UP->DOWN - cycles for depth deep.
@@ -392,7 +392,7 @@ def simulate_numba_core(depth,
 
     n_events = n_edges + n_nodes
     if max_events == -1:
-        max_events = n_events * 300
+        max_events = n_events * 200
     if laziness < 0:
         print('Choose values in [0,1) for laziness')
         laziness = 0.0
@@ -428,16 +428,17 @@ def simulate_numba_core(depth,
                         val += n_events  # Repair-Offset
                     critical_components[crit_write_idx] = val
                     crit_write_idx += 1
+            #
 
     return results, critical_components[:crit_write_idx]
 
 
 @njit
-def simulate_numba_core_norepair(n_edges, n_nodes,
-		                        adj_offsets, adj_nodes, adj_edges,
-                                lam_edges_arr, lam_nodes_arr, bit,
-                                source_idx, target_idx, min_connected,
-		                        max_events, max_time,
+def simulate_numba_core_norepair(n_edges, n_nodes,												# topology, precomputed constants
+		                        adj_offsets, adj_nodes, adj_edges,								# topology, connections
+                                lam_edges_arr, lam_nodes_arr, bit, 								# topology, rates
+                                source_idx, target_idx, min_connected,							# connectivity
+		                        max_events, max_time,											# early stoppage
 		                        analyze_crit, laziness):
     """
     Simulate system lifetime for a non-repairable system (mu_i=0 for all i).
@@ -455,6 +456,7 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
     :OUTPUT:
         **t** - float, time until first system failure (MTTF sample)
     """
+    # TODO: implement laziness [DONE, check required]
 
     # Initialize states (all UP)
     edge_state = np.ones(n_edges, dtype=np.bool_)
@@ -462,7 +464,7 @@ def simulate_numba_core_norepair(n_edges, n_nodes,
 
     n_events = n_edges + n_nodes
     if max_events == -1:
-        max_events = n_events * 300 # 300 is a heuristic factor
+        max_events = n_events * 200
     if laziness < 0:
         print('Choose values in [0,1) for laziness')
         laziness = 0.0

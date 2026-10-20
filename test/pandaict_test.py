@@ -69,6 +69,6 @@ class PandaICT_Test(unittest.TestCase):
 
 if __name__ == '__main__':
     #pitest = PandaICT_Test()
-    #pitest.test_create()
+    #pitest.test_exceltools()
     unittest.main()
     

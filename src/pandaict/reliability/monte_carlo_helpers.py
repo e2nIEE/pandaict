@@ -53,63 +53,6 @@ def _check_initial_connectivity(G, sources, targets, min_connected):
                        f"but {min_connected} required. "
                        f"Disconnected: {disconnected_pairs[:3]}{'...' if len(disconnected_pairs) > 3 else ''}")
 
-def _rates_to_arrays(edge_list, node_list, lam_edges, lam_nodes, mu_edges, mu_nodes):
-    """Convert rate dictionaries to arrays aligned with edge/node lists."""
-    lam_edges_arr = np.array([lam_edges[e] for e in edge_list], dtype=np.float64)
-    lam_nodes_arr = np.array([lam_nodes[n] for n in node_list], dtype=np.float64)
-
-    n_edges = len(edge_list)
-    n_nodes = len(node_list)
-
-    mu_edges_arr = (np.zeros(n_edges, dtype=np.float64) if mu_edges is None
-                    else np.array([mu_edges[e] for e in edge_list], dtype=np.float64))
-    mu_nodes_arr = (np.zeros(n_nodes, dtype=np.float64) if mu_nodes is None
-                    else np.array([mu_nodes[n] for n in node_list], dtype=np.float64))
-
-    return lam_edges_arr, lam_nodes_arr, mu_edges_arr, mu_nodes_arr
-
-
-def _count_events(all_critical, n_events):
-    """
-    Split critical-event indices into failure and repair count vectors.
-
-    Returns (failure_counts, repair_counts, total_failure, total_repair),
-    or (None, None, 0, 0) when no valid events exist.
-    """
-    flat = all_critical.flatten()
-    valid = flat[flat >= 0]
-
-    if len(valid) == 0:
-        return None, None, 0, 0
-
-    failure_indices = valid[valid < n_events]
-    repair_indices  = valid[valid >= n_events] - n_events
-
-    failure_counts = np.zeros(n_events, dtype=np.float64)
-    repair_counts  = np.zeros(n_events, dtype=np.float64)
-
-    if len(failure_indices) > 0:
-        f_idx, f_cnt = np.unique(failure_indices, return_counts=True)
-        failure_counts[f_idx] = f_cnt
-
-    if len(repair_indices) > 0:
-        r_idx, r_cnt = np.unique(repair_indices, return_counts=True)
-        repair_counts[r_idx] = r_cnt
-
-    total_failure = np.sum(failure_counts)
-    total_repair  = np.sum(repair_counts)
-
-    return failure_counts, repair_counts, total_failure, total_repair
-
-
-def _expected_fractions(rates, n_events):
-    """Compute baseline event fractions from a rate array."""
-    total = np.sum(rates)
-    if total > 0:
-        return rates / total
-    return np.ones(n_events) / n_events
-
-
 def _normalize_connection_pairs(source, target):
     """
     Normalizes source/target to index-arrays of the same length.
