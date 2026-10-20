@@ -45,7 +45,7 @@ sonarqube-check:
     paths:
       - .sonar/cache
   before_script:
-    - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit    
+    - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
   script:
     - sonar-scanner -X
   allow_failure: true

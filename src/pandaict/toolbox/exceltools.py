@@ -24,11 +24,6 @@ from pandaict import __version__ as pandaict_version
 from pandaict import connectors_installed
 import pandas as pd
 
-class Sheetnames:    
-    ENUMS = "Custom Enums"
-    LINKTYPES = "Custom Linktypes"
-    PROTOCOLTYPES = "Custom Protocoltypes"
-
 def _get_metadata(wb):
     ws = wb['Metadata']
     md = {}
@@ -120,9 +115,9 @@ def _get_converted_value(rvalue, ctype, cname):
         elif cname in ["producer","payload_size_byte"]:
             rconv = _convert_prod_payload(rvalue)
         elif cname in ["prod_freq_ms"]:
-            rconv = _convert_prodfreq(ctype, rvalue)
+            rconv = _convert_prodfreq(ctype, rconv, rvalue)
         elif cname in ["bandwidth_Mbps", "latency_ms"]:
-            rconv = _convert_bw_lat(ctype, rvalue)
+            rconv = _convert_bw_lat(ctype, rconv, rvalue)
         elif cname in ["peers"]:
             speer1 = rvalue.split(";")[0].strip()
             speer2 = rvalue.split(";")[1].strip()
@@ -137,14 +132,14 @@ def _get_converted_value(rvalue, ctype, cname):
     return rconv
 
 
-def _convert_bw_lat(ctype, rvalue):
+def _convert_bw_lat(ctype, rconv, rvalue):
     if isinstance(rvalue, (int, float)):
         rconv = ctype([rvalue])
     else:
         rconv = ctype([float(ii.strip()) for ii in rvalue.split(",")])
     return rconv
 
-def _convert_prodfreq(ctype, rvalue):
+def _convert_prodfreq(ctype, rconv, rvalue):
     if isinstance(rvalue, (int, float)):
         rconv = ctype([rvalue])
     else:
@@ -293,11 +288,11 @@ def _evaluate_sheet(net, wb, sheetname):
         elif col_names!=[] and len(row)>0 and not all(c.value is None for c in rowarea):
             idx = row[0].value
             values = [r.value for r in rowarea]
-            if sheetname==Sheetnames.ENUMS:
+            if sheetname=="Custom Enums":
                 _add_enums(net, values)
-            elif sheetname==Sheetnames.LINKTYPES:
+            elif sheetname=="Custom Linktypes":
                 _add_linktypes(net, values+[True], col_names+['custom'])
-            elif sheetname==Sheetnames.PROTOCOLTYPES:
+            elif sheetname=="Custom Protocoltypes":
                 _add_protocoltypes(net, values+[True], col_names+['custom'])
             else:
                 conv_values = _convert_area(values, col_names, sheetname)
@@ -325,7 +320,7 @@ def from_excel(xlsfilename, do_inspection=True):
     net = _bulk_extend_net(net)
     net.name = md.get('name', "")
     
-    for sheetname in [Sheetnames.ENUMS, Sheetnames.LINKTYPES, Sheetnames.PROTOCOLTYPES, "Nodes", "Devices", "Links", "Connections", "Apps"]:
+    for sheetname in ["Custom Enums", "Custom Linktypes", "Custom Protocoltypes", "Nodes", "Devices", "Links", "Connections", "Apps"]:
         net = _evaluate_sheet(net, wb, sheetname)    
     passed = inspect(net, verbose=True) if do_inspection else True
     
@@ -356,40 +351,34 @@ def _convert_eltid_to_int(datatuple):
     else:
         return datatuple    
 
-def _to_xls_handle_tuple(dataitem):
-    if isinstance(dataitem[0], str):
-        _dataitem = _convert_eltid_to_int(dataitem)            
-        return str(_dataitem).replace("(","").replace(")","").replace("'","")
-    elif isinstance(dataitem[0], tuple):            
-        return str(dataitem).replace("),",";").replace("(","").replace(")","").replace("'","")
-    else:
-        return str(dataitem).replace("(","").replace(")","")
-
-def _to_xls_handle_list(dataitem):
-    if isinstance(dataitem[0], tuple):
-        _dataitem = _convert_eltid_to_int(dataitem[0])            
-        s = str(_dataitem).replace("[","").replace("]","").replace("'","")
-        s = s.replace("),",";").replace("(","").replace(", ",",")
-        if s[-1]==")":
-            s = s[:-1]
-        return s
-    elif isinstance(dataitem[0], str):
-        return str(dataitem).replace("[","").replace("]","").replace("'","")
-    elif isinstance(dataitem[0], (AppType, NodeType, DeviceType, InfoItem)):
-        s = [ii.name for ii in dataitem]
-        return str(s).replace("[","").replace("]","").replace("'","")
-    else:
-        return str(dataitem).replace("[","").replace("]","")
-
 def _to_xls_format(dataitem):
     if isinstance(dataitem, (AppType, NodeType, DeviceType, InfoItem)):
         return dataitem.name
     elif isinstance(dataitem, (bool, uuid.UUID)):
         return str(dataitem)
     elif isinstance(dataitem, tuple):
-        return _to_xls_handle_tuple(dataitem)
+        if isinstance(dataitem[0], str):
+            _dataitem = _convert_eltid_to_int(dataitem)            
+            return str(_dataitem).replace("(","").replace(")","").replace("'","")
+        elif isinstance(dataitem[0], tuple):            
+            return str(dataitem).replace("),",";").replace("(","").replace(")","").replace("'","")
+        else:
+            return str(dataitem).replace("(","").replace(")","")
     elif isinstance(dataitem, list):
-        return _to_xls_handle_list(dataitem)
+        if isinstance(dataitem[0], tuple):
+            _dataitem = _convert_eltid_to_int(dataitem[0])            
+            s = str(_dataitem).replace("[","").replace("]","").replace("'","")
+            s = s.replace("),",";").replace("(","").replace(", ",",")
+            if s[-1]==")":
+                s = s[:-1]
+            return s
+        elif isinstance(dataitem[0], str):
+            return str(dataitem).replace("[","").replace("]","").replace("'","")
+        elif isinstance(dataitem[0], (AppType, NodeType, DeviceType, InfoItem)):
+            s = [ii.name for ii in dataitem]
+            return str(s).replace("[","").replace("]","").replace("'","")
+        else:
+            return str(dataitem).replace("[","").replace("]","")
     else:
         return dataitem
 
@@ -401,14 +390,14 @@ def _fill_sheet(net, wb, sheetname):
                      "Links": ["name", "type", "in_service", "uuid", "from", "to", "length_km"],
                      "Connections": ["name", "in_service", "uuid", "from", "to", "protocol", "info_items", "peers", "producer", "prod_freq_ms"],
                      "Apps": ["name", "type", "in_service", "uuid", "device", "conversions"],
-                     Sheetnames.LINKTYPES: ["bandwidth_Mbps", "latency_ms", "wired", "protocols", "ber_per_km", "mtbf_h", "mttr_h", "uuid"],
-                     Sheetnames.PROTOCOLTYPES: ["base_package_size_byte", "info_items", "payload_size_byte", "uuid"]}
+                     "Custom Linktypes": ["bandwidth_Mbps", "latency_ms", "wired", "protocols", "ber_per_km", "mtbf_h", "mttr_h", "uuid"],
+                     "Custom Protocoltypes": ["base_package_size_byte", "info_items", "payload_size_byte", "uuid"]}
 
     data_to_rows = _update_data_to_rows(data_to_sheet, data_to_rows)
 
     row_data = []  
     match sheetname:
-        case Sheetnames.ENUMS:
+        case "Custom Enums":
             i = 0
             for enum_type in [NodeType, DeviceType, AppType, InfoItem]:
                 for en in enum_type.__members__.items():
@@ -416,10 +405,10 @@ def _fill_sheet(net, wb, sheetname):
                         row_data = [i, enum_type.__name__, en[0], en[1].value]
                         ws.append(row_data)
                         i+=1
-        case Sheetnames.LINKTYPES:
+        case "Custom Linktypes":
             ws = _append_customtypes(net, ws, data_to_rows[sheetname], 'link')
 
-        case Sheetnames.PROTOCOLTYPES:
+        case "Custom Protocoltypes":
             ws = _append_customtypes(net, ws, data_to_rows[sheetname], 'protocol')
         case _:    
             elt = data_to_sheet[sheetname]
@@ -427,7 +416,9 @@ def _fill_sheet(net, wb, sheetname):
             for i, ielt in net[elt].iterrows():
                 row_data = [i] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
                 ws.append(row_data)
+
     return True
+
 
 def _append_customtypes(net, ws, data_to_row, stype):
     i = 0
@@ -436,6 +427,7 @@ def _append_customtypes(net, ws, data_to_row, stype):
             pdata = []
             for prop in data_to_row:                
                 pdata += [_to_xls_format(ielt[prop]) if prop in ielt.keys() else None]
+            #row_data = [i, n] + [_to_xls_format(ielt[prop]) for prop in data_to_row]
             row_data = [i, n] + pdata
             ws.append(row_data)
             i += 1
@@ -484,7 +476,7 @@ def to_excel(ict_net, xlsfilename, template_path=None):
 
     _fill_metadata(ict_net, wb)
     passed = False
-    for sheetname in [Sheetnames.ENUMS, Sheetnames.LINKTYPES, Sheetnames.PROTOCOLTYPES, "Nodes", "Devices", "Links", "Connections", "Apps"]:
+    for sheetname in ["Custom Enums", "Custom Linktypes", "Custom Protocoltypes", "Nodes", "Devices", "Links", "Connections", "Apps"]:
         passed = _fill_sheet(ict_net, wb, sheetname)
         if not passed:
             msg = "Exceltools: problem while filling out "+sheetname+", network can not be saved to xlsx"

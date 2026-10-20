@@ -84,7 +84,7 @@ def build_series_network_with_rates(mttf_list, mttr_h=0.0):
         node_names - list of the K path-node names in mttf_list order, so the
                      caller can map criticality scores back to reference indices.
     """
-    net = pi.create_empty_network(name='serial_test_network')
+    net = pi.create_empty_network(name=f'serial_test_network')
 
     # create idealized (unfailing) link for test purposes
     pi.create_std_type(net, {'bandwidth_Mbps': (1000, 1000), 'latency_ms': 100, 'wired': True,
@@ -131,7 +131,7 @@ def build_parallel_network_with_rates(mttf_list, mttr_h=0.0):
         (ict_net, connections, node_names)
         node_names - list of the N path-node names in mttf_list order.
     """
-    net = pi.create_empty_network(name='parallel_test_network')
+    net = pi.create_empty_network(name=f'parallel_test_network')
 
     # create idealized (unfailing) link for test purposes
     pi.create_std_type(net, {'bandwidth_Mbps': (1000, 1000), 'latency_ms': 100, 'wired': True,

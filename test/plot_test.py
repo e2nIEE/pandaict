@@ -4,8 +4,10 @@ Created on 21.03.2024
 @author: gbanerjee
 '''
 
+from core_test import *
 from pandaict.networks.test_networks import create_testnet1
 from pandaict.plot import create_plot, __create_g__
+import PIL
 from PIL import Image, ImageChops
 import tempfile
 import os
@@ -58,28 +60,28 @@ class Plot_Test():
     
     def test_graph_dev(self, utest):
         net1 = create_testnet1()
-        g, _ = __create_g__(None, 'dev', net1)
+        G, edge_labels = __create_g__(None, 'dev', net1)
         
         # Iterate through nodes
-        for node_g, node_name in zip(g.nodes(), ['Node1', 'Node2', 'Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):
+        for node_g, node_name in zip(G.nodes(), ['Node1', 'Node2', 'Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):
             assert node_g  == node_name
 
         # Iterate through edges
-        for edge, edge_compare in zip(g.edges(), [('Node1', 'CC'), ('Node1', 'Node2'), ('Node2', 'Conv1'),
+        for edge, edge_compare in zip(G.edges(), [('Node1', 'CC'), ('Node1', 'Node2'), ('Node2', 'Conv1'),
                                     ('Node2', 'Conv2'), ('Node2', 'Conv3'), ('Node2', 'PQ1'), 
                                     ('Node2', 'PQ2'), ('Conv1', 'PC1'), ('Conv2', 'PC2'), ('Conv3', 'SC')]):
-            utest.assertTrue(edge == edge_compare)        
+           utest.assertTrue(edge == edge_compare)        
     
     def test_graph_app(self, utest):
         net1 = create_testnet1()
-        g, _ = __create_g__(None, 'app', net1)
+        G, edge_labels = __create_g__(None, 'app', net1)
         
         # Iterate through nodes
-        for node_g, node_name in zip(g.nodes(), ['Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):
+        for node_g, node_name in zip(G.nodes(), ['Conv1', 'Conv2', 'Conv3', 'CC', 'PQ1', 'PQ2', 'SC', 'PC1', 'PC2']):
             assert node_g  == node_name
 
         # Iterate through edges
-        for edge, edge_compare in zip(g.edges(), [('Conv1', 'CC'), ('Conv1', 'PC1'), ('Conv2', 'CC'), ('Conv2', 'PC2'), 
+        for edge, edge_compare in zip(G.edges(), [('Conv1', 'CC'), ('Conv1', 'PC1'), ('Conv2', 'CC'), ('Conv2', 'PC2'), 
                                                   ('Conv3', 'CC'), ('Conv3', 'SC'), ('CC', 'PQ1'), ('CC', 'PQ2')]):
            utest.assertTrue(edge == edge_compare)
            

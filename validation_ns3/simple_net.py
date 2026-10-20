@@ -2,6 +2,8 @@ import pandaict as pi
 import pandaict.diagnosis
 from pandaict.utils.utils import get_bandwidth_mbps
 from pandaict.plot import create_plot
+from pandaict.topology.routing import *
+from pandaict.utils.enums import *
 
 # //   Network Topology
 # //

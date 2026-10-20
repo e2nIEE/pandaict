@@ -27,7 +27,6 @@ from pandaict.reliability.reliability_helpers import (
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from plotly.matplotlylib import mpltools
 
 
 def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptables=False):
@@ -70,7 +69,7 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
             from_dev, to_dev = to_dev, from_dev
 
         if respect_iptables:
-            __modify_multidigraph_by_iptables(ict_net, mdg, to_dev)
+            __modify_multidigraph_by_iptables(ict_net, mdg, from_dev, to_dev)
 
         from_nxnode = __get_nx_node_for_elt(mdg, from_dev)
         to_nxnode   = __get_nx_node_for_elt(mdg, to_dev)
@@ -111,7 +110,7 @@ def plot_graph(ict_net, protocol='TCP',
                highlight_nodes=None, highlight_edges=None,
                edge_criticality=None, node_criticality=None,
                default_color='lightblue', highlight_color='red',
-               cmap=True, show_colorbar=True, seed=8, show=True):
+               cmap=True, show_colorbar=True, seed=8):
     """
     Plot a pandaict network as a graph with optional criticality-based color encoding.
     Converts the given pandaict network into a NetworkX MultiDiGraph and renders it
@@ -157,14 +156,11 @@ def plot_graph(ict_net, protocol='TCP',
 
         **seed** (int, default 8) - Random seed for the spring layout, ensuring
         reproducible node positions.
-        
-        **show** (bool, default True) - If True, displays the plot via matplotlib. 
-        Otherwise just returns the plot.
 
     :OUTPUT:
-        **plt** (matplotlib plot). 
+        None. Displays the plot via matplotlib.
 
-    .. note::        
+    .. note::
         The criticality scores can be obtained from
         :func:`analyze_critical_components_for_conn`. A score of 1 means the
         component fails exactly as often as expected. Scores above 1 indicate
@@ -252,10 +248,7 @@ def plot_graph(ict_net, protocol='TCP',
         cbar.ax.axhline(y=1, color='white', linewidth=2, linestyle='--')
 
     plt.tight_layout()
-    if show:
-        plt.show()
-
-    return plt 
+    plt.show()
 
 
 def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
@@ -288,14 +281,14 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
         See :ref:`mc_kwargs` for the full list.
 
     :EXAMPLE:
-        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], n=100_000)
+        >>> result = estimate_mtbf_mttr_for_conn(net, [conn_a], N=100_000)
         >>> print(f"MTBF = {result['mtbf_h']:.1f} h, MTTR = {result['mttr_h']:.1f} h")
         MTBF = 9200.4 h, MTTR = 5.8 h
     """
     # set default kwargs
     defaults = {
         'min_connected': -1,
-        'n': int(1e5),
+        'N': int(1e5),
         'depth': 200,
         'max_time': np.inf,
         'max_events': -1,
@@ -421,7 +414,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
 
     defaults = {
         'min_connected': -1,
-        'n': int(1e5),
+        'N': int(1e5),
         'depth': 200,
         'max_time': np.inf,
         'max_events': -1,
@@ -524,11 +517,11 @@ def analyze_critical_components_for_conn(ict_net, connections,
     }
 
 
-def empirical_reliability_function(ict_net, connections, t, **kwargs):
+def empirical_reliability_function(ict_net, connections, T, **kwargs):
     """
-    Estimate the reliability function R(t) for pandaict connections,
-    which describes the likelihood of system level survival longer that t.
-    Approximates R(t) = P(system lifetime > t) by generating first-failure-time
+    Estimate the reliability function R(T) for pandaict connections,
+    which describes the likelihood of system level survival longer that T.
+    Approximates R(T) = P(system lifetime > T) by generating first-failure-time
     samples via Monte-Carlo simulation and computing the empirical survival
     fraction at one or more time points.
 
@@ -539,13 +532,13 @@ def empirical_reliability_function(ict_net, connections, t, **kwargs):
         **connections** (list of tuple) - One or more connection(s) in pandaict 
         element notation.    
 
-        **t** (float or array-like of float) - Time point(s) in hours at which the
+        **T** (float or array-like of float) - Time point(s) in hours at which the
         reliability is evaluated. A scalar input returns a scalar; an array returns
         an array of the same length.
 
     :OUTPUT:
-        **R(t)** (float or np.ndarray) - If t is scalar, the reliability value R(t) in [0, 1]. \
-        If t is array-like, element-wise reliability values of the same length as t.
+        **R(T)** (float or np.ndarray) - If T is scalar, the reliability value R(T) in [0, 1]. \
+        If T is array-like, element-wise reliability values of the same length as T.
 
         Returns None if the simulation produced no valid samples.
 
@@ -558,21 +551,21 @@ def empirical_reliability_function(ict_net, connections, t, **kwargs):
     :EXAMPLE:
         Scalar evaluation:
 
-        >>> R = empirical_reliability_function(net, [conn_a], t=8760)
+        >>> R = empirical_reliability_function(net, [conn_a], T=8760)
         >>> print(f"R(1 year) = {R:.4f}")
         R(1 year) = 0.6321
 
         Vectorised evaluation over a time axis:
 
         >>> import numpy as np
-        >>> t = np.linspace(0, 50_000, 200)
-        >>> R = empirical_reliability_function(net, [conn_a], t=t, N=500_000)
+        >>> T = np.linspace(0, 50_000, 200)
+        >>> R = empirical_reliability_function(net, [conn_a], T=T, N=500_000)
         >>> R.shape
         (200,)
     """
     defaults = {
         'min_connected': -1,
-        'n': int(1e5),
+        'N': int(1e5),
         'max_time': np.inf,
         'max_events': -1,
         'laziness': 0,
@@ -592,23 +585,23 @@ def empirical_reliability_function(ict_net, connections, t, **kwargs):
 
     graph, sources, targets = _pandaict_to_mcnxgraph(ict_net, connections)
 
-    scalar_input = np.isscalar(t)
+    scalar_input = np.isscalar(T)
 
     if scalar_input:
         # use max_time speedup
-        config['max_time'] = t
+        config['max_time'] = T
 
     res = estimate_mttf_mttr(graph, sources, targets, **config)
 
     samples = res.get('mttf_samples')
 
     if samples is None or len(samples) == 0:
-        print('Warning: No valid MTTF samples obtained. Cannot estimate R(t).')
+        print('Warning: No valid MTTF samples obtained. Cannot estimate R(T).')
         return None
 
     # Handle scalar and array input uniformly
-    t_arr = np.atleast_1d(np.asarray(t, dtype=np.float64))
+    T_arr = np.atleast_1d(np.asarray(T, dtype=np.float64))
 
-    R = np.array([_empirical_reliability(t, samples) for t in t_arr])
+    R = np.array([_empirical_reliability(t, samples) for t in T_arr])
 
     return float(R[0]) if scalar_input else R

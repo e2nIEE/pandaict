@@ -28,27 +28,19 @@ def __df_to_json(df):
              
     return dfc.to_json()
 
-def __std_type_to_be_saved(save_std_types, save_custom_std_types, stkeys):
-    do_save = not((not save_std_types and save_custom_std_types and ("custom" not in stkeys)) 
-                  or (save_std_types and not save_custom_std_types and ("custom" in stkeys)))
-    return do_save  
-
-def __std_type_update_dict(dic, etype, stdtype):
-    if 'uuid' in dic[etype][stdtype].keys():            
-        if dic[etype][stdtype]['uuid'] is not None:                
-            dic[etype][stdtype].update({'uuid': str(dic[etype][stdtype]['uuid'])})                
-    if 'info_items' in dic[etype][stdtype].keys():            
-        dic[etype][stdtype].update({'info_items': [{'name': ii.name, 'value': ii.value} for ii in dic[etype][stdtype]['info_items']]})
-
 def __std_type_dict_to_json(di, save_std_types, save_custom_std_types):
     dic = copy.deepcopy(di)    
     for etype in di.keys():                
         for stdtype in di[etype].keys():
-            if not __std_type_to_be_saved(save_std_types, save_custom_std_types, di[etype][stdtype].keys()):                 
+            if ((not save_std_types and save_custom_std_types and ("custom" not in di[etype][stdtype].keys())) # save custom only
+                or (save_std_types and not save_custom_std_types and ("custom" in di[etype][stdtype].keys()))): # save non-custom only                
                 dic[etype].pop(stdtype)
                 continue                            
-            __std_type_update_dict(dic, etype, stdtype)            
-                               
+            if 'uuid' in dic[etype][stdtype].keys():            
+                if dic[etype][stdtype]['uuid'] is not None:                
+                    dic[etype][stdtype].update({'uuid': str(dic[etype][stdtype]['uuid'])})                
+            if 'info_items' in dic[etype][stdtype].keys():            
+                dic[etype][stdtype].update({'info_items': [{'name': ii.name, 'value': ii.value} for ii in dic[etype][stdtype]['info_items']]})                    
     return json.dumps(dic)
 
 def __custom_enums_to_json():

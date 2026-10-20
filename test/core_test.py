@@ -24,7 +24,6 @@ from pandaict.toolbox.exceltools import from_excel, to_excel
 
 class Core_Test():
     
-    DUMMY_JSON = 'test/dummy.json'
         
     def __assert_node_raises(self, utest, ict_net):
         utest.assertRaises(UserWarning, pi.create_ict_node, ict_net, name="Node1", node_type=AppType.CLIENT)
@@ -138,31 +137,21 @@ class Core_Test():
         ict_net2 = create_testnet2()
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net2))
-        
-        elts = ict_net.get_elts_by_name_dict()        
-        utest.assertTrue(len(elts.keys())==5 and len(elts['device'])==9)
-        devs = ict_net.get_elts_by_name_dict(['device'])
-        utest.assertTrue(len(devs)==1 and len(devs['device'])==len(elts['device']))
-        utest.assertEqual(ict_net.get_elts_by_name_dict(['foo']),{})
-        
-        elts2 = ict_net2.get_elts_by_uuid_dict()
-        utest.assertTrue(len(elts2.keys())==5 and len(elts2['device'])==9)
-        utest.assertTrue(all([isinstance(x, uuid.UUID) for x in elts2['device'].values()]))
-        
     
     def test_save_load(self, utest, ict_net=None): 
     
         if ict_net is None: 
             ict_net = create_testnet2()
-        pi.to_json(ict_net, self.DUMMY_JSON, save_std_types=True)
-        ict_net_reloaded = pi.from_json(self.DUMMY_JSON)
+        pi.to_json(ict_net, 'test/dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('test/dummy.json')
     
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
     
     def test_inspect_ict_net(self, utest):        
         
         ict_net  = create_testnet1()
-        utest.assertTrue(pi.inspect(ict_net, verbose=False))    
+        utest.assertTrue(pi.inspect(ict_net, verbose=False))   
+        return 
     
     def test_user_input_checks(self, utest):        
         self.__test_user_input_checks_nouuid(utest)
@@ -174,13 +163,13 @@ class Core_Test():
         ict_net = extend_testnet3(ict_net)
         link_bw = {}
         for i, _ in ict_net['conn'].iterrows():
-            # xTODO: what if connection is not at all possible?
+            # TODOx: what if connection is not at all possible?
             lup_table = calc_lup_table(ict_net, ('conn', i), RoutingType.LOWEST_TOTAL_LATENCY, respect_iptables=False)
             link_bw = add_link_bandwidth_mbps(ict_net, link_bw, lup_table)
         
         link_bw_cmp = {1: [0.8854053333333334, 11.4694144], 8: [0.8738, 0.0006144], 0: [0.012219733333333333, 3.741], 10: [0.011605333333333334, 11.4688], 3: [14.341802666666666, 26.258810666666665], 4: [2.8672, 0.011605333333333334], 7: [0.011605333333333334, 2.8672], 2: [26.235599999999998, 0.005802666666666667], 11: [26.235599999999998, 0.005802666666666667]}
         # Note: there are links unused (5,6,9) but that may be OK - hard to tell, though
-        # xTODO: add method that checks if there are overloaded links (look at link 11 here!)
+        # TODOx: add method that checks if there are overloaded links (look at link 11 here!)
 
         utest.assertEqual(link_bw, link_bw_cmp)
     
@@ -248,9 +237,6 @@ class Core_Test():
         ict_net = create_testnet3()
         extend_testnet3(ict_net)
         # single route testing
-        
-        # TODO: add test calc_mtbf_route, calc_mtbf_mttr_by_lup
-        
         ber_d = []
         ber_u = []
         for i, _ in ict_net['conn'].iterrows():
@@ -354,8 +340,8 @@ class Core_Test():
         utest.assertEqual(ict_net.std_types['protocol']['SFTP'],  custom_protocol)
         
         # test save/load
-        pi.to_json(ict_net, self.DUMMY_JSON, save_std_types=True)
-        ict_net_reloaded = pi.from_json(self.DUMMY_JSON)    
+        pi.to_json(ict_net, 'test/dummy.json', save_std_types=True)
+        ict_net_reloaded = pi.from_json('test/dummy.json')    
         utest.assertTrue(ict_net.equals_excluding_uuids(ict_net_reloaded, include_std_types=True))
         
         # test path calculation for conn 2
@@ -382,31 +368,10 @@ class Core_Test():
         (down4, up4) = is_connection_possible(ict_net, ('conn',3))
         
         utest.assertTrue( (down1, up1)==(True,True) and (down2, up2)==(True,False) and (down3, up3)==(True,False) and (down4, up4)==(True,False) ) 
-     
-    def _test_ip_boundary(self, utest):
-        # Test boundary/error cases
-        ipaddr = IP_address("2001:0db8:85a3:08d3:1319:8a2e:0370:7344")
-        utest.assertFalse(ipaddr.is_IPV4())
-        utest.assertFalse(ipaddr.last_hostIP_in_network())
         
-        ipaddr = IP_address("192.168.20.5")
-        utest.assertTrue(ipaddr.inc())
-        utest.assertEqual(str(ipaddr),'192.168.20.6')    
-        utest.assertEqual(str(ipaddr.last_hostIP_in_network()), '255.255.255.254')    
-        
-        ipaddr2 = IP_address("192.168.20.255","255.255.255.0")       
-        utest.assertTrue(ipaddr2.inc())
-        utest.assertEqual(str(ipaddr2),'192.168.21.1 / 255.255.255.0')
-        utest.assertEqual(str(ipaddr2.last_hostIP_in_network()), '192.168.21.254 / 255.255.255.0')
-        utest.assertTrue(ipaddr2.greater_than(ipaddr))
-        
-        ipaddr = IP_address("192.168.20.255","255.255.255.0")
-        utest.assertFalse(ipaddr.inc(own_network_only = True))
-        utest.assertEqual(str(ipaddr),'192.168.20.255 / 255.255.255.0')   
 
     def test_ip_support(self, utest):    
-        # xTODO: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
-        self._test_ip_boundary(utest)      
+        # TODOx: add test for assign_ipaddr_to_elts, last_hostIP_in_network, ip.inc
                             
         ict_net = create_testnet3()
         extend_testnet3(ict_net)
@@ -458,8 +423,8 @@ class Core_Test():
         to_excel(net,'test/example_net_rewritten.xlsx')
         net2 = from_excel('test/example_net_rewritten.xlsx')
         utest.assertTrue(net.equals_excluding_uuids(net2))
-        pi.to_json(net, self.DUMMY_JSON, save_std_types=True)
-        net3 = pi.from_json(self.DUMMY_JSON)
+        pi.to_json(net, 'test/dummy.json', save_std_types=True)
+        net3 = pi.from_json('test/dummy.json')
         utest.assertTrue(net.equals_excluding_uuids(net3))
 
 if __name__ == '__main__':

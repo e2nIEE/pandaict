@@ -69,12 +69,12 @@ def __check_lup_prob_sum_lt_one(lup_table, downstream):
         return False 
     return True 
 
-def _get_lam_mu_from_graph(nxg):
+def _get_lam_mu_from_graph(G):
     """Extract failure and repair rates from graph attributes"""
     lam_edges, mu_edges = {}, {}
     lam_nodes, mu_nodes = {}, {}
 
-    for e in nxg.edges(data=True):
+    for e in G.edges(data=True):
         u, v, edata = e
         mttf_h = edata.get('mttf_h', 0)
         lam = 0 if mttf_h == 0 else 1 / mttf_h
@@ -84,7 +84,7 @@ def _get_lam_mu_from_graph(nxg):
         mu = 0 if mttr_h == 0 else 1 / mttr_h
         mu_edges[(u, v)] = mu
 
-    for n in nxg.nodes(data=True):
+    for n in G.nodes(data=True):
         u, ndata = n
         mttf_h = ndata.get('mttf_h', 0)
         lam = 0 if mttf_h == 0 else 1 / mttf_h

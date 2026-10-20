@@ -10,16 +10,6 @@ import uuid
 from pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
 
-def _check_required(data, element):
-    if element == "link":
-        required = ["bandwidth_Mbps", "latency_ms", "wired"]
-    elif element == "protocol":
-        required = ["base_package_size_byte", "info_items"]
-    else:
-        raise ValueError("Unkown element type %s" % element)
-    for par in required:
-        if par not in data:
-            raise UserWarning("%s is required as %s type parameter" % (par, element))
 
 def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=True, check_required=True):
     """
@@ -54,8 +44,15 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
         raise UserWarning("type data has to be given as a dictionary of parameters")
 
     if check_required:
-        _check_required(data, element)
-        
+        if element == "link":
+            required = ["bandwidth_Mbps", "latency_ms", "wired"]
+        elif element == "protocol":
+            required = ["base_package_size_byte", "info_items"]
+        else:
+            raise ValueError("Unkown element type %s" % element)
+        for par in required:
+            if par not in data:
+                raise UserWarning("%s is required as %s type parameter" % (par, element))
     stdict = ict_net.std_types[element]
     if overwrite or name not in stdict:
         if custom:
