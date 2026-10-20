@@ -1,9 +1,10 @@
 '''
-Created on 30.01.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+Created on 30.01.2024
+
+@author: jringelstein
 '''
 
 from pandaict.auxiliary import pandaICTNet
@@ -63,7 +64,6 @@ def __get_conn_structure():
         ("uuid", dtype(object)), 
         ("from", "u4"), 
         ("to", "u4"), 
-        ("protocol", dtype(object)),
         ("info_items", dtype(object)), 
         ("peers", dtype(object)), 
         ("producer", dtype(object)), 

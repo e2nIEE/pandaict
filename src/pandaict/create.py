@@ -1,9 +1,10 @@
 '''
-Created on 30.01.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+Created on 30.01.2024
+
+@author: jringelstein
 '''
 
 from pandaict.auxiliary import pandaICTNet
@@ -100,8 +101,8 @@ def __create_ict_node_check__(ict_net, node_type, index, uid, geodata, link_type
         if isinstance(geodata, dict):
             if "type" not in geodata.keys() or "coordinates" not in geodata.keys():
                 raise UserWarning("geodata must contain 'type' and 'coordinates' keys") 
-        elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):
-            raise UserWarning("geodata must be (float, float) tuple or geojson")
+        elif not isinstance(geodata, tuple) or len(geodata) != 2 or not isinstance(geodata[0], float) or not isinstance(geodata[0], float):         
+            raise UserWarning("geodata must be (float, float) tuple or geojson")                 
     __create_std_type_check(ict_net, link_types, (str), 'link', allow_list=True)
     __check_uuid(ict_net, uid) 
 
@@ -123,16 +124,15 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
         **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
-        **in_service** (boolean, default True) - True if node is in service, False if out of service
+        **in_service** (boolean, default True) - True for in_service or False for out of service
 
-        **use_uuid** (boolean, default False) - Set True if uuids shall be used. If False, pandaict element notation is used. 
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used 
         
         **uid** (UUID4 or string, default None) - user-selected uuid for this node (must not be used in this network yet)
         
         **geodata** ((x,y)-tuple or GeoJSON Point, default None) - coordinates used for plotting
         
-        **link_types** (aenum, default None) - link types supported by the node. Standard link types can be used. \
-            None means that all link types are supported.
+        **link_types** (aenum, default None) - link types supported by the node. Standard link types can be used. 
        
         **ber** (float, 0) - Bit error rate for this node, in p.u.
 
@@ -161,7 +161,7 @@ def create_ict_node(ict_net, name=None, node_type=None, index=None, in_service=T
 
     __preserve_dtypes(ict_net.node, dtypes)
     
-    return ruuid if use_uuid else ('node', int(index))
+    return ruuid if use_uuid else ('node', index)
 
 def __create_ict_link_check_uuid(ict_net, from_elt, to_elt, uid):
     
@@ -208,9 +208,9 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
         **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
-        **in_service** (boolean, default True) - True for in service or False for out of service.
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
 
-        **use_uuid** (boolean, default False) - True if uuids shall be used; if False, pandaict element notation is used. 
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used. 
         
         **uid** (UUID4 or string, default None) - user-selected uuid for this link (must not be used in this network yet).
         
@@ -254,7 +254,7 @@ def create_ict_link(ict_net, from_elt, to_elt, name=None, link_type=None, index=
 
     __preserve_dtypes(ict_net.link, dtypes)
 
-    return ruuid if use_uuid else ('link', int(index))
+    return ruuid if use_uuid else ('link', index)
 
 def __create_device_check(ict_net, device_type, uid):
     
@@ -282,9 +282,9 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
         **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
-        **in_service** (boolean, default True) - True for in service or False for out of service
+        **in_service** (boolean, default True) - True for in_service or False for out of service
 
-        **use_uuid** (boolean, default False) - True if uuids shall be used; if False, pandaict element notation is used 
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used 
         
         **uid** (UUID4 or string, default None) - user-selected uuid for this device (must not be used in this network yet)            
         
@@ -312,7 +312,7 @@ def create_ict_device(ict_net, name=None, device_type=None, index=None, in_servi
 
     __preserve_dtypes(ict_net.device, dtypes)
 
-    return ruuid if use_uuid else ('device', int(index))
+    return ruuid if use_uuid else ('device', index)
      
 def __create_app_check_conversion(ict_net, cn, name):
     if not isinstance(cn, tuple):
@@ -345,14 +345,12 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
     """
     Adds one app in table ict_net["app"].
 
-    Apps are end-to-end communication endpoints. Each app runs on exactly one device. Apps are connected by connections
+    Apps are end-to-end communication endpoints on application-level. Each app runs on exactly one device. Apps are connected by connections
     for transmission of information items. A special type of app is the Converter app, which translates between different protocols
     and must run on a Converter-type device.  
     
     :INPUT:
-        **ict_net** (pandaictNet) - The pandaict network in which the app is created.
-        
-        **device** (int, default None) - Index in device table, referencing the device this app runs on.    
+        **ict_net** (pandaictNet) - The pandaict network in which the app is created.    
 
     :OPTIONAL:
         **name** (string, default None) - the name for this app.
@@ -362,15 +360,16 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
         **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
-        **in_service** (boolean, default True) - True for in service or False for out of service.
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
 
-        **use_uuid** (boolean, default False) - True if uuids shall be used; if False, pandaict element notation is used. 
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used. 
         
         **uid** (UUID4 or string, default None) - user-selected uuid for this app (must not be used in this network yet).            
         
         **conversions** (list of (string,string) tuple, default None) - List of protocol pairs the app is converting between \
             (Only for Converter type app).
-                
+        
+        **device** (int, default None) - Index in device table, referencing the device this app runs on.
 
     :OUTPUT:
         **elt** ((str,int) or UUID4) - The unique ID of the created element. If use_uuid==False, pandaict element notation is used, \
@@ -398,7 +397,7 @@ def create_ict_app(ict_net, name=None, app_type=None, index=None, in_service=Tru
 
     __preserve_dtypes(ict_net.app, dtypes)
 
-    return ruuid if use_uuid else ('app', int(index))
+    return ruuid if use_uuid else ('app', index)
 
 def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_service=True, use_uuid=False,            
                       conversions=None, mtbf_h=0, mttr_h=0 ):
@@ -419,9 +418,9 @@ def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_se
 
         **app_type** (aenum, default None) - the app type. Use an APP_TYPE aenum. 
                 
-        **in_service** (boolean, default True) - True for in service or False for out of service.
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
 
-        **use_uuid** (boolean, default False) - True if uuids shall be used; if False, pandaict element notation is used.            
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used.            
         
         **conversions** (list of (string,string) tuple, default None) - List of protocol pairs the app is converting between \
             (Only for Converter type app).
@@ -435,7 +434,7 @@ def create_ict_devapp(ict_net, name=None, device_type=None, app_type=None, in_se
             notation is used, otherwise uuids are returned.
 
     :EXAMPLE:
-        create_ict_devapp(net, name = "PowerMeter1")
+        create_ict_app(net, name = "PowerMeterApp1", device=0)
     """
     
     dev = create_ict_device(ict_net, name=name, device_type=device_type, in_service=in_service, use_uuid=use_uuid, mtbf_h=mtbf_h, mttr_h=mttr_h)    
@@ -485,17 +484,11 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     """
     Adds one connection in table ict_net["conn"].
 
-    Connections represent end-to-end ICT connections between apps. Information items are transmitted over connections using 
+    Connections represent end-to-end ICT connections between apps. Information Items are transmitted over connections using 
     protocols, and may be physically routed through multiple links and nodes.  
 
     :INPUT:
-        **ict_net** (pandaictNet) - The pandaict network in which the connection is created      
-        
-        **from_app** ((string,int) or UUID4, default None) - connection start element, in pandaict element notation if use_uuid == False, \
-            else as UUID. Element type must be app.     
-        
-        **to_app** ((string,int) or UUID4, default None) - connection end element, in pandaict element notation if use_uuid == False, \
-            else as UUID. Element type must be app.  
+        **ict_net** (pandaictNet) - The pandaict network in which the connection is created        
         
     :OPTIONAL:
         **name** (string, default None) - The name for this connection.
@@ -503,11 +496,17 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
         **index** (int, default None) - Force a specified list index if it is available. If None, the \
             index one higher than the highest already existing index is selected.
 
-        **in_service** (boolean, default True) - True for in service or False for out of service.
+        **in_service** (boolean, default True) - True for in_service or False for out of service.
 
-        **use_uuid** (boolean, default False) - True if uuids shall be used; if False, pandaict element notation is used. 
+        **use_uuid** (boolean, default False) - True if uuids shall be used; if false, pandaict element notation is used. 
         
-        **uid** (UUID4 or string, default None) - user-selected uuid for this connection (must not be used in this network yet).            
+        **uid** (UUID4 or string, default None) - user-selected uuid for this connection (must not be used in this network yet).
+        
+        **from_app** ((string,int) or UUID4, default None) - connection start element, in pandaict element notation if use_uuid == False, \
+            else as UUID. Element type must be app.     
+        
+        **to_app** ((string,int) or UUID4, default None) - connection end element, in pandaict element notation if use_uuid == False, \
+            else as UUID. Element type must be app.
             
         **protocol** (string, default None) - Protocol to be used for this connection. A standard protocol type may be used. \
             Note: a connection uses exactly one protocol. End-to-end communication using multiple protocols need multiple connections \
@@ -516,11 +515,11 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
         **info_items** (list of aenum, default None) - Information items transmitted by the connection. Use INFO_ITEM type aenum. 
         
         **peers** (2-tuple of (string,int) or UUID4, default None) - element identifiers of non-converter type apps that are communication endpoints. \
-            The pair refers to the app that originally produces information items, and the one which finally receives them. \
+            The pair refers to the app that originally produces Information Items, and the one which finally receives them. \
             If these communicate using different protocols, there are multiple connections and at least one converter-type app in between, \
             but the **peers** field is the same for all involved connections.    
         
-        **producer** (list of <0 or 1>) - Indicates producers of information items. If **producer[n]** is 0, this means the info_items[n] is \
+        **producer** (list of <0 or 1>) - Indicates producers of info_items. If **producer[n]** is 0, this means the info_items[n] is \
             produced by peers[0]. If **producer[n]** is 1, this means the info_items[n] is \
             produced by peers[1]. 
         
@@ -577,5 +576,5 @@ def create_ict_connection(ict_net, name=None, index=None, in_service=True, use_u
     
     __preserve_dtypes(ict_net.conn, dtypes)
 
-    return ruuid if use_uuid else ('conn', int(index))
+    return ruuid if use_uuid else ('conn', index)
 

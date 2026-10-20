@@ -44,17 +44,15 @@ sonarqube-check:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
-  before_script:
-    - keytool -v -importcert -noprompt -alias sonar -file $SONAR_CRT -keystore ${JAVA_HOME}/lib/security/cacerts -storepass changeit
   script:
-    - sonar-scanner -X
+    - sonar-scanner
   allow_failure: true
   only:
     - develop
 
 unit-test:
     image: python:3.12.2
-    stage: test
+    stage: test       
     script:
      - pip install -r requirements.txt
      - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
@@ -77,36 +75,23 @@ pages:
    - leitwarte_iee
   image: python:3.10.0
   stage: pages
-  before_script:
-  - apt-get update -y
   script:
-  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash - 
-  - apt-get install -y nodejs
   - export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/
   - pip install -U sphinx
   - pip install -r requirements.txt
-  - sphinx-build -b html doc/sphinx/source public/sphinx
-  - pip install "jupyter-book<2.0"
-  - pip install pandapower
+  - sphinx-build -b html doc/sphinx/source public/pandaict
+  - pip install jupyter-book
   - python doc/jupyter/pandaict/convert_attachements.py
-  - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/  
-  after_script:
-  - more /tmp/sphinx-err-*.log
+  - jupyter-book build doc/jupyter/pandaict/ --path-output public/jupyter/
   artifacts:
     paths:
     - public
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-    - if: $CI_COMMIT_BRANCH == "main"
 
-create_artifact_gitlab_nexus:
+
+create_artifact_gitlab_nexus::
   image: python:3.9
   tags: 
    - leitwarte_iee
-  only:
-    - tags # only runs if version is tagged
-  except:
-    - branches # not on branches
   stage: deploy
   script:    
     - pip install virtualenv
@@ -118,10 +103,7 @@ create_artifact_gitlab_nexus:
     - export CURL_CA_BUNDLE=""
     - echo "$PYPIRC_CFG_GITLAB" > ~/.pypirc
     - twine upload --config-file ~/.pypirc -r gitlab dist/* --verbose    
-    - echo "$PYPIRC_CFG_NEXUS" > ~/.pypirc    
     - twine upload --config-file ~/.pypirc -r nexus dist/*
   artifacts:
     paths:
       - dist/*.whl
-
-

@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on 6.03.2024
-@author: gbanerjee
+Created on Wed Mar  6 11:34:37 2024
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+@author: gbanerjee
 """
 
 import networkx as nx
@@ -14,41 +12,46 @@ import matplotlib.pyplot as plt
 
 
 
-def create_plot(net, draw_type='dev', custom_icons=None):    
+def create_plot(net, draw_type='dev', custom_icons=None):
+    
     """
     Create a plot.
-
+    
     :INPUT:
         **net** - The network to be plotted.
-
-        **draw_type** (string) - The type of drawing to be created. There are two possibilities: 'dev' and 'app'. \
-            'dev': plotting all devices and nodes as well as links in the ICT grid (physical view) \
-            'app': plotting all apps and connections in the ICT grid (logical view).
         
-    :OPTIONAL:
-        **custom_icons** (dict, default None) - A dictionary of custom icons to be used in the plot. If None, standard icons are used.                              
+        **draw_type** (string) - The type of drawing to be created. There are two possibilities, i.e., 'dev' and 'app'.\n
+         'dev': plotting all devices and nodes in the ICT grid and all the elemnets are connected via 'link' (physical view)\n
+         'app': plotting all apps in the ICT grid and all the end-to-end elements are connected via connection 'conn' (logical view).
+        
+        **custom_icons** (dict, optional) - A dictionary of custom icons to be used in the plot. Defaults to None.\n
+        Example:\n
+            "node": "icons/router.png",\n
+            "app":  "icons/app.png",\n
+            "device": "icons/device.png",\n
+            "converter": "icons/convert.png",
     
+            
     :OUTPUT:
-        **plot** -  The pyplot figure object.                 
+        **plot** -  The pyplot figure object.
+        
+     
+    :OPTIONAL: custom_icons to be used as optional
               
     :EXAMPLE:
-        ::
+    ::
             
-            import networkx as nx
-            import matplotlib.pyplot as plt
-    
-            cicons = {"node": "icons/router.png",
-                      "app":  "icons/app.png",
-                      "device": "icons/device.png",
-                      "converter": "icons/convert.png"}
-                
-            # Plot the graph for dev
-            plot = create_plot(net, draw_type='dev', custom_icons=cicons)
-            plot.show()
-            
-            # Plot the graph for app
-            plot = create_plot(net, draw_type='app', custom_icons=cicons)
-            plot.show()
+        import networkx as nx
+        import matplotlib.pyplot as plt
+
+
+        # Plot the graph for dev
+        plot = create_plot(net, draw_type='dev', custom_icons=None)
+        plot.show()
+        
+        # Plot the graph for app
+        plot = create_plot(net, draw_type='app', custom_icons=None)
+        plot.show()
         
     """    
     g, edge_labels = __create_g__(custom_icons, draw_type, net)        
@@ -179,7 +182,8 @@ def __create_graph__(draw_type, images, net):
 
 def __get_icons__(custom_icons):
     icons = {}
-    if custom_icons is not None:    
+    if custom_icons is not None:
+    # hier relative Pfade BR ToDo
         icons = custom_icons
     else:
         import os

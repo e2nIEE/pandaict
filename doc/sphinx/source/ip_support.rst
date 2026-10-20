@@ -1,4 +1,3 @@
-.. 	@author: jringelstein	
 .. _ip_support:
 
 ###################################

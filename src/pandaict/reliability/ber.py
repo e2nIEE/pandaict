@@ -1,9 +1,10 @@
 '''
-Created on 30.01.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+Created on 30.01.2024
+
+@author: jringelstein
 '''
 
 from pandaict.utils.utils import uuid2elt, get_elts_any, to_elt, get_values_for_links
@@ -17,13 +18,12 @@ def calc_ber_route(ict_net, links):
     """
     Calculate bit error rate (ber) along a route given by a list of links.    
     Links and nodes along the route are handled as a serial system and total ber is calculated accordingly.  
-    Note: the first and last link in the list must be connected to a device by its "from" or "to" parameter.
-    Note: the link list may be obtained from a LUP table calculation.
+    Note: the link list may be obtained from a LUP table calculation.    
     
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **links** (list of tuple) - list of links that define the route, in pandaict element notation            
+        **links** (list of tuple) - list of links that define the route, in pandaICT element notation            
                             
     :OUTPUT:
         **ber_total** (float) - ber of serial system consisting of links and nodes along the route 
@@ -51,7 +51,7 @@ def calc_ber_route(ict_net, links):
             if ber_link is not None:
                 ber_route *= 1-ber_link
             break            
-        else: # update total
+        else: # update total  MTBF and MTTR
             if ber_link is not None:
                 ber_route *= 1-ber_link
             if ber_node is not None:
@@ -83,11 +83,8 @@ def calc_ber_by_lup(ict_net, lup_table, downstream=True):
     :EXAMPLE:
         Note: this calculates the total ber for connection id 1 in the upstream direction.
         
-        ::  
-      
-            lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
-            calc_ber_by_lup(ict_net, lup_table, downstream=False)
-        
+        lup_table = calc_lup_table(ict_net, ('conn', 1), RoutingType.LOWEST_TOTAL_LATENCY)
+        calc_ber_by_lup(ict_net, lup_table, downstream=False)
     """
     
     ber_conn_total = 0

@@ -1,9 +1,10 @@
 '''
-Created on 22.08.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+Created on 22.08.2024
+
+@author: jringelstein
 '''
 
 import pandas as pd
@@ -20,7 +21,7 @@ pd.set_option('display.expand_frame_repr', False)
 
 def init_extend_network(ict_net):    
     """
-    Prepares extending existing pandaict network by IP-specific information by adding additional data to nodes and devices, \
+    Prepares extending existing pandaICT network by IP-specific information by adding additional data to nodes and devices \
         and adding a new data structure ("iptables") for the routing tables.  
 
     :INPUT:
@@ -38,17 +39,17 @@ def init_extend_network(ict_net):
 
 def __get_ipaddr_by_element(ict_net, e):
     if e[0]=='device':
-        return [ict_net.device.loc[e[1]].ip_addr]
+        return [ict_net.device.iloc[e[1]].ip_addr]
     elif e[0]=='node':
-        return ict_net.node.loc[e[1]].ip_addr
+        return ict_net.node.iloc[e[1]].ip_addr
     else:
         return None
     
 def __get_netmask_by_element(ict_net, e):
     if e[0]=='device':
-        return [ict_net.device.loc[e[1]].netmask]
+        return [ict_net.device.iloc[e[1]].netmask]
     elif e[0]=='node':
-        return ict_net.node.loc[e[1]].netmask
+        return ict_net.node.iloc[e[1]].netmask
     else:
         return None
     
@@ -139,7 +140,7 @@ def assign_ipaddr_to_elt(ict_net, elt, ip, netmask=None):
         ict_net.device.at[elt[1],'ip_addr'] = ip
         ict_net.device.at[elt[1],'netmask'] = netmask
     elif elt[0]=='node':
-        t = ict_net.node.loc[elt[1]]['type']
+        t = ict_net.node.iloc[elt[1]]['type']
         if t is not NodeType.ROUTER:
             raise UserWarning("Node_elt "+str(elt)+" is "+str(t)+", must be router-type node")
         else:
@@ -167,32 +168,32 @@ def _get_cur_last_ip(start_ip, end_ip, ip_range, netmask):
     
 def assign_ipaddr_to_elts(ict_net, eltlist, start_ip=None, end_ip=None, netmask=None, ip_range=None):
     """
-    Subsequently assigns IP addresses to nodes and devices in eltlist using given address range.  
-    Elements must be router-type nodes or devices. Other element types are ignored. 
+    Subsequently assigns IP addresses to nodes and devices in eltlist using given address range  
+    Elements need to be router-type nodes or devices. Other element types are ignored. 
     The IP address range to be used can be given explicitly (start end end IP address) or using CIDR notation.
         
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **eltlist** (list of tuple) - list of elements in pandaict elements notation. Elements other than devices or nodes are ignored.  
+        **eltlist** (list of tuple) - list of elements in pandaICT elements notation. Elements other than devices or nodes are ignored.  
         
         **start_ip** (string) - IP to assign to the first element in eltlist. May use CIDR notation, where mask is used as netmask \
-            overriding the **netmask** parameter. 
+            overriding the netmask parameter. 
             
     :OPTIONAL:    
         **end_ip** (string) - Last IP in usable address range. May use CIDR notation but mask is ignored. Only respected \
             if start_ip is used. If start_ip contains a mask (cidr notation), end_ip is ignored but the ip range comprises \
-            start_ip to the highest host ip in the same IP network.
+            start_ip to the highest host ip in the same IP network
         
         **ip_range** (string) - Alternative option for IP address range. IP in CIDR notation. The address range comprises the whole IP subnet \
             indicated by this. E.g. ip_range=10.0.0.1/24 translates to start_ip=10.0.0.1, end_ip=10.0.0.254
             
-        **netmask** (string) - Netmask, which is also assigned to elements. If **start_ip** is given in CIDR notation or **ip_range** is used, \
+        **netmask** (string) - Netmask, which is also assigned to elements. If start_ip is given in CIDR notation or ip_range is used, \
             this parameter will be ignored but instead the mask from start_ip/ip_range is used. 
                             
     :OUTPUT:
-        **(complete, next_free_ip)** (boolean, string) - If **complete** is True, all elements in the list (except invalid ones) were assigned an IP. If False, \
-            the IP address range was insufficient for that. **next_free_ip** is the next IP within the address range that was not assigned to an element. \
+        **(complete, next_free_ip)** (boolean, string) - If complete is True, all elements in the list (except invalid ones) were assigned an IP. If False, \
+            the IP address range was insufficient for that. next_free_ip is the next IP within the address range that was not assigned to an element. \
             It is None if the address range was fully used.    
 
     :EXAMPLE:
@@ -247,7 +248,7 @@ def _get_neighbour_ips_and_ports(ict_net, ne, our_node, node_elt, neighbour_ips,
     their_elt = get_elt(ict_net, ne)
     # get linktypes between us and neighbour        
     in_between_link_idxs = get_links_between(ict_net, node_elt, ne, respect_direction=True)
-    in_between_linktypes = [ict_net.link.loc[li]['type'] for li in in_between_link_idxs]
+    in_between_linktypes = [ict_net.link.iloc[li]['type'] for li in in_between_link_idxs]
     # look at all our ip addresses        
     for i in range(0, len(our_node['ip_addr'])):
         # get our ip data for this address
@@ -277,7 +278,7 @@ def __get_neighbour_ips_respecting_ports(ict_net, node_elt):
         return None    
     neighbour_ips = []
     ports = []
-    our_node = ict_net.node.loc[node_elt[1]]
+    our_node = ict_net.node.iloc[node_elt[1]]
     neighbour_elts = get_neighbour_elts(ict_net, node_elt, respect_in_service=True) 
     for ne in neighbour_elts:         
         neighbour_ips, ports = _get_neighbour_ips_and_ports(ict_net, ne, our_node, node_elt, neighbour_ips, ports)                               
@@ -314,45 +315,38 @@ def update_iptables(ict_net, lup_table):
         # traverse hops
         destination = __get_ipaddr_by_element(ict_net, r['hops'][-1])[0]
         for i in range(0, len(r['hops'])-1):
-            _traverse_hops(ict_net, i, r, destination, metric)
+            e = r['hops'][i]
+            if e[0]!="node": 
+                continue
+            # check if there is already static routing entry - if yes, continue
+            iptables_static = ict_net.iptables[(ict_net.iptables.node_idx==e[1]) & (ict_net.iptables.destination==destination) & (ict_net.iptables.type=="static")]
+            if not iptables_static.empty: 
+                continue
+            # fetch IP addresses at sender and gateway nodes that lie in the same network
+            (reachable_ips, ports) = __get_neighbour_ips_respecting_ports(ict_net, e)
+            gateway_ips_all = __get_ipaddr_by_element(ict_net, r['hops'][i+1])
+            gateway_ip = [ip for ip in gateway_ips_all if ip in reachable_ips]            
+            if gateway_ip is None:
+                pilogger.warning("Nodes "+str(e)+" and "+str(r['hops'][i+1])+" are supposed to be connected but don't seem to share an IP network. Did you specify IP addresses and netmasks correctly?")
+                continue
+            else:
+                if len(gateway_ip) > 1:
+                    pilogger.warning("Nodes "+str(e)+" and "+str(r['hops'][i+1])+" seem to share multiple IP networks. This may or may not be intended. Are you sure that IP addresses and netmasks are defined correctly?")            
+                gateway_ip = gateway_ip[0]
+                pidx = reachable_ips.index(gateway_ip) 
+                link_idx = ports[pidx]
+            gateway_netmasks_all = __get_netmask_by_element(ict_net, r['hops'][i+1])
+            gateway_netmask = gateway_netmasks_all[gateway_ips_all.index(gateway_ip)]
+                                
+            entrycount = len(ict_net.iptables[ict_net.iptables["node_idx"]==e[1]])
+            if not ict_net.iptables[(ict_net.iptables.node_idx==e[1]) & (ict_net.iptables.destination==destination)].empty:
+                # iptable entry for this already exists 
+                continue
+            ientry = {"node_idx": e[1], "entry": entrycount, "destination": destination, "netmask": gateway_netmask, "gateway": gateway_ip, 
+                      "link_idx": link_idx,"type": "dynamic", "metric": metric}
+            ict_net.iptables.loc[len(ict_net.iptables.index)] = ientry
             
-def _traverse_hops(ict_net, i, r, destination, metric):
-    e = r['hops'][i]
-    if e[0] != "node":
-        return
-    # check if there is already static routing entry - if yes, continue
-    iptables_static = ict_net.iptables[
-        (ict_net.iptables.node_idx == e[1]) & (ict_net.iptables.destination == destination) & (
-                    ict_net.iptables.type == "static")]
-    if not iptables_static.empty:
-        return
-    # fetch IP addresses at sender and gateway nodes that lie in the same network
-    (reachable_ips, ports) = __get_neighbour_ips_respecting_ports(ict_net, e)
-    gateway_ips_all = __get_ipaddr_by_element(ict_net, r['hops'][i + 1])
-    gateway_ip = [ip for ip in gateway_ips_all if ip in reachable_ips]
-    if len(gateway_ip)==0:
-        pilogger.warning("Nodes " + str(e) + " and " + str(r['hops'][
-                                                               i + 1]) + " are supposed to be connected but don't seem to share an IP network. Did you specify IP addresses and netmasks correctly?")
-        return
-    else:
-        if len(gateway_ip) > 1:
-            pilogger.warning("Nodes " + str(e) + " and " + str(r['hops'][
-                                                                   i + 1]) + " seem to share multiple IP networks. This may or may not be intended. Are you sure that IP addresses and netmasks are defined correctly?")
-        gateway_ip = gateway_ip[0]
-        pidx = reachable_ips.index(gateway_ip)
-        link_idx = ports[pidx]
-    gateway_netmasks_all = __get_netmask_by_element(ict_net, r['hops'][i + 1])
-    gateway_netmask = gateway_netmasks_all[gateway_ips_all.index(gateway_ip)]
-
-    entrycount = len(ict_net.iptables[ict_net.iptables["node_idx"] == e[1]])
-    if not ict_net.iptables[(ict_net.iptables.node_idx == e[1]) & (ict_net.iptables.destination == destination)].empty:
-        # iptable entry for this already exists
-        return
-    ientry = {"node_idx": e[1], "entry": entrycount, "destination": destination, "netmask": gateway_netmask,
-              "gateway": gateway_ip,
-              "link_idx": link_idx, "type": "dynamic", "metric": metric}
-    ict_net.iptables.loc[len(ict_net.iptables.index)] = ientry
-
+    
 def get_iptable(ict_net, node_elt):
     """
     Fetch IP routing table entries for a router-type node.
@@ -368,18 +362,18 @@ def get_iptable(ict_net, node_elt):
     :EXAMPLE:
         get_iptable(ict_net, ('node',2))
     """ 
-    if node_elt[0]!="node" or ict_net.node.loc[node_elt[1]].type is not NodeType.ROUTER:
+    if node_elt[0]!="node" or ict_net.node.iloc[node_elt[1]].type is not NodeType.ROUTER:
         return None
     iptable = ict_net.iptables[ict_net.iptables.node_idx==node_elt[1]].drop("node_idx", axis=1)
     iptable.set_index("entry")
     return iptable
 
 def __get_link_type_to_destination(ict_net, node_elt, gateway, destination):
-    # Review this, maybe needs checking if the link connects node and gateway within same network (if changed, adapt Sphinx).
+    # TODO: review this, maybe needs checking if the link connects node and gateway within same network (if changed, adapt Sphinx).
     ltype = None
     for l_idx in get_links_at(ict_net, node_elt):
         # Check if link connects our node with the gateway ip
-        l = ict_net.link.loc[l_idx] 
+        l = ict_net.link.iloc[l_idx] 
         to_ips = [__get_ipaddr_by_element(ict_net, n) for n in l['to']]
         to_ips = [i for sub in to_ips for i in sub] # flatten 2D list
         if (node_elt in l['to'] and __get_ipaddr_by_element(ict_net, l['from'])==gateway) or \
@@ -395,32 +389,21 @@ def set_static_iptable_entry(ict_net, node_elt, destination, gateway, netmask = 
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **node_elt** (str, int) -pandaict identifier of a router-type node in ict_net
-        
-        **destination** (str) - destination IP address 
-        
-        **gateway** (str) - IP address of gateway for the static route
-        
-    :OPTIONAL:
-    
-        **netmask** (str, default None) - Netmask for static iptable entry
-    
-        **link_idx** (int, default None) - Index of router link that connects to the gateway. If None, it is determined automatically. 
-        
-        **metric** (int, default 0) - Routing metric for static iptable entry                            
+        **node_elt** (str, int) -pandaict identifier of a node in ict_net
+                            
+    :OUTPUT:
+        **iptable** (DataFrame) - The IP table of the node, or None if there are no IP table entries for this node. 
 
     :EXAMPLE:
-        set_static_iptable_entry(ict_net, ('node',0), "192.168.4.1", "10.1.3.0", link_idx=1, metric=10)
+        get_iptable(ict_net, ('node',2))
     
-    Notes: 
-        - There is no output to this, but **ict_net.iptable** is modified. 
-        - This function does not yet check if the gateway IP is in the same network as the node IP, or if \
-         destination and gateway ip's exist. Use the inspect package to check the latter.
+    Note: this function does not yet check if the gateway IP is in the same network as the node IP. \
+        Also it does not check for existence of destination and gateway ip. Use the inspect package to check the latter.
     
     """
     if (node_elt[0]!="node" or node_elt[1] > len(ict_net.node)):
         raise UserWarning("Node_elt "+str(node_elt)+" is not a node or doesn't exist")
-    t = ict_net.node.loc[node_elt[1]]['type']
+    t = ict_net.node.iloc[node_elt[1]]['type']
     if t is not NodeType.ROUTER:
         raise UserWarning("Node_elt "+str(node_elt)+" is "+str(t)+", must be router-type node")
     entrycount = len(ict_net.iptables[ict_net.iptables["node_idx"]==node_elt[1]])
@@ -431,12 +414,12 @@ def set_static_iptable_entry(ict_net, node_elt, destination, gateway, netmask = 
         # try to find interface / link index by its type
         if ltype is not None: 
             try:
-                link_idx = ict_net.node.loc[node_elt[1]].link_types.index(ltype)
+                link_idx = ict_net.node.iloc[node_elt[1]].link_types.index(ltype)
             except (IndexError, KeyError, AttributeError, ValueError, TypeError):
                 link_idx = None        
     try:
         if netmask is None: 
-            netmask = ict_net.node.loc[node_elt[1]]['netmask'][link_idx]
+            netmask = ict_net.node.iloc[node_elt[1]]['netmask'][link_idx]
     except (IndexError, KeyError, AttributeError, ValueError, TypeError):
         netmask=None
         

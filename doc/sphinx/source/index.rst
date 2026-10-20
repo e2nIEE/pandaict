@@ -1,4 +1,3 @@
-.. 	@author: jringelstein	
 .. _index:
 
 ############################
@@ -22,7 +21,9 @@ aimed at analysis of combined ICT and electric networks.
 |br|
 
 
-.. More information about pandaict can be found on `www.pandaict.org <https://www.pandaict.org>`_.
+More information about pandaict can be found on `www.pandaict.org <https://www.pandaict.org>`_.
+
+If you are interested in the newest pandaict developments, subscribe to our `mailing list <https://www.pandaict.org/contact/#list>`_!
 
 pandaict is a joint development of the research group Energy Management and Power System Operation, University of Kassel and the Department for Distribution System
 Operation at the Fraunhofer Institute for Energy Economics and Energy System Technology (IEE), Kassel.
@@ -53,8 +54,7 @@ Operation at the Fraunhofer Institute for Energy Economics and Energy System Tec
     std_types    
     topology/routing  
     visualisation     
-    reliability_basic
-    montecarlo    
+    reliability
     ip_support
     
 

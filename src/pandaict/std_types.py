@@ -1,17 +1,18 @@
 '''
-Created on 2.02.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+Created on 2.02.2024
+
+@author: jringelstein
 '''
 
 import uuid
-from pandaict.utils.enums import InfoItem
+from   pandaict.utils.enums import InfoItem
 from pandaict.pilogger import pilogger
 
 
-def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=True, check_required=True):
+def create_std_type(ict_net, data, name, element="link", overwrite=True, check_required=True):
     """
     Creates type data in the type dict. The following mandatory parameters have to be at least contained in data:
     
@@ -21,18 +22,11 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
     The standard type is saved into the pandaict dict of the given network by default.
 
     :INPUT:
-    
         **ict_net** (pandaictNet) - The pandaict network
-    
         **data** (dict) - dictionary of standard type parameters (without the name)
-    
         **name** (string) - name of the standard type as string
-                            NOTE: if a standard type with this already exists, it is overwritten.
-    
         **element** (string, default "link" - Element type, may be "link" or "protocol"
-    
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name. If False, only inserts new type when name is not used yet.
-    
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
     
     """
@@ -47,7 +41,7 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
         if element == "link":
             required = ["bandwidth_Mbps", "latency_ms", "wired"]
         elif element == "protocol":
-            required = ["base_package_size_byte", "info_items"]
+            required = ["info_items"]
         else:
             raise ValueError("Unkown element type %s" % element)
         for par in required:
@@ -55,31 +49,24 @@ def create_std_type(ict_net, data, name, element="link", overwrite=True, custom=
                 raise UserWarning("%s is required as %s type parameter" % (par, element))
     stdict = ict_net.std_types[element]
     if overwrite or name not in stdict:
-        if custom:
-            data.update({'custom': True})
         stdict.update({name: data})
 
 
-def create_std_types(ict_net, data, element="link", overwrite=True, custom=True, check_required=True):
+def create_std_types(ict_net, data, element="link", overwrite=True, check_required=True):
     """
     Creates multiple standard types in the type dict.
 
     :INPUT:
         **ict_net** (pandaictNet) - The pandaict network
-       
         **data** (dict) - dictionary of standard type parameters (including type names)
-                          NOTE: if a standard type with given name already exists, it is overwritten.
-       
         **element** (string, default "link" - Element type, may be "link" or "protocol"
-       
         **overwrite** (boolean, default True) - If True, overwrites existing std type with same name(s). If False, only inserts new type when name is not used yet.
-       
         **check_required** (boolean, default True) - If True, function fails if required parameters are not present. If False, no checks are made. 
 
     """
     for name, typdata in data.items():
         create_std_type(ict_net, data=typdata, name=name, element=element, overwrite=overwrite,
-                        custom=custom, check_required=check_required)
+                        check_required=check_required)
 
 
 def __controller_area_linktypes():
@@ -192,7 +179,7 @@ def __transmission_protocoltypes():
             "uuid": uuid.UUID("fdb0612d-3791-437a-b570-139c49c9dea9"),   
             },
         "UDP": {        
-            "base_package_size_byte": 12, # UDP Header has at least 12 byte
+            "base_package_size_byte": 8,
             "info_items":
                 [ InfoItem.REQUEST,
                   InfoItem.RESPONSE,                   
@@ -253,7 +240,7 @@ def __application_protocoltypes():
         }
     return pt  
 
-def __modbus_protocoltypes():
+def __MODBUS_protocoltypes():
     return {"MODBUS-TCP": {        
                 "base_package_size_byte": 1024,
                 "info_items":
@@ -279,7 +266,7 @@ def __basic_protocol_std_types():
     protocoltypes = __simple_protocoltypes()
     protocoltypes.update(__transmission_protocoltypes())
     protocoltypes.update(__application_protocoltypes())   
-    protocoltypes.update(__modbus_protocoltypes())
+    protocoltypes.update(__MODBUS_protocoltypes())                      
     return protocoltypes
 
 
@@ -291,12 +278,14 @@ def __basic_std_types():
     
 def add_basic_std_types(ict_net):
     """Adds basic standard types of the pandaict library to the ict_net provided. These standard types
-    are automatically available with output of `create_empty_network()`.
+    are the same types that are available with output of `pandapower.create_empty_network()` and
+    `pandapower.create_empty_network(add_stdtypes=True)` respectively.
 
     :INPUT:
         **ict_net** - pandaICT net which should receive the basic standard types
 
-    :OUTPUT:    
+    :OUTPUT:
+    
         **std_types** (tuple of dict) - standard types as dictionaries which have been added to the ict_net.
     """
 
@@ -307,7 +296,7 @@ def add_basic_std_types(ict_net):
     linktypes = __basic_link_std_types()
     protocols = __basic_protocol_std_types()
 
-    create_std_types(ict_net, data=linktypes, element="link", custom=False)
-    create_std_types(ict_net, data=protocols, element="protocol", custom=False)  
+    create_std_types(ict_net, data=linktypes, element="link")
+    create_std_types(ict_net, data=protocols, element="protocol")  
         
-    return linktypes, protocols    
+    return linktypes    

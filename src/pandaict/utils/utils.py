@@ -1,10 +1,10 @@
 '''
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
+
 Created on 8.02.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
-
+@author: jringelstein
 '''
 
 import numpy as np 
@@ -34,7 +34,7 @@ def uuid2elt(ict_net, uid):
     for et in elt_types:
         try:
             idx = np.nonzero(ict_net[et]['uuid']==uid)[0][0]
-            return (et, int(idx))
+            return (et, idx)
         except:
             pass            
     return None
@@ -60,7 +60,7 @@ def elt2uuid(ict_net, elt):
     try:
         uid = get_elt(ict_net,elt)['uuid']
         return uid
-    except (TypeError, KeyError, IndexError, ValueError):
+    except:
         return None
     
 def to_elt(ict_net, any_id):
@@ -76,7 +76,7 @@ def to_elt(ict_net, any_id):
         **elt_id** ((str, int) tuple) - The element in pandapower element notation.  
 
     :EXAMPLES:
-        to_elt(ict_net, ('device',2))  \
+        to_elt(ict_net, ('device',2))
         to_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
     """ 
     if isinstance(any_id, uuid.UUID): 
@@ -90,8 +90,7 @@ def check_all_uuid(ids, allow_list=True):
     Raises UserWarning if this is not the case.
 
     :INPUT:
-        **ids** (any) - Parameter to be checked  \
-        
+        **ids** (any) - Parameter to be checked
         **allow_list** (boolean) - If True, lists are allowed and checked element-wise. If False, lists are considered non-uuid.              
                             
     :OUTPUT:
@@ -118,7 +117,7 @@ def get_elt(ict_net, elt):
         **elt** (str, int) -pandaict identifier of an element that exists in ict_net     
                             
     :OUTPUT:
-        **elt** (dict) - The pandaict element. Returns None if element not found in ict_net. 
+        **elt** (dict) - The pandaict element. 
 
     :EXAMPLE:
         get_elt(ict_net, ('device',2))
@@ -126,7 +125,7 @@ def get_elt(ict_net, elt):
     try:
         retval = ict_net[elt[0]].loc[elt[1]]
         return retval
-    except (TypeError, KeyError, IndexError, ValueError):
+    except:
         return None
 
 def get_elt_by_uuid(ict_net, uid):
@@ -136,7 +135,7 @@ def get_elt_by_uuid(ict_net, uid):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **uid** (UUID4) - UUID of an element that exists in ict_net          
+        **elt** (dict) -pandaict identifier of an element that exists in ict_net     
                             
     :OUTPUT:
         **elt** (dict) - The pandaict element. 
@@ -159,7 +158,7 @@ def get_elts_any(ict_net, elt_ids, expected=None):
     :INPUT:
         **ict_net** (pandaictNet) - A pandaict network     
 
-        **elt_ids** (tuple, uuid or list) - pandaict identifier(s) of one or multiple elements that exists in ict_net
+        **elt_ids** (tuple, uuid or list) - pandaict identifier(s) of an element that exists in ict_net
         
     :OPTIONAL:
         **expected** (list of string, default None) - list of element types expected in the output. None means any types allowed. \
@@ -169,7 +168,7 @@ def get_elts_any(ict_net, elt_ids, expected=None):
         **elt** (dict or list of dict) - The pandaict element(s). 
 
     :EXAMPLES:
-        get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))  \
+        get_elt(ict_net, uuid.UUID("0a004f60-1df4-449c-94b5-08809ad686d1"))
         get_elt(ict_net, [('device', 0), ('node, 3)], expected=['device', 'node'])
     """
     if isinstance(elt_ids, list):
@@ -313,7 +312,7 @@ def get_values_for_links(ict_net, link_elts, valuetype):
             values += [None]
             pilogger.warn("link_elts contains an element which is not a link")
             continue                 
-        ltype = ict_net.std_types['link'][ict_net.link.loc[l[1]]['type']]
+        ltype = ict_net.std_types['link'][ict_net.link.iloc[l[1]]['type']]
         vtype = None
         
         if ('latency' in str(valuetype).casefold()):            
@@ -329,10 +328,10 @@ def get_values_for_links(ict_net, link_elts, valuetype):
             values += [ltype[vtype]]
         elif ('length' in str(valuetype).casefold()):
             vtype = 'length_km'
-            values += [ict_net.link.loc[l[1]]['length_km']]
+            values += [ict_net.link.iloc[l[1]]['length_km']]
         elif ('bit_error_rate' in str(valuetype).casefold() or 'ber' in str(valuetype).casefold()):
-            length = ict_net.link.loc[l[1]]['length_km']
-            if length is None or ltype['ber_per_km'] is None:
+            length = ict_net.link.iloc[l[1]]['length_km']
+            if length is None: 
                 values += [None]
             else:
                 vtype = 'bit_error_rate' 
@@ -358,7 +357,7 @@ def is_bidirectional(ict_net, link_elt):
     if (not isinstance(link_elt, tuple) or link_elt[0] != "link"):
         pilogger.warn("link_elt is not a link")
         return None
-    bw = get_bandwidth_mbps(ict_net, link_elt)
+    bw = get_bandwidth_Mbps(ict_net, link_elt)
     return False if (isinstance(bw, float) or isinstance(bw, int) or len(bw)<2 or bw[1]==0) else True  
    
 def get_supported_protocols(ict_net, link_elt):       
@@ -377,9 +376,9 @@ def get_supported_protocols(ict_net, link_elt):
         get_supported_protocols(ict_net, ('link',2))
     """
     
-    return ict_net.std_types['link'][ict_net.link.loc[link_elt[1]]['type']]['protocols']  
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['protocols']  
 
-def get_bandwidth_mbps(ict_net, link_elt):
+def get_bandwidth_Mbps(ict_net, link_elt):     
     """
     Get bandwidth of a link
 
@@ -389,18 +388,18 @@ def get_bandwidth_mbps(ict_net, link_elt):
         **link_elt** (str, int) - The link's pandaict notation element identifier.                 
                             
     :OUTPUT:
-        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction [Mbps]
+        **bandwidth** (tuple) - Link bandwith in downstream/upstream direction 
 
     :EXAMPLE:
-        get_bandwidth_mbps(ict_net, ('link',2))
+        get_bandwidth_Mbps(ict_net, ('link',2))
     """  
-        
-    return ict_net.std_types['link'][ict_net.link.loc[link_elt[1]]['type']]['bandwidth_Mbps']
+    
+    return ict_net.std_types['link'][ict_net.link.iloc[link_elt[1]]['type']]['bandwidth_Mbps']
 
 def __get_elt_idx_by_name(ict_net, elt_name, elt_type):
     if elt_name in ict_net[elt_type]['name'].values:
         elt_id = ict_net[elt_type].loc[ict_net[elt_type]['name'] == elt_name].index.values[0]
-        return int(elt_id) 
+        return elt_id 
     else:
         return None
 
@@ -490,9 +489,9 @@ def get_neighbour_elts(ict_net, elt, respect_in_service=False):
     link_idxs = get_links_at(ict_net, elt)
     if link_idxs is None:
         return None
-    neighbours = set({})
+    neighbours = set([])
     for li in link_idxs: 
-        l = ict_net.link.loc[li]
+        l = ict_net.link.iloc[li]
         if respect_in_service and not(l.in_service): 
             continue        
         neighbours.add(l['from'])

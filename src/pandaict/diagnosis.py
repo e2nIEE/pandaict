@@ -1,9 +1,10 @@
 '''
-Created on 23.04.2024
-@author: jringelstein <jan.ringelstein@iee.fraunhofer.de>
+# Copyright (c) 2016-2023 by University of Kassel and Fraunhofer Institute for Energy Economics
+# and Energy System Technology (IEE), Kassel. All rights reserved.
 
-SPDX-FileCopyrightText: Copyright (c) 2024-2026 by Fraunhofer IEE, Kassel. All rights reserved.
-SPDX-License-Identifier: BSD-3-Clause
+Created on 23.04.2024
+
+@author: jringelstein
 '''
 
 from pandaict.utils.enums import InfoItem, NodeType, DeviceType, AppType
@@ -21,7 +22,7 @@ def __check_isnone(i, n, elt_type, sparam, passed, checkempty=False, verbose=Fal
         passed = __log_info_and_return_false(elt_type+" '" + str(n['name']) + "' (index " + str(i) + ") has no "+sparam, verbose)        
     return passed
     
-def __inspect_node(ict_net, passed, verbose):   
+def __inspect_node(ict_net, passed, verbose):
     for i, n in ict_net.node.iterrows():
         passed = __check_isnone(i, n, "node", "name", passed, verbose=verbose)
         passed = __check_isnone(i, n, "node", "type", passed, verbose=verbose)
@@ -42,16 +43,11 @@ def __inspect_link(ict_net, passed, verbose):
         # check for double linkage (excluding multicasts)
         from_elt = l["from"]
         to_elt   = l["to"][0]
-        try:
-            linklist = get_links_between(ict_net, from_elt, to_elt)
-            if len(linklist) > 1: 
-                linklist.remove(i)
-                passed = __log_info_and_return_false(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")", verbose)            
-        except UserWarning as uw:
-            if verbose:
-                __log_info_and_return_false(" link '"+str(l['name'])+"' (index "+str(i)+"): problem getting links between "+str(from_elt)+" and "+str(to_elt), verbose)
-            raise uw 
-            
+        linklist = get_links_between(ict_net, from_elt, to_elt)
+        if len(linklist) > 1: 
+            linklist.remove(i)
+            passed = __log_info_and_return_false(" link '"+str(l['name'])+"' (index "+str(i)+") has duplicate(s) (indexes "+str(linklist)+")", verbose)            
+        
     # check std linktypes
     for linktype in ict_net.std_types['link'].keys():
         protocols = ict_net.std_types['link'][linktype]['protocols']
@@ -70,7 +66,7 @@ def __inspect_device(ict_net, passed, verbose):
         apps = get_apps_on_device(ict_net, ('device', i))
         if apps is None or apps == []:
             passed = __log_info_and_return_false(" device '" + str(d['name']) + "' (index " + str(i) + ") does not run any apps", verbose)            
-        if any(ict_net.app.loc[a]['type'] == AppType.CONVERTER for a in apps):
+        if (any([ict_net.app.iloc[a]['type'] == AppType.CONVERTER for a in apps])):
             l = get_links_at(ict_net, ('device', i))
             if len(l) < 2:
                 passed = __log_info_and_return_false(" device '" + str(d['name']) + "' (index " + str(i) + ") is running converter type app(s) but has less than two links", verbose)                
@@ -90,10 +86,8 @@ def __inspect_app(ict_net, passed, verbose):
         # check if Apps with conversions run on converter type devices
         if a['type'] == AppType.CONVERTER:
             d = a.device 
-            if not isinstance(d, int):
-                passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' has non-int device index '"+str(d)+"'", verbose)
-            elif ict_net.device.loc[d]['type'] != DeviceType.CONVERTER:
-                passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.loc[d]['name'])+"'", verbose)                            
+            if ict_net.device.iloc[d]['type'] != DeviceType.CONVERTER:
+                passed = __log_info_and_return_false(" Converter-type app '"+str(a['name'])+"' is running on non-converter type device '"+str(ict_net.device.iloc[d]['name'])+"'", verbose)                            
     
     return passed
 
@@ -127,10 +121,10 @@ def __inspect_ip(ict_net, passed, verbose):
     if "ip_addr" not in ict_net['node'].keys():
         return passed
     # check for double IP addresses (could be intended, warn only)    
-    all_ips = list(ict_net['node']['ip_addr'])        # get all node ips, 2d list
-    all_ips = [i for sub in all_ips for i in sub]     # flattens list
-    all_ips += list(ict_net['device']['ip_addr'])     # add device ips
-    duplicates = {d for d in all_ips if all_ips.count(d)>1}  # get duplicates
+    all_ips = [i for i in ict_net['node']['ip_addr']]        # get all node ips, 2d list
+    all_ips = [i for sub in all_ips for i in sub]            # flattens list
+    all_ips += [i for i in ict_net['device']['ip_addr']]     # add device ips
+    duplicates = set([d for d in all_ips if all_ips.count(d)>1])  # get duplicates
     for d in duplicates: 
         passed = __log_info_and_return_false("Warning: found duplicate IP "+str(d), verbose)        
 

@@ -1,4 +1,3 @@
-.. 	@author: jringelstein		
 .. _utils:
 
 #################
@@ -58,9 +57,9 @@ Link utilities
 
 .. autofunction:: pandaict.utils.utils.get_supported_protocols
 
-.. _get_bandwidth_mbps:
+.. _get_bandwidth_Mbps:
 
-.. autofunction:: pandaict.utils.utils.get_bandwidth_mbps
+.. autofunction:: pandaict.utils.utils.get_bandwidth_Mbps
 
 
 Get connections by app 

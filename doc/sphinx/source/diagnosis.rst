@@ -1,4 +1,3 @@
-.. 	@author: jringelstein
 .. _diagnosis:
 
 #########

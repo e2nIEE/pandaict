@@ -1,8 +1,7 @@
+doc/.ipynb_checkpoints/
 doc/sphinx/Makefile
 doc/sphinx/make.bat
 doc/sphinx/build
-doc/jupyter/build/
-*/.ipynb_checkpoints/
 pandaict_orig/__pycache__/
 pandaict_orig/outage/__pycache__/
 pandaict_orig/plotting/__pycache__/
@@ -10,22 +9,13 @@ pandaict_orig/simulation/__pycache__/
 pandaict_orig/topology/__pycache__/
 test_orig/__pycache__/
 test/__pycache__/
-test/*.xlsx
 src/pandaict/__pycache__/
 src/pandaict/plotting/__pycache__/
 src/pandaict/topology/__pycache__/
 src/pandaict/datamodel/__pycache__/
 src/pandaict/reliability/__pycache__/
-src/pandaict/networks/__pycache__/
-src/pandaict/utils/__pycache__/
-build/
-.venv/
-.idea/
-*.pyc
-*.log
-*.json
 
 .idea/
-public/jupyter
-doc/jupyter/pandaict/.ipynb_checkpoints
+public/jupyter/_build/
 doc/jupyter/pandaict/images/
+public/

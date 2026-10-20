@@ -1,6 +1,6 @@
 import pandaict as pi
 import pandaict.diagnosis
-from pandaict.utils.utils import get_bandwidth_mbps
+from pandaict.utils.utils import get_bandwidth_Mbps
 from pandaict.plot import create_plot
 from pandaict.topology.routing import *
 from pandaict.utils.enums import *
@@ -54,7 +54,7 @@ Connection_AB = pi.create_ict_connection(
 
 pandaict.diagnosis.inspect(net)
 
-BW = calc_conn_bandwidth_mbps(net, Connection_AB)
+BW = calc_conn_bandwidth_Mbps(net, Connection_AB)
 
 print('Used Bandwidth (upstream, downstream) Mbps = ', BW)
 

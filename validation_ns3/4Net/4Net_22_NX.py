@@ -1,0 +1,38 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+
+
+# *************************
+#           Graph
+#
+#       A-----------B
+#       |         / |
+#       |      /    |
+#       |    /      |
+#       | /         |
+#       D-----------C
+#
+# *************************
+
+# initialize latencies for edges (links)
+weights = [
+    ("A", "B", 1000),
+    ("B", "C", 100),
+    ("C", "D", 1000),
+    ("D", "A", 100),
+    ("D", "B", 100)
+]
+
+# create Graph
+G = nx.Graph()
+G.add_weighted_edges_from(weights)
+
+path = nx.dijkstra_path(G, "A", "C", weight="weight")
+dist = nx.dijkstra_path_length(G, "A", "C", weight="weight")
+
+print(path, dist)
+
+#nx.draw(G, with_labels=True)
+#plt.show()
+
+print('Ok!')

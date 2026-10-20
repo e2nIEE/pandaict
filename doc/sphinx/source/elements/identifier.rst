@@ -1,5 +1,3 @@
-.. 	@author: jringelstein
-
 ===================
 Element Identifiers
 ===================

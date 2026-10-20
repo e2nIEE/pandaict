@@ -1,4 +1,3 @@
-.. 	@author: jringelstein
 .. _elements:
 
 ##########################
@@ -8,7 +7,7 @@ Datastructure and Elements
 
 A pandaict network consists of an element table for each ict element in the network. Each element table is a pandas DataFrame that stores parameters according to the datamodel. The full datamodel definition is found in this excel file: :download:`Datamodel.xlsx`
 
-An example for creation of a simple pandaict network is found in the sourcecode under networks/test_networks.py in function create_testnet1(). This creates the following network. 
+An example for creation of a simple pandaICT network is found in the sourcecode under test/core_test.py in function create_testnet1(). This creates the following network. 
 
 .. image:: ../pics/Testnet_ICTonly.jpg
 		:width: 100%

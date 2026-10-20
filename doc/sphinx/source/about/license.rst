@@ -1,5 +1,4 @@
-﻿.. 	@author: jringelstein	
-.. _license:
+﻿.. _license:
 
 =========
 License
@@ -10,5 +9,5 @@ License
 
 pandapower is published under the following 3-clause BSD license:
 
-    .. literalinclude:: ../../../../LICENSES/BSD-3-Clause.txt
+    .. literalinclude:: ../../../../LICENSE
 

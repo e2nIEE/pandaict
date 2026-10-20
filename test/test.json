@@ -1,0 +1,291 @@
+{
+  "info": "pandaICT net file",
+  "pandaict_version": "1.1.2preview",
+  "name": "Demo_net",
+  "connectors": [],
+  "node": {
+    "name": {
+      "0": "node 1",
+      "1": "node 2",
+      "2": "node 3"
+    },
+    "type": {
+      "0": {
+        "name": "ROUTER",
+        "value": 2,
+        "values": [
+          2
+        ]
+      },
+      "1": {
+        "name": "SWITCH",
+        "value": 1,
+        "values": [
+          1
+        ]
+      },
+      "2": {
+        "name": "SWITCH",
+        "value": 1,
+        "values": [
+          1
+        ]
+      }
+    },
+    "in_service": {
+      "0": true,
+      "1": true,
+      "2": true
+    },
+    "uuid": {
+      "0": null,
+      "1": null,
+      "2": null
+    },
+    "geodata": {
+      "0": null,
+      "1": null,
+      "2": null
+    },
+    "link_types": {
+      "0": [
+        "Fiber",
+        "LAN1000"
+      ],
+      "1": [
+        "LAN1000"
+      ],
+      "2": [
+        "LAN1000"
+      ]
+    },
+    "ber": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 0.0
+    },
+    "mtbf_h": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 0.0
+    },
+    "mttr_h": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 0.0
+    }
+  },
+  "link": {
+    "name": {
+      "0": "L-n1-n2",
+      "1": "L-n2-n3",
+      "2": "L-n1-n3"
+    },
+    "type": {
+      "0": "LAN1000",
+      "1": "LAN1000",
+      "2": "LAN1000"
+    },
+    "in_service": {
+      "0": true,
+      "1": true,
+      "2": true
+    },
+    "uuid": {
+      "0": null,
+      "1": null,
+      "2": null
+    },
+    "from": {
+      "0": [
+        "node",
+        0
+      ],
+      "1": [
+        "node",
+        1
+      ],
+      "2": [
+        "node",
+        0
+      ]
+    },
+    "to": {
+      "0": [
+        [
+          "node",
+          1
+        ]
+      ],
+      "1": [
+        [
+          "node",
+          2
+        ]
+      ],
+      "2": [
+        [
+          "node",
+          2
+        ]
+      ]
+    },
+    "length_km": {
+      "0": 0.0,
+      "1": 0.0,
+      "2": 0.0
+    }
+  },
+  "device": {
+    "name": {
+      "0": "CTRL-Server",
+      "1": "RTU-A"
+    },
+    "type": {
+      "0": {
+        "name": "SERVER",
+        "value": 2,
+        "values": [
+          2
+        ]
+      },
+      "1": {
+        "name": "RTU",
+        "value": 3,
+        "values": [
+          3
+        ]
+      }
+    },
+    "in_service": {
+      "0": true,
+      "1": true
+    },
+    "uuid": {
+      "0": null,
+      "1": null
+    },
+    "mtbf_h": {
+      "0": 0.0,
+      "1": 0.0
+    },
+    "mttr_h": {
+      "0": 0.0,
+      "1": 0.0
+    }
+  },
+  "app": {
+    "name": {
+      "0": "App-Server",
+      "1": "App-RTU"
+    },
+    "type": {
+      "0": {
+        "name": "CLIENT",
+        "value": 5,
+        "values": [
+          5
+        ]
+      },
+      "1": {
+        "name": "WEBSERVER",
+        "value": 3,
+        "values": [
+          3
+        ]
+      }
+    },
+    "in_service": {
+      "0": true,
+      "1": true
+    },
+    "uuid": {
+      "0": null,
+      "1": null
+    },
+    "device": {
+      "0": 0,
+      "1": 1
+    },
+    "conversions": {
+      "0": null,
+      "1": null
+    }
+  },
+  "conn": {
+    "name": {
+      "0": "Conn"
+    },
+    "in_service": {
+      "0": true
+    },
+    "uuid": {
+      "0": null
+    },
+    "from": {
+      "0": 0
+    },
+    "to": {
+      "0": 1
+    },
+    "protocol": {
+      "0": null
+    },
+    "info_items": {
+      "0": null
+    },
+    "peers": {
+      "0": null
+    },
+    "producer": {
+      "0": null
+    },
+    "prod_freq_ms": {
+      "0": null
+    }
+  },
+  "std_type": {
+    "link": {
+      "Fiber10G": {
+        "bandwidth_Mbps": [
+          10000,
+          10000
+        ],
+        "latency_ms": 0.5,
+        "wired": true,
+        "protocols": [
+          "TCP",
+          "UDP"
+        ],
+        "mtbf_h": 43800,
+        "mttr_h": 4,
+        "ber": 1e-06,
+        "custom": true
+      }
+    },
+    "protocol": {
+      "IEC61850-MMS": {
+        "base_package_size_byte": 128,
+        "info_items": [
+          {
+            "name": "VALUE",
+            "value": 2
+          },
+          {
+            "name": "STATUS",
+            "value": 5
+          },
+          {
+            "name": "ACK",
+            "value": 1
+          }
+        ],
+        "custom": true
+      }
+    }
+  },
+  "cenum": [],
+  "iptables": {
+    "0": {}
+  }
+}
