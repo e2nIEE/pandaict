@@ -24,8 +24,7 @@ jobs:
     runs-on: ubuntu-latest    
     strategy:
       matrix:
-        python-version: [ '3.12', '3.13', '3.14' ]
-        group: [ 1, 2, 3 ]
+        python-version: [ '3.12', '3.13', '3.14' ]        
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Check out repository
@@ -55,6 +54,5 @@ jobs:
           
       - name: Execute Tests
         run: |
-          python test/pandaict_test.py \
-            --splits 3 \
-            --group ${{ matrix.group }}
+          python test/pandaict_test.py
+            
