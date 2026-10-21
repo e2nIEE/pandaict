@@ -28,21 +28,33 @@ jobs:
         group: [ 1, 2, 3 ]
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v6
+      - name: Check out repository
+        uses: actions/checkout@v6
+        
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          
       - name: Install uv
         uses: astral-sh/setup-uv@v10.2.0
         with:
-          python-version: ${{ matrix.python-version }}
+          enable-cache: true      
+          
       - name: Install dependencies
         run: |
-          uv init
-          uv pip install -r requirements.txt --system        
+          uv pip install --system -r requirements.txt       
+          
       - name: List all installed packages
         run: |
-          uv pip list
+          uv pip list --system 
+          
       - name: Set PYTHONPATH
         run: |
-          export PYTHONPATH=${PYTHONPATH}:./:./test/:./src/:./src/pandaict/ 
-      - name: Execute Test
+          echo "PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/test:$GITHUB_WORKSPACE/src:$GITHUB_WORKSPACE/src/pandaict" >> "$GITHUB_ENV"
+          
+      - name: Execute Tests
         run: |
-          uv run test/pandaict_test.py --splits 3 --group ${{ matrix.group }}
+          python test/pandaict_test.py \
+            --splits 3 \
+            --group ${{ matrix.group }}
