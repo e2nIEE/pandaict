@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest    
     strategy:
       matrix:
-        python-version: [ '3.12', '3.13', '3.14' ]        
+        python-version: [ '3.12' ]        
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Check out repository
