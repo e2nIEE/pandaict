@@ -13,13 +13,7 @@ concurrency:
   group: "src"
   cancel-in-progress: false
 
-jobs:
-  #sonarqube-check:  
-  #  runs-on: sonarsource/sonar-scanner-cli:5.0  
-  
-  #code_quality:
-  #  runs-on: ubuntu-latest    
-  
+jobs:    
   semgrep-sast:
     name: Semgrep SAST
     runs-on: ubuntu-latest

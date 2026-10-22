@@ -1,3 +1,6 @@
+Copyright (c) 2024-2026 by University of Kassel and Fraunhofer Institute for Energy Economics and Energy System Technology (IEE) Kassel and individual contributors
+Licensed under BSD-3-Clause
+
 Correct PYTHONPATH setting: 
 
 Windows:

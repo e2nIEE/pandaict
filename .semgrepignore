@@ -1,3 +1,6 @@
+doc/
+pandaict_orig/
+test_orig/
 venv/
 .venv/
 .git/
