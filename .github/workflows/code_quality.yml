@@ -1,67 +1,58 @@
-name: CI/CD
-
-on:  
-  push:
-    branches: ["main"]
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "src"
-  cancel-in-progress: false
-
-jobs:
-  sonarqube-check:
-    name: SonarQube analysis
-    runs-on: ubuntu-latest    
-    continue-on-error: true
-
-    permissions:
-      contents: read
-
-    env:
-      SONAR_USER_HOME: ${{ github.workspace }}/.sonar
+  code-quality:
+    name: Code quality
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
-      - name: Set up Java
-        uses: actions/setup-java@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          distribution: temurin
-          java-version: "17"
+          python-version: "3.13"
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
         with:
-          path: ${{ env.SONAR_USER_HOME }}/cache
-          key: ${{ runner.os }}-sonar-${{ hashFiles('**/sonar-project.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-sonar-
+          enable-cache: true
 
-      - name: Install SonarQube certificate
-        env:
-          SONAR_CRT: ${{ secrets.SONAR_CRT }}
+      - name: Install project dependencies
         run: |
-          printf '%s' "$SONAR_CRT" > "$RUNNER_TEMP/sonar.crt"
+          uv pip install --system -r requirements.txt
+          uv pip install --system ruff mypy coverage
 
-          sudo keytool \
-            -importcert \
-            -noprompt \
-            -trustcacerts \
-            -alias sonar \
-            -file "$RUNNER_TEMP/sonar.crt" \
-            -keystore "$JAVA_HOME/lib/security/cacerts" \
-            -storepass changeit
+      - name: Set PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/src:$GITHUB_WORKSPACE/test" >> "$GITHUB_ENV"
 
-      - name: Run SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v6
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: Run Ruff linting
+        run: |
+          ruff check .
+
+      - name: Check code formatting
+        run: |
+          ruff format --check .
+
+      - name: Run Mypy
+        run: |
+          mypy src
+
+      - name: Run tests with coverage
+        run: |
+          coverage run \
+            --source=src \
+            -m unittest discover \
+            -s test \
+            -p "*_test.py"
+
+      - name: Create coverage reports
+        run: |
+          coverage report -m
+          coverage xml
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          args: >
-            -X
+          name: coverage-report
+          path: coverage.xml
