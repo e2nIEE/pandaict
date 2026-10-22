@@ -10,7 +10,6 @@ pandaict_orig/simulation/__pycache__/
 pandaict_orig/topology/__pycache__/
 test_orig/__pycache__/
 test/__pycache__/
-test/*.xlsx
 src/pandaict/__pycache__/
 src/pandaict/plotting/__pycache__/
 src/pandaict/topology/__pycache__/
