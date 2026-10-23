@@ -16,8 +16,7 @@ concurrency:
 jobs:
   code-quality:
     name: Code quality
-    runs-on: ubuntu-latest
-    continue-on-error: true
+    runs-on: ubuntu-latest    
 
     steps:
       - name: Check out repository
@@ -45,7 +44,8 @@ jobs:
       - name: Run Ruff linting
         run: |
           ruff check . --output-format sarif --output-file ruff.sarif
-          
+        continue-on-error: true  
+        
       - name: Upload SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v3
         with:
@@ -55,6 +55,7 @@ jobs:
         uses: sasanquaneuf/mypy-github-action@releases/v1
         with:
           checkName: 'code-quality'   # NOTE: this needs to be the same as the job name
+        continue-on-error: true  
         #run: |
         #  mypy src
 
