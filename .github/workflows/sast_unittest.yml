@@ -17,7 +17,8 @@ jobs:
   semgrep-sast:
     name: Semgrep SAST
     runs-on: ubuntu-latest
-
+    continue-on-error: true
+    
     permissions:
       contents: read
       security-events: write

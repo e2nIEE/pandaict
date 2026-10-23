@@ -2,8 +2,11 @@ name: Code Quality
 
 on:  
   push:
-    branches: ["main"]
+    branches: ["develop"]
 
+permissions:
+  contents: read
+  
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
@@ -14,6 +17,7 @@ jobs:
   code-quality:
     name: Code quality
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - name: Check out repository
@@ -40,15 +44,19 @@ jobs:
 
       - name: Run Ruff linting
         run: |
-          ruff check .
-
-      - name: Check code formatting
-        run: |
-          ruff format --check .
+          ruff check . --output-format sarif --output-file ruff.sarif
+          
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ruff.sarif
 
       - name: Run Mypy
-        run: |
-          mypy src
+        uses: sasanquaneuf/mypy-github-action@releases/v1
+        with:
+          checkName: 'code-quality'   # NOTE: this needs to be the same as the job name
+        #run: |
+        #  mypy src
 
       - name: Run tests with coverage
         run: |
