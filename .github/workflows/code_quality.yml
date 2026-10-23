@@ -47,10 +47,12 @@ jobs:
           ruff check . --output-format sarif --output-file ruff.sarif
         continue-on-error: true  
         
-      - name: codeql      
+      - name: codeql-init      
         uses: github/codeql-action/init@v3
         with:
           languages: python
+      
+      - name: codeql-analyze   
         uses: github/codeql-action/analyze@v3
       
       - name: Upload SARIF to GitHub
