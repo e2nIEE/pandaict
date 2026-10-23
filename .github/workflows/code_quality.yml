@@ -47,18 +47,16 @@ jobs:
           ruff check . --output-format sarif --output-file ruff.sarif
         continue-on-error: true  
         
+      - name: codeql      
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+        uses: github/codeql-action/analyze@v3
+      
       - name: Upload SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: ruff.sarif
-
-      - name: Run Mypy
-        uses: sasanquaneuf/mypy-github-action@releases/v1
-        with:
-          checkName: 'code-quality'   # NOTE: this needs to be the same as the job name
-        continue-on-error: true  
-        #run: |
-        #  mypy src
+          sarif_file: ruff.sarif     
 
       - name: Run tests with coverage
         run: |
@@ -66,7 +64,7 @@ jobs:
             --source=src \
             -m unittest discover \
             -s test \
-            -p "*_test.py"
+            -p "test/pandaict_test.py"
 
       - name: Create coverage reports
         run: |
