@@ -1,0 +1,84 @@
+name: CI/CD
+
+on:  
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "src"
+  cancel-in-progress: false
+
+jobs:    
+  semgrep-sast:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/python
+          generateSarif: "1"
+                
+      - name: Upload SARIF results to GitHub
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep.sarif
+  
+  unit-test:
+    runs-on: ubuntu-latest    
+    strategy:
+      matrix:
+        python-version: [ '3.12' ]        
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Check out repository
+        uses: actions/checkout@v6
+        
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true      
+          
+      - name: Install dependencies
+        run: |
+          uv pip install --system -r requirements.txt       
+          
+      - name: List all installed packages
+        run: |
+          uv pip list --system 
+          
+      - name: Set PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/test:$GITHUB_WORKSPACE/src:$GITHUB_WORKSPACE/src/pandaict" >> "$GITHUB_ENV"
+          
+      - name: Execute Tests
+        run: |
+          python test/pandaict_test.py
+            
