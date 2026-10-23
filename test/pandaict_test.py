@@ -4,7 +4,6 @@ Created on 8.03.2024
 '''
 
 import unittest
-from codetiming import Timer
 from core_test import Core_Test
 from plot_test import Plot_Test
 from reliability_tests.reliability_test import ReliabilityTest
