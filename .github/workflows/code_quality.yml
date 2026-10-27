@@ -62,12 +62,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          coverage run \
-            --source=src \
-            -m unittest discover \
-            -s test \
-            -p "test/pandaict_test.py"
-
+          coverage run --source=src -m unittest discover -s . -p "test/pandaict_test.py"
       - name: Create coverage reports
         run: |
           coverage report -m
