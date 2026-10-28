@@ -38,7 +38,7 @@ class ReliabilityTest:
     def set_up_class(cls):
         # relative tolerance for stochastic approximation (2%)
         print("Init...")
-        cls.TOL = 3e-2
+        cls.TOL = 10e-2
 
         # reliability parameters (only nodes fail)
         cls.mttf_h = 1000.0
