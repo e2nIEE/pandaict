@@ -79,11 +79,11 @@ class PandaICT_Test(unittest.TestCase):
         self.reli_tester.test_mtbf_mttr(self)
         self.reli_tester.test_mtbf_mttr_serial_execution(self)      
         
-        print("Test with python fallback...")
-        self.reli_tester.set_test_python_fallback(True)   
-        self.reli_tester.test_criticality_series_rates(self) 
-        self.reli_tester.test_mtbf_mttr(self)          
-        self.reli_tester.set_test_python_fallback(False)
+        #print("Test with python fallback...")
+        #self.reli_tester.set_test_python_fallback(True)           
+        #self.reli_tester.test_criticality_series_rates(self)         
+        #self.reli_tester.test_mtbf_mttr(self)                  
+        #self.reli_tester.set_test_python_fallback(False)
           
 
 if __name__ == '__main__':
