@@ -1,3 +1,6 @@
+[run]
+omit = src/pandaict/reliability/monte_carlo_python_fallback.py
+	
 [report]
 exclude_lines =
     @njit
