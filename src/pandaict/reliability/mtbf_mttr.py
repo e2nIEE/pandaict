@@ -55,28 +55,6 @@ def __calc_mtbf_mttr_serial2(mtbf_mttr1, mtbf_mttr2):
                 mttr_total =  (mtbf1 * mttr2 + mtbf2 * mttr1) / (mtbf1 + mtbf2)        
             return (mtbf_total, mttr_total)        
 
-def _add_to_mtbf_route(ict_net, links, lni, mtbf_route, include_end_devices):
-    for li in range(0,len(links)):
-        l = get_elts_any(ict_net, links[li])
-        nn, nni = __get_next_hop(ict_net, l, lni)
-        
-        # get mtbfs, mttrs 
-        mtbf_link = get_values_for_links(ict_net, links[li], 'mtbf')[0][0]
-        mtbf_node = nn['mtbf_h']
-        
-        if mtbf_link is not None and mtbf_link != 0:
-            mtbf_route += 1/mtbf_link
-        if li==len(links)-1: # last link in the chain                     
-            if include_end_devices and __all_nonzero_float(mtbf_node):
-                mtbf_route += 1/mtbf_node                
-            break
-        else: # update total  MTBF and MTTR, also add node        
-            if __all_nonzero_float(mtbf_node):
-                mtbf_route += 1/mtbf_node        
-        lni = nni
-    
-    return lni, mtbf_route
-
 def calc_mtbf_route(ict_net, links, include_end_devices = False):
     """
     Calculate MTBF along a route given by a list of links.    
@@ -111,7 +89,25 @@ def calc_mtbf_route(ict_net, links, include_end_devices = False):
         if start_dev is not None and 'mtbf_h' in d.keys() and d['mtbf_h']!=0:
             mtbf_route += 1/d['mtbf_h']
                         
-    lni, mtbf_route = _add_to_mtbf_route(ict_net, links, lni, mtbf_route, include_end_devices)
+    for li in range(0,len(links)):
+
+        l = get_elts_any(ict_net, links[li])
+        nn, nni = __get_next_hop(ict_net, l, lni)
+        
+        # get mtbfs, mttrs 
+        mtbf_link = get_values_for_links(ict_net, links[li], 'mtbf')[0][0]
+        mtbf_node = nn['mtbf_h']
+        
+        if mtbf_link is not None and mtbf_link != 0:
+            mtbf_route += 1/mtbf_link
+        if li==len(links)-1: # last link in the chain                     
+            if include_end_devices and __all_nonzero_float(mtbf_node):
+                mtbf_route += 1/mtbf_node                
+            break
+        else: # update total  MTBF and MTTR, also add node        
+            if __all_nonzero_float(mtbf_node):
+                mtbf_route += 1/mtbf_node        
+        lni = nni
     
     # finally inverse 
     mtbf_route = 1/mtbf_route
@@ -135,22 +131,6 @@ def _update_mtbf_mttr(mtbf_link, mttr_link, mtbf_node, mttr_node, mtbf_route, mt
         (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_link, mttr_link))
         (mtbf_route, mttr_route) = __calc_mtbf_mttr_serial2((mtbf_route, mttr_route), (mtbf_node, mttr_node))
     return mtbf_route, mttr_route
-
-def _handle_include_end_devices(ict_net, links, include_end_devices):
-    if include_end_devices:
-        (start_dev, end_dev) = __get_end_devices_route(ict_net, links)
-        d = get_elts_any(ict_net, start_dev)
-        if start_dev is not None:
-            if 'mtbf_h' in d.keys() and d['mtbf_h']!=0:
-                mtbf_route = d['mtbf_h']
-            if 'mttr_h' in d.keys() and d['mttr_h']!=0:
-                mttr_route = d['mttr_h']        
-    else:
-        mtbf_route = None
-        mttr_route = None
-        end_dev    = None
-        
-    return mtbf_route, mttr_route, end_dev
 
 def calc_mtbf_mttr_route(ict_net, links, include_end_devices=False):
     """
@@ -177,10 +157,21 @@ def calc_mtbf_mttr_route(ict_net, links, include_end_devices=False):
     
     if not __check_calc_route(ict_net, links, "calc_mtbf_mttr_route"):
         return None
-               
+           
+    mtbf_route = None
+    mttr_route = None
     lni  = None # last node index
     
-    mtbf_route, mttr_route, end_dev = _handle_include_end_devices(ict_net, links, include_end_devices)
+    if include_end_devices:
+        (start_dev, end_dev) = __get_end_devices_route(ict_net, links)
+        d = get_elts_any(ict_net, start_dev)
+        if start_dev is not None:
+            if 'mtbf_h' in d.keys() and d['mtbf_h']!=0:
+                mtbf_route = d['mtbf_h']
+            if 'mttr_h' in d.keys() and d['mttr_h']!=0:
+                mttr_route = d['mttr_h']        
+    else:
+        end_dev = None
     
     for li in range(0,len(links)):
         l = get_elts_any(ict_net, links[li])

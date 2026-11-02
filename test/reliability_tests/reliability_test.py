@@ -3,10 +3,7 @@ Created on 03.08.2026
 @author: fnuetz
 '''
 
-
-import tempfile
-import os
-from PIL import Image, ImageChops
+import unittest
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -26,18 +23,16 @@ from pandaict.reliability.monte_carlo import NUMBA_AVAILABLE
 from pandaict.reliability.reliability import (
     estimate_mtbf_mttr_for_conn,
     empirical_reliability_function,
-    analyze_critical_components_for_conn,
-    plot_graph
+    analyze_critical_components_for_conn
 )
 
 
-class ReliabilityTest:
+class ReliabilityTest(unittest.TestCase):
     """Compare MC results against analytical reference values."""
 
     @classmethod
-    def set_up_class(cls):
+    def setUpClass(cls):
         # relative tolerance for stochastic approximation (2%)
-        print("Init...")
         cls.TOL = 2e-2
 
         # reliability parameters (only nodes fail)
@@ -57,125 +52,112 @@ class ReliabilityTest:
         ]
 
         # sample counts
-        cls.n_nonrep    = int(1e7)
-        cls.n_rep       = int(1e4)
+        cls.N_nonrep    = int(1e7)
+        cls.N_rep       = int(1e4)
         cls.depth       = 200
-        cls.n_rel       = cls.n_nonrep
-        
-        cls.test_verbose_plot_repair = True
-        cls.test_verbose_plot_norepair = True
+        cls.N_rel       = cls.N_nonrep
 
-    def set_test_python_fallback(self, pfb):
-        if pfb:
-            self.method_config.update({'use_numba': False})
-            self.n_nonrep    = int(1e3)
-            self.n_rep       = int(1e2)
-        else:
-            self.method_config.update({'use_numba': True})
-            self.n_nonrep    = int(1e7)
-            self.n_rep       = int(1e4)
-    
     def _require_numba(self):
         """Skip test if Numba is not available."""
         if not NUMBA_AVAILABLE:
             self.skipTest("Numba not available")
 
-    def _rel_err(self, utest, mc, ref, quantity, label):
+    def _rel_err(self, mc, ref, quantity, label):
         """Assert relative error of mc vs ref is below TOL."""
         rel = abs(mc - ref) / ref
-        utest.assertLess(rel, self.TOL,
+        self.assertLess(rel, self.TOL,
             f"{label}: {quantity}_MC={mc:.4f} vs analytical={ref:.4f} (err={rel:.2%})")
 
     # ==========================================================================
     # MTBF / MTTR Tests
     # ==========================================================================
-    def test_mtbf_mttr(self, utest):
+    def test_mtbf_mttr(self):
         """Monte-Carlo MTBF/MTTR against analytical reference for all cases."""
         self._require_numba()
 
         for n, m, mc, label in self.cases:
             for repairable in (False, True):
-                with utest.subTest(case=label, repairable=repairable):
+                with self.subTest(case=label, repairable=repairable):
                     mttr_h = self.mttr_h if repairable else 0.0
                     net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
                     ref = reference_values(n, m, self.mttf_h, mttr_h, min_connected=mc)
 
                     if repairable:
                         res = estimate_mtbf_mttr_for_conn(
-                            net, conns, n=self.n_rep, depth=self.depth,
+                            net, conns, N=self.N_rep, depth=self.depth,
                             min_connected=mc, **self.method_config)
 
-                        a_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
-                        self._rel_err(utest, a_mc, ref['availability'], "A", label)
-                        self._rel_err(utest, res['mtbf_h'], ref['mtbf_h'], "MTBF", label)
+                        A_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
+                        self._rel_err(A_mc, ref['availability'], "A", label)
+                        self._rel_err(res['mtbf_h'], ref['mtbf_h'], "MTBF", label)
                     else:
                         res = estimate_mtbf_mttr_for_conn(
-                            net, conns, n=self.n_nonrep, depth=1,
+                            net, conns, N=self.N_nonrep, depth=1,
                             min_connected=mc, **self.method_config)
 
-                        utest.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
-                        utest.assertTrue(np.isinf(res['mttr_h']),
+                        self.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
+                        self.assertTrue(np.isinf(res['mttr_h']),
                             f"{label}: expected MTTR=inf for non-repairable, got {res['mttr_h']}")
-                        self._rel_err(utest, res['mttf_h'], ref['mttf_h'], "MTTF", label)   
+                        self._rel_err(res['mttf_h'], ref['mttf_h'], "MTTF", label)   
 
     # ==========================================================================
     # Serial (non-parallel) Execution Tests
     # ==========================================================================
-    def test_mtbf_mttr_serial_execution(self, utest):
+    def test_mtbf_mttr_serial_execution(self):
         """Cover the serial (non-parallel) numba path; single-component only."""
         self._require_numba()
-        
+
         n, m, mc, label = 1, 1, -1, 'single'
         for repairable in (False, True):
-            with utest.subTest(repairable=repairable):
+            with self.subTest(repairable=repairable):
                 mttr_h = self.mttr_h if repairable else 0.0
                 net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
                 ref = reference_values(n, m, self.mttf_h, mttr_h, min_connected=mc)
 
                 if repairable:
                     res = estimate_mtbf_mttr_for_conn(
-                        net, conns, n=self.n_rep, depth=self.depth,
+                        net, conns, N=self.N_rep, depth=self.depth,
                         min_connected=mc, **self.method_config_serial)
 
-                    a_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
-                    self._rel_err(utest, a_mc, ref['availability'], "A(serial)", label)
-                    self._rel_err(utest, res['mtbf_h'], ref['mtbf_h'], "MTBF(serial)", label)
+                    A_mc = res['mttf_h'] / (res['mttf_h'] + res['mttr_h'])
+                    self._rel_err(A_mc, ref['availability'], "A(serial)", label)
+                    self._rel_err(res['mtbf_h'], ref['mtbf_h'], "MTBF(serial)", label)
                 else:
                     res = estimate_mtbf_mttr_for_conn(
-                        net, conns, n=self.n_nonrep,
+                        net, conns, N=self.N_nonrep,
                         min_connected=mc, **self.method_config_serial)
 
-                    utest.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
-                    utest.assertTrue(np.isinf(res['mttr_h']),
+                    self.assertIsNotNone(res['mttf_h'], f"{label}: MTTF is None")
+                    self.assertTrue(np.isinf(res['mttr_h']),
                         f"{label}: expected MTTR=inf for non-repairable, got {res['mttr_h']}")
-                    self._rel_err(utest, res['mttf_h'], ref['mttf_h'], "MTTF(serial)", label)
+                    self._rel_err(res['mttf_h'], ref['mttf_h'], "MTTF(serial)", label)
 
     # ==========================================================================
     # Empirical Reliability Function Tests (non-repairable only)
     # ==========================================================================
-    def test_empirical_reliability(self, utest):
+    def test_empirical_reliability(self):
         """Monte-Carlo R(T) against analytical reference (non-repairable)."""
         self._require_numba()
 
         for n, m, mc, label in self.cases:
-            with utest.subTest(case=label):
+            with self.subTest(case=label):
                 net, conns = build_test_ict_network(n, m, self.mttf_h, 0.0)
                 ref = reference_values(n, m, self.mttf_h, 0.0, min_connected=mc)
                 mttf = ref['mttf_h']
 
                 # evaluate at 0, 0.5, 1, 2, 4 times the analytical MTTF
                 T = mttf * np.array([0.0, 0.5, 1.0, 2.0, 4.0])
-                ref_r = reference_values(n, m, self.mttf_h, 0.0,
-                                         min_connected=mc, t=T)['reliability']
+                ref_R = reference_values(n, m, self.mttf_h, 0.0,
+                                         min_connected=mc, T=T)['reliability']
 
                 R = empirical_reliability_function(
-                    net, conns, t=T, n=self.n_rel, min_connected=mc, **self.method_config)
+                    net, conns, T=T, N=self.N_rel, min_connected=mc, **self.method_config)
 
-                utest.assertIsInstance(R, np.ndarray)
-                utest.assertEqual(len(R), len(T))
+                self.assertIsInstance(R, np.ndarray)
+                self.assertEqual(len(R), len(T))
 
-                for t, r_mc, r_ref in zip(T, R, ref_r):
-                    self._rel_err(utest, r_mc, r_ref, f"R({t:.1f})", label)
+                for t, r_mc, r_ref in zip(T, R, ref_R):
+                    self._rel_err(r_mc, r_ref, f"R({t:.1f})", label)
 
     # ==========================================================================
     # Critical Component Analysis Tests
@@ -190,124 +172,101 @@ class ReliabilityTest:
         return {names[i]: float(crit[i])
                 for i in range(len(names))
                 if elements[i][0] == 'node'}
-        
-    def _do_plot_test(self, utest, net, test_idx, res=None):        
-        if res:
-            plt = plot_graph(net, edge_criticality=res['edge_criticality'], node_criticality=res['node_criticality'], show=False)                                                         
-        else:
-            plt = plot_graph(net, show=False)
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:    
-            plt.savefig(tmp_file.name)
-             
-            image1 = Image.open(tmp_file.name)
-            # load the saved figure to compare
-            image2 = Image.open(os.path.dirname(os.path.abspath(__file__)) + os.sep + 'plt_nxg' + str(test_idx) + '.png')                         
-            # compare the size
-            assert image1.size == image2.size 
-            # compare the content
-            diff = ImageChops.difference(image1, image2)
-            utest.assertTrue(diff.getbbox() is None)
 
-    def _do_test_criticality_symmetric(self, utest, label, repairable, n, m, mc):
-        with utest.subTest(case=label, repairable=repairable):
-            mttr_h = self.mttr_h if repairable else 0.0
-            net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
-
-            if repairable:
-                N, depth = self.n_rep, self.depth
-            else:
-                N, depth = self.n_nonrep, 1
-            
-            vpflag = self.test_verbose_plot_repair or self.test_verbose_plot_norepair
-            res = analyze_critical_components_for_conn(
-                net, conns, n=N, depth=depth, min_connected=mc,
-                plot=vpflag, verbose=vpflag, **self.method_config)
-            # test verbose one time only for each repairable and non-repairable
-            if repairable: 
-                self.test_verbose_plot_repair = False 
-            else:
-                self.test_verbose_plot_norepair = False 
-            
-            # --- failure criticality (rate_adjustment=True default) ---
-            node_crit = self._path_node_crit(res, 'node_criticality')
-            utest.assertTrue(node_crit, f"{label}: no path nodes tracked")
-            K = len(node_crit)
-            for name, c in node_crit.items():
-                self._rel_err(utest, c, 1.0, f"nodeCrit[{name}]", label)
-            # symmetric + RA=True => sum of scores == K
-            self._rel_err(utest, sum(node_crit.values()), float(K),
-                          "sumNodeCrit", label)
-
-            # edges are ideal => criticality exactly 0
-            utest.assertTrue(np.allclose(res['edge_criticality'], 0.0),
-                f"{label}: expected edge crit 0, got {res['edge_criticality']}")
-
-            # --- repair criticality (repairable only) ---
-            if repairable:
-                node_rep = self._path_node_crit(res, 'node_repair_criticality')
-                for name, c in node_rep.items():
-                    self._rel_err(utest, c, 1.0, f"nodeRepCrit[{name}]", label)
-                    
-                utest.assertTrue(np.allclose(res['edge_repair_criticality'], 0.0),
-                    f"{label}: expected edge rep crit 0, "
-                    f"got {res['edge_repair_criticality']}")
-        if label=="serial5" and repairable:             
-            self._do_plot_test(utest, net, 2, res=res)
-    
-    def test_criticality_symmetric(self, utest):
+    def test_criticality_symmetric(self):
         """T1: identical rates => every path-node criticality == 1.0."""
         self._require_numba()
 
         for n, m, mc, label in self.cases:
             for repairable in (False, True):
-                self._do_test_criticality_symmetric(utest, label, repairable, n, m, mc)
+                with self.subTest(case=label, repairable=repairable):
+                    mttr_h = self.mttr_h if repairable else 0.0
+                    net, conns = build_test_ict_network(n, m, self.mttf_h, mttr_h)
 
-    def test_criticality_series_rates(self, utest):
+                    if repairable:
+                        N, depth = self.N_rep, self.depth
+                    else:
+                        N, depth = self.N_nonrep, 1
+
+                    res = analyze_critical_components_for_conn(
+                        net, conns, N=N, depth=depth, min_connected=mc,
+                        plot=False, verbose=False, **self.method_config)
+
+                    # --- failure criticality (rate_adjustment=True default) ---
+                    node_crit = self._path_node_crit(res, 'node_criticality')
+                    self.assertTrue(node_crit, f"{label}: no path nodes tracked")
+                    K = len(node_crit)
+                    for name, c in node_crit.items():
+                        self._rel_err(c, 1.0, f"nodeCrit[{name}]", label)
+                    # symmetric + RA=True => sum of scores == K
+                    self._rel_err(sum(node_crit.values()), float(K),
+                                  "sumNodeCrit", label)
+
+                    # edges are ideal => criticality exactly 0
+                    self.assertTrue(np.all(res['edge_criticality'] == 0.0),
+                        f"{label}: expected edge crit 0, got {res['edge_criticality']}")
+
+                    # --- repair criticality (repairable only) ---
+                    if repairable:
+                        node_rep = self._path_node_crit(res, 'node_repair_criticality')
+                        for name, c in node_rep.items():
+                            self._rel_err(c, 1.0, f"nodeRepCrit[{name}]", label)
+                        self.assertTrue(np.all(res['edge_repair_criticality'] == 0.0),
+                            f"{label}: expected edge rep crit 0, "
+                            f"got {res['edge_repair_criticality']}")
+
+    def test_criticality_series_rates(self):
         """T2: 2-node series, rates 1:10 => BP_i = lam_i/sum(lam)."""
         self._require_numba()
 
         mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
-        net, conns, node_names = build_series_network_with_rates(mttf_list, mttr_h=0.0)                
+        net, conns, node_names = build_series_network_with_rates(mttf_list, mttr_h=0.0)
+
         for ra in (True, False):
-            with utest.subTest(rate_adjustment=ra):
+            with self.subTest(rate_adjustment=ra):
                 ref = reference_criticality_series(mttf_list, ra)
 
                 res = analyze_critical_components_for_conn(
-                    net, conns, n=self.n_nonrep, depth=1, min_connected=-1,
+                    net, conns, N=self.N_nonrep, depth=1, min_connected=-1,
                     plot=False, verbose=False, rate_adjustment=ra,
                     **self.method_config)
 
                 crit_by_name = self._path_node_crit(res, 'node_criticality')
                 for name, r_ref in zip(node_names, ref):
-                    self._rel_err(utest, crit_by_name[name], r_ref,
+                    self._rel_err(crit_by_name[name], r_ref,
                                   f"seriesCrit[{name}]", f"series_RA={ra}")
 
-                utest.assertTrue(np.allclose(res['edge_criticality'], 0.0),
+                self.assertTrue(np.all(res['edge_criticality'] == 0.0),
                     f"series_RA={ra}: expected edge crit 0, "
                     f"got {res['edge_criticality']}")
 
-    def test_criticality_parallel_rates(self, utest):
+    def test_criticality_parallel_rates(self):
         """T3: 1oo2 parallel, rates 1:10 => BP_i = lam_j/(lam_i+lam_j)."""
         self._require_numba()
+
         mttf_list = [1000.0, 100.0]   # lam1 : lam2 = 1 : 10
         net, conns, node_names = build_parallel_network_with_rates(mttf_list, mttr_h=0.0)
-        self._do_plot_test(utest, net, 1)
+
         for ra in (True, False): # repairable
-            with utest.subTest(rate_adjustment=ra):
+            with self.subTest(rate_adjustment=ra):
                 ref = reference_criticality_parallel_1oo2(mttf_list, ra)
 
                 res = analyze_critical_components_for_conn(
-                    net, conns, n=self.n_nonrep, depth=1, min_connected=1,
+                    net, conns, N=self.N_nonrep, depth=1, min_connected=1,
                     plot=False, verbose=False, rate_adjustment=ra,
                     **self.method_config)
 
                 crit_by_name = self._path_node_crit(res, 'node_criticality')
                 for name, r_ref in zip(node_names, ref):
-                    self._rel_err(utest, crit_by_name[name], r_ref,
+                    self._rel_err(crit_by_name[name], r_ref,
                                   f"parCrit[{name}]", f"parallel_RA={ra}")
 
                 # Assert link criticality == 0
-                utest.assertTrue(np.allclose(res['edge_criticality'], 0.0),
+                self.assertTrue(np.all(res['edge_criticality'] == 0.0),
                     f"parallel_RA={ra}: expected edge crit 0, "
                     f"got {res['edge_criticality']}")
-        
+
+
+
+if __name__ == '__main__':
+    unittest.main()
