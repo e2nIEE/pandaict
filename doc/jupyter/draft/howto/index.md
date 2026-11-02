@@ -1,1 +1,0 @@
-# How to series on pandaICT's reliability module
