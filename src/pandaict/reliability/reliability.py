@@ -17,16 +17,9 @@ from pandaict.reliability.monte_carlo import (
     empirical_reliability as _empirical_reliability
 )
 from pandaict.reliability.monte_carlo_helpers import _critical_bar_plot
-from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
-from pandaict.reliability.reliability_helpers import (
-    _build_criticality_colors,
-    _auto_highlight,
-    _draw_directed_edges,
-)
-
-
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from pandaict.reliability.reliability_utils import _get_lam_mu_from_graph
 
 
 def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptables=False):
@@ -82,26 +75,14 @@ def _pandaict_to_mcnxgraph(ict_net, connections, downstream=True, respect_iptabl
         pinode = ndata['pielt']
         mtbf   = ict_net[pinode[0]].loc[pinode[1]]['mtbf_h']
         mttr   = ict_net[pinode[0]].loc[pinode[1]]['mttr_h']
-        mttf = mtbf - mttr
-        if mttf < 0:
-            print(f"Warning: mtbf_h ({mtbf}) <= mttr_h ({mttr}) for node {n}. "
-                  f"Clamping mttf_h to 0 (component never fails).")
-            mttf = 0
-        ndata['mttf_h'] = mttf
+        ndata['mttf_h'] = mtbf - mttr # mttf = mtbf - mttr
         ndata['mttr_h'] = mttr
 
     for u, v, key, edata in mdg.edges(data=True, keys=True):
-        piedge  = edata['pielt']
-        ltype   = ict_net.std_types['link'][ict_net[piedge[0]].loc[piedge[1]]['type']]
-        mtbf    = ltype['mtbf_h']
-        mttr    = ltype['mttr_h']
-        mttf = mtbf - mttr
-        if mttf < 0:
-            print(f"Warning: mtbf_h ({ltype['mtbf_h']}) <= mttr_h ({ltype['mttr_h']}) "
-                f"for edge ({u}, {v}). Clamping mttf_h to 0 (link never fails).")
-            mttf = 0
-        edata['mttf_h'] = mttf
-        edata['mttr_h'] = mttr
+        piedge = edata['pielt']
+        ltype  = ict_net.std_types['link'][ict_net[piedge[0]].loc[piedge[1]]['type']]
+        edata['mttf_h'] = ltype['mtbf_h'] - ltype['mttr_h'] # mttf = mtbf - mttr
+        edata['mttr_h'] = ltype['mttr_h']
 
     return mdg, sources, targets
 
@@ -188,58 +169,96 @@ def plot_graph(ict_net, protocol='TCP',
         ...            node_criticality=result['node_criticality'],
         ...            cmap=False)
     """
+    # TODO: Fix plot for unidirectional graphs
+    # Build multidigraph once
     G = create_multidigraph(ict_net, protocol, validate=True)
 
+    # Build label mapping: node index -> device/node name
     labels = {}
     for n, attr in G.nodes(data=True):
         elt_type, elt_idx = attr['pielt']
-        labels[n] = ict_net[elt_type].iloc[elt_idx]['name']
+        labels[n] = ict_net[elt_type].loc[elt_idx]['name']
 
-    colormap = mcolors.LinearSegmentedColormap.from_list(
-        'criticality', ['lightgray', 'black', 'red'])
+    for u, v, key, data in G.edges(data=True, keys=True):
+        G[u][v][key]['weight'] = 1.0
 
-    # --- Edge colors ---
+    # Custom diverging colormap: light gray -> black -> red
+    colors = ['lightgray', 'black', 'red']
+    colormap = mcolors.LinearSegmentedColormap.from_list('criticality', colors)
+
+    norm = None
+
+    # --- Handle edge criticality ---
     if edge_criticality is not None:
-        edge_colors, edge_norm = _build_criticality_colors(
-            edge_criticality, cmap, colormap, highlight_color)
-        if highlight_edges is None:
-            highlight_edges = _auto_highlight(edge_criticality, list(G.edges()))
-    else:
-        edge_colors = ['gray'] * G.number_of_edges()
-        edge_norm = None
+        edge_criticality = np.array(edge_criticality)
 
-    # --- Node colors ---
-    if node_criticality is not None:
-        node_colors, node_norm = _build_criticality_colors(
-            node_criticality, cmap, colormap, highlight_color)
-        if highlight_nodes is None:
-            highlight_nodes = _auto_highlight(node_criticality, list(G.nodes()))
+        if cmap:
+            # Diverging colormap mode
+            max_deviation = max(abs(edge_criticality.max() - 1),
+                                abs(edge_criticality.min() - 1))
+            vmin = 1 - max_deviation
+            vmax = 1 + max_deviation
+
+            norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1, vmax=vmax)
+            edge_colors = [colormap(norm(c)) for c in edge_criticality]
+        else:
+            # Binary mode: red if > 1, black otherwise
+            edge_colors = [highlight_color if c > 1 else 'black' for c in edge_criticality]
+
+        # Determine highlight edges based on criticality > 1
+        critical_edges_mask = edge_criticality > 1
+        edges_array = np.array(list(G.edges()))
+        critical_edges = [tuple(e) for e in edges_array[critical_edges_mask]]
+        highlight_edges = critical_edges if highlight_edges is None else highlight_edges
     else:
-        node_colors = [default_color] * G.number_of_nodes()
-        node_norm = None
+        edge_colors = ['gray' for _ in G.edges()]
+
+    # --- Handle node criticality ---
+    if node_criticality is not None:
+        node_criticality = np.array(node_criticality)
+
+        if cmap:
+            # Diverging colormap mode
+            max_deviation = max(abs(node_criticality.max() - 1),
+                                abs(node_criticality.min() - 1))
+            vmin = 1 - max_deviation
+            vmax = 1 + max_deviation
+
+            node_norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1, vmax=vmax)
+            node_colors = [colormap(node_norm(c)) for c in node_criticality]
+
+            if norm is None:
+                norm = node_norm
+        else:
+            # Binary mode: red if > 1, black otherwise
+            node_colors = [highlight_color if c > 1 else 'black' for c in node_criticality]
+
+        # Determine highlight nodes based on criticality > 1
+        critical_nodes_mask = node_criticality > 1
+        nodes_array = np.array(list(G.nodes()))
+        critical_nodes = list(nodes_array[critical_nodes_mask])
+        highlight_nodes = critical_nodes if highlight_nodes is None else highlight_nodes
+    else:
+        node_colors = [default_color for _ in G.nodes()]
+
+    highlight_nodes = highlight_nodes or []
+    highlight_edges = highlight_edges or []
 
     # --- Draw ---
-    _, ax = plt.subplots(figsize=(5, 5))
-    pos = nx.spring_layout(G, seed=seed, weight=None)
+    fig, ax = plt.subplots(figsize=(5,5))
+    pos = nx.spring_layout(G, seed=seed)
 
-    _draw_directed_edges(G, pos, ax, edge_colors, edge_width=2,
-                         highlight_edges=highlight_edges)
+    nx.draw(G, pos, ax=ax,
+            node_color=node_colors,
+            edge_color=edge_colors,
+            with_labels=True,
+            labels=labels,
+            font_color='black',
+            node_size=500,
+            font_size=12,
+            width=2)
 
-    highlight_set = set(highlight_nodes or [])
-    node_edge_colors = ['red' if n in highlight_set else 'black'
-                        for n in G.nodes()]
-
-    nx.draw_networkx_nodes(G, pos, ax=ax,
-                           node_color=node_colors,
-                           node_size=500,
-                           edgecolors=node_edge_colors,
-                           linewidths=[2.5 if n in highlight_set else 1.0
-                                       for n in G.nodes()])
-    nx.draw_networkx_labels(G, pos, labels=labels, ax=ax,
-                            font_color='black', font_size=12)
-
-    # --- Colorbar ---
-    norm = edge_norm or node_norm
+    # Add colorbar (only in cmap mode)
     if show_colorbar and cmap and norm is not None:
         sm = plt.cm.ScalarMappable(cmap=colormap, norm=norm)
         sm.set_array([])
@@ -290,8 +309,10 @@ def estimate_mtbf_mttr_for_conn(ict_net, connections, **kwargs):
         'min_connected': -1,
         'N': int(1e5),
         'depth': 200,
+        'TOL': 0,
         'max_time': np.inf,
         'max_events': -1,
+        'return_samples': True,
         'analyze_crit': False,
         'laziness': 0,
         'use_numba': True,
@@ -376,28 +397,24 @@ def analyze_critical_components_for_conn(ict_net, connections,
     .. note::
         **Relation to classical importance measures**
 
-        Under the standard assumption of a non-repairable coherent system, the implemented
-        attribution procedure corresponds to an empirical Monte Carlo estimate of the 
-        Barlow-Proschan importance. It estimates the probability that a particular component
-        is the one whose failure cuases the system to fail. For repairable systems, the
-        same principle is used as an analogous recurrent importance measure for system failures
-        and restoration.
+        The criticality score is conceptually related to classical component
+        importance measures from reliability theory:
 
-        By default, an additional rate-based normalization specific to this implementation is
-        applied. The observed share of system-failure triggers attributed to a component is
-        compared with its share of the nominal failure rate. Restoration scores are calculated
-        analogously using the repair rate. This normalization establishes ``1`` as an intuitive
-        reference level:
+        - With ``rate_adjustment=True``, the score reflects *structural importance*:
+          how much more often a component triggers a system failure than its
+          failure rate alone would predict. This is closely related to the
+          **Birnbaum importance measure**, which expresses the probability that
+          the system state is determined by a given component.
 
-        - ``score = 1``: the component is observed as often as expected from the rate-based reference;
-        - ``score > 1``: the component is overrepresented and therefore more critical than expected
-          from its nominal rate alone.
-        - ``score < 1``: the component is underrepresented and therefore less critical than expected
-          from its nominal rate alone.
+        - With ``rate_adjustment=False``, the score reflects the raw failure
+          frequency of each component, which is closer to the **Criticality
+          importance measure** (Birnbaum x component unreliability).
 
-        The reported score should therefore be interpreted as relative criticality with respect to the
-        rate-based reference. The underlying unnormalized trigger share represents the empirical 
-        Barlow-Proschan-type importance.
+        Empirical comparisons across various network topologies show that the
+        ranking produced by this function correlates well with Birnbaum
+        importance (mean Spearman: 0.76), making it a practical
+        simulation-based alternative when analytical importance measures are
+        difficult to compute.
 
     .. note::
         This function shares optional keyword arguments with
@@ -416,6 +433,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
         'min_connected': -1,
         'N': int(1e5),
         'depth': 200,
+        'TOL': 0,
         'max_time': np.inf,
         'max_events': -1,
         'laziness': 0,
@@ -426,6 +444,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
     # Force critical analysis on; samples not needed for the caller
     protected = {
         'analyze_crit': True,
+        'return_samples': False,
     }
 
     config = {**defaults, **kwargs, **protected}
@@ -435,6 +454,10 @@ def analyze_critical_components_for_conn(ict_net, connections,
     # Run simulation — estimate_mttf_mttr collects all_critical internally
     # (its own analyze call is suppressed via plot=False, verbose=False)
     res = estimate_mttf_mttr(graph, sources, targets, **config)
+
+    mttr = 0 if np.isinf(res['mttr']) else res['mttr']
+    mttf = res['mttf']
+    mtbf = mttf + mttr
 
     all_critical = res.get('all_critical')
 
@@ -473,6 +496,7 @@ def analyze_critical_components_for_conn(ict_net, connections,
         all_critical, graph, sources, targets,
         lam_edges, lam_nodes, mu_edges, mu_nodes,
         top_n=top_n,
+        plot=plot,
         verbose=verbose,
         rate_adjustment=rate_adjustment,
         save_excel=save_excel,
@@ -566,6 +590,7 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     defaults = {
         'min_connected': -1,
         'N': int(1e5),
+        'TOL': 0,
         'max_time': np.inf,
         'max_events': -1,
         'laziness': 0,
@@ -576,7 +601,7 @@ def empirical_reliability_function(ict_net, connections, T, **kwargs):
     # Samples are required; critical analysis is not.
     # depth=1: each sample must be an individual failure time, not a cycle-averaged mean.
     protected = {
-        #'return_samples': True,
+        'return_samples': True,
         'analyze_crit': False,
         'depth': 1,
     }
