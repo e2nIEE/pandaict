@@ -18,6 +18,19 @@ src/pandaict/datamodel/__pycache__/
 src/pandaict/reliability/__pycache__/
 src/pandaict/networks/__pycache__/
 src/pandaict/utils/__pycache__/
+_site/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+
 build/
 .venv/
 .idea/
