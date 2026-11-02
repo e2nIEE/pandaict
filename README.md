@@ -1,3 +1,5 @@
+pandaict - An Open-source tool for modeling ICT networks, compatible to pandapower
+
 Correct PYTHONPATH setting: 
 
 Windows:
@@ -13,3 +15,4 @@ Windows:
 
 Linux: 
 - python test/pandaict_test.py 
+
