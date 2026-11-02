@@ -1,0 +1,68 @@
+name: CI/CD
+
+on:  
+  push:
+    branches: ["develop"]
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "src"
+  cancel-in-progress: false
+
+jobs:
+  sonarqube-check:
+    name: SonarQube analysis
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    continue-on-error: true
+
+    permissions:
+      contents: read
+
+    env:
+      SONAR_USER_HOME: ${{ github.workspace }}/.sonar
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SONAR_USER_HOME }}/cache
+          key: ${{ runner.os }}-sonar-${{ hashFiles('**/sonar-project.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-sonar-
+
+      - name: Install SonarQube certificate
+        env:
+          SONAR_CRT: ${{ secrets.SONAR_CRT }}
+        run: |
+          printf '%s' "$SONAR_CRT" > "$RUNNER_TEMP/sonar.crt"
+
+          sudo keytool \
+            -importcert \
+            -noprompt \
+            -trustcacerts \
+            -alias sonar \
+            -file "$RUNNER_TEMP/sonar.crt" \
+            -keystore "$JAVA_HOME/lib/security/cacerts" \
+            -storepass changeit
+
+      - name: Run SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -X
