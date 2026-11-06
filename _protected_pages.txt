@@ -1,1 +1,3 @@
 index.html querregler
+about.html querregler
+start.html querregler
